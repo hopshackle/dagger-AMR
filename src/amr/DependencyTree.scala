@@ -17,7 +17,7 @@ object DependencyTree {
 
   val processor = new StanfordProcessor
 
-  def parse(sentence: String): DependencyTree = {
+  def apply(sentence: String): DependencyTree = {
 
     val parseTree = processor.parse(sentence).head
 
