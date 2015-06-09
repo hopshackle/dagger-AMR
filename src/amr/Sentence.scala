@@ -4,7 +4,7 @@ package amr
 import edu.cmu.lti.nlp.amr._
 
 // TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as node keys
-// This derives from use of String in the raw AMR input files. Might be better to merge these two case classes.
+// This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
 case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: List[(String, String, String)]) {}
 
 case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: List[(Int, Int, String)]) {
@@ -15,6 +15,27 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
 
     "# ::SpanGraph\n" + nodeOutput.mkString + arcOutput.mkString
   }
+
+  def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
+    val newArcs = for {
+      (f, t, l) <- arcs
+      update = (parent == f && child == t)
+    } yield (f, t, if (update) label else l)
+
+    this.copy(arcs = newArcs)
+  }
+
+  def labelNode(node: Int, label: String): DependencyTree = {
+    val newNodes = nodes + (node -> label)
+    this.copy(nodes = newNodes)
+  }
+
+  def removeNode(node: Int): DependencyTree = {
+    // only valid for a leaf node with no children
+    assert(!(arcs exists (_ match { case (f, t, l) => f == node } )))
+    this.copy(nodes = nodes - node)
+  }
+
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph]) {}
@@ -52,6 +73,7 @@ object DependencyTree {
 
     DependencyTree(nodes, nodeSpans, arcs)
   }
+
 }
 
 object AMRGraph {
@@ -69,7 +91,7 @@ object AMRGraph {
       span <- amr.spans
       nodeId <- span.nodeIds
     } yield (nodeId -> (span.start, span.end))).toMap
-    
+
     val Relation = """:?(.*)""".r
     val arcs = (amr.root.id, "ROOT", "ROOT") :: (for {
       node1 <- amr.nodes
