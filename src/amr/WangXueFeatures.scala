@@ -27,7 +27,7 @@ class WangXueFeatures(dict: Index) {
     add(hmap, "SIGMA-WORD=" + sigmaWord)
 
     if (sigma > 0) {  // sigma == 0 indicates the dummy root node (which has no parent)
-      val (_, sigmaParent, parentLabel) = (state.currentGraph.arcs filter { case (p, c, l) => (c == sigma) })(0)
+      val ((_, sigmaParent), parentLabel) = ((state.currentGraph.arcs filter { case ((p, c), l) => (c == sigma) }).toList)(0)
       add(hmap, "PARENT-SIGMA-DEP-LABEL=" + parentLabel)
     }
     hmap
@@ -38,7 +38,7 @@ class WangXueFeatures(dict: Index) {
 
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
-    val dependencyLabel = state.currentGraph.arcs.filter { case (p, c, l) => (p == sigma && c == beta) }(0)._3
+    val dependencyLabel = state.currentGraph.arcs((sigma, beta)) 
     val sigmaWord = state.currentGraph.nodes(sigma)
     val betaWord = state.currentGraph.nodes(beta)
     val distance = Math.abs(state.currentGraph.nodeSpans(sigma)._1 - state.currentGraph.nodeSpans(beta)._1)

@@ -3,26 +3,21 @@ package amr
 
 import edu.cmu.lti.nlp.amr._
 
-// TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as node keys
+// TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as keys
 // This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
-case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: List[(String, String, String)]) {}
+case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) {}
 
-case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: List[(Int, Int, String)]) {
+case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) {
 
   def toOutputFormat: String = {
     val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\t${nodeSpans(x)._1}\t${nodeSpans(x)._2}\n")
-    val arcOutput = arcs map (x => s"# ::edge\t${x._1}\t${x._2}\t${x._3}\n")
+    val arcOutput = arcs map (x => s"# ::edge\t${x._1._1}\t${x._1._2}\t${x._2}\n")
 
     "# ::SpanGraph\n" + nodeOutput.mkString + arcOutput.mkString
   }
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
-    val newArcs = for {
-      (f, t, l) <- arcs
-      update = (parent == f && child == t)
-    } yield (f, t, if (update) label else l)
-
-    this.copy(arcs = newArcs)
+    this.copy(arcs = arcs + ((parent, child) -> label))
   }
 
   def labelNode(node: Int, label: String): DependencyTree = {
@@ -32,13 +27,30 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
 
   def removeNode(node: Int): DependencyTree = {
     // only valid for a leaf node with no children
-    assert(!(arcs exists (_ match { case (f, t, l) => f == node } )))
+    assert(!(arcs.keys exists (_ match { case (f, t) => f == node })))
     this.copy(nodes = nodes - node)
   }
 
 }
 
-case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph]) {}
+case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph]) {
+
+  val positionToAMR = amr match {
+    case None => Map[Int, String]()
+    case Some(amrGraph) => for {
+      //TODO: Problem is that JAMR labels all of the nodes in the AMR - including sub-nodes.
+      // This means we have duplicates for any given position - and we really just want the top-most one
+      (amrKey, (start, end)) <- amrGraph.nodeSpans
+      i <- start until end
+    } yield (i -> amrKey)
+  }
+
+  val mapFromDTtoAMR = {
+    for {
+      (dtSpan, (position, _)) <- dependencyTree.nodeSpans
+    } yield (dtSpan -> positionToAMR(position))
+  }
+}
 
 object Sentence {
   def apply(sentence: String): Sentence = {
@@ -62,10 +74,10 @@ object DependencyTree {
       if deprel != "punct"
     } yield (index -> form)).toMap + (0 -> "ROOT")
 
-    val arcs = for {
+    val arcs = (for {
       ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel) <- parseTree
       if deprel.getOrElse("") != "punct"
-    } yield (parentIndex, index, deprel.getOrElse("UNK"))
+    } yield ((parentIndex, index) -> deprel.getOrElse("UNK"))).toMap
 
     val nodeSpans = (for {
       (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel), wordCount) <- (parseTree.filter(x => x.deprel.getOrElse("") != "punct").zipWithIndex)
@@ -93,11 +105,11 @@ object AMRGraph {
     } yield (nodeId -> (span.start, span.end))).toMap
 
     val Relation = """:?(.*)""".r
-    val arcs = (amr.root.id, "ROOT", "ROOT") :: (for {
+    val arcs = (for {
       node1 <- amr.nodes
       (label, node2) <- node1.relations
       Relation(relation) = label // label includes the ":"
-    } yield (node1.id, node2.id, relation)).toList
+    } yield ((node1.id, node2.id) -> relation)).toMap + ((amr.root.id, "ROOT") -> "ROOT")
 
     AMRGraph(nodes, nodeSpans, arcs)
   }

@@ -18,10 +18,10 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
         case Nil => Nil
         case _ =>
           val nextLevel = for {
-            (parent, child, label) <- datum.dependencyTree.arcs
+            ((parent, child), label) <- datum.dependencyTree.arcs
             if previousLevel contains parent
           } yield child
-          getAllNodes(nextLevel) ++ previousLevel
+          getAllNodes(nextLevel.toList) ++ previousLevel
       }
     }
 

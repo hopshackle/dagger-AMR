@@ -15,14 +15,16 @@ case class NextEdge(relation: Int) extends WangXueAction {
 }
 
 object NextEdge {
-  val relationMaster = Map[Int, String]((1 -> "ARG0"), (2 -> "ARG1"), (3 -> "ARG2"),
+  private val relationMaster = Map[Int, String]((1 -> "ARG0"), (2 -> "ARG1"), (3 -> "ARG2"),
     (4 -> "ARG3"), (5 -> "ARG4"), (6 -> "opN"), (7 -> "mod"), (8 -> "time"), (9 -> "manner"), (10 -> "location"))
+  private val stringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
 
   def all(): Array[WangXueAction] = {
     (relationMaster.keys map (i => NextEdge(i))).toArray
   }
 
   def getRelation(index: Int): String = relationMaster(index)
+  def getRelationIndex(string: String): Int = stringToIndex(string)
 }
 
 case class NextNode(concept: Int) extends WangXueAction {
@@ -37,14 +39,16 @@ case class NextNode(concept: Int) extends WangXueAction {
 }
 
 object NextNode {
-  val conceptMaster = Map[Int, String]((1 -> "attack-01"), (2 -> "train-01"), (3 -> "threaten-01"),
+  private val conceptMaster = Map[Int, String]((1 -> "attack-01"), (2 -> "train-01"), (3 -> "threaten-01"),
     (4 -> "computer"), (5 -> "military"), (6 -> "container"), (7 -> "network"), (8 -> "thing"), (9 -> "kill-01"), (10 -> "explosive"))
+  private val stringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   def all(): Array[WangXueAction] = {
     (conceptMaster.keys map (i => NextNode(i))).toArray
   }
 
   def getConcept(index: Int): String = conceptMaster(index)
+  def getConceptIndex(string: String): Int = stringToIndex(string)
 }
 
 case object DeleteNode extends WangXueAction {
