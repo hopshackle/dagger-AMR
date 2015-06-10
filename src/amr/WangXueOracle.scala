@@ -1,10 +1,8 @@
 package amr
 import dagger.core._
 
-class WangXueOracle extends TransitionOracle[Sentence, WangXueAction, WangXueTransitionState] {
-
-  def acceptableActions(state: amr.WangXueTransitionState): Seq[amr.WangXueAction] = ???
+class WangXueOracle extends HeuristicPolicy[Sentence, WangXueAction, WangXueTransitionState] {
   
-  def chooseTransition(o: amr.Sentence,state: amr.WangXueTransitionState): amr.WangXueAction = ???
+  def chooseTransition(data: Sentence,state: WangXueTransitionState): WangXueAction = ???
 
 }
