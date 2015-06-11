@@ -44,11 +44,11 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
       i <- start until end
     } yield (i -> amrKey)
   }
-
+  
   val mapFromDTtoAMR = {
     for {
       (dtSpan, (position, _)) <- dependencyTree.nodeSpans
-    } yield (dtSpan -> positionToAMR(position))
+    } yield (dtSpan -> positionToAMR.getOrElse(position, "NONE"))
   }
 }
 
@@ -102,7 +102,8 @@ object AMRGraph {
     val nodeSpans = (for {
       span <- amr.spans
       nodeId <- span.nodeIds
-    } yield (nodeId -> (span.start, span.end))).toMap
+    } yield (nodeId -> (span.start+1, span.end+1))).toMap
+    // Note our convention is that the first word in a sentence is at index 1
 
     val Relation = """:?(.*)""".r
     val arcs = (for {
