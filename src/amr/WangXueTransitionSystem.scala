@@ -34,6 +34,9 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   }
 
   def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = ???
-  def isTerminal(state: WangXueTransitionState): Boolean = ???
+  def isTerminal(state: WangXueTransitionState): Boolean = {
+    // for the present, we have finished once we have processed all nodes and edges
+    state.nodesToProcess.isEmpty && state.childrenToProcess.isEmpty
+  }
 
 }

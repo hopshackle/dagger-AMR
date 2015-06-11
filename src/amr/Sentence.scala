@@ -2,6 +2,7 @@
 package amr
 
 import edu.cmu.lti.nlp.amr._
+import scala.collection.SortedMap
 
 // TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as keys
 // This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
@@ -27,9 +28,27 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
 
   def removeNode(node: Int): DependencyTree = {
     // only valid for a leaf node with no children
-    assert(!(arcs.keys exists (_ match { case (f, t) => f == node })))
+    assert(isLeafNode(node))
     this.copy(nodes = nodes - node)
   }
+
+  override def toString: String = {
+    val nodeSort = nodes.foldLeft(SortedMap[Int, String]()) { case (start, (a, b)) => start + (a -> b) }
+    val spanSort = nodeSpans.foldLeft(SortedMap[Int, (Int, Int)]()) { case (start, (a, b)) => start + (a -> b) }
+    val edgeSort = arcs.foldLeft(SortedMap[(Int, Int), String]()) { case (start, (a, b)) => start + (a -> b) }
+    "\nNodeMap:\t" + nodeSort.toString +
+      "\nSpanMap:\t" + spanSort.toString +
+      "\nEdges:\t" + edgeSort.toString()
+  }
+
+  def toAMR: AMRGraph = {
+    val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> value) }
+    val amrNodeSpan = nodeSpans map { case (key: Int, value: Any) => (key.toString -> value) }
+    val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
+    AMRGraph(amrNodes, amrNodeSpan, amrArcs)
+  }
+  
+  def isLeafNode(node: Int): Boolean = {!(arcs.keys exists (_ match { case (f, t) => f == node })) }
 
 }
 
@@ -44,7 +63,7 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
       i <- start until end
     } yield (i -> amrKey)
   }
-  
+
   val mapFromDTtoAMR = {
     for {
       (dtSpan, (position, _)) <- dependencyTree.nodeSpans
@@ -85,7 +104,6 @@ object DependencyTree {
 
     DependencyTree(nodes, nodeSpans, arcs)
   }
-
 }
 
 object AMRGraph {
@@ -102,7 +120,7 @@ object AMRGraph {
     val nodeSpans = (for {
       span <- amr.spans
       nodeId <- span.nodeIds
-    } yield (nodeId -> (span.start+1, span.end+1))).toMap
+    } yield (nodeId -> (span.start + 1, span.end + 1))).toMap
     // Note our convention is that the first word in a sentence is at index 1
 
     val Relation = """:?(.*)""".r
