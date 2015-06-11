@@ -6,7 +6,14 @@ import scala.collection.SortedMap
 
 // TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as keys
 // This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
-case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) {}
+case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) {
+  def toOutputFormat: String = {
+    val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\n")
+    val arcOutput = arcs map (x => s"# ::edge\t${x._1._1}\t${x._1._2}\t${x._2}\n")
+
+    "# ::AMRGraph\n" + nodeOutput.mkString + arcOutput.mkString
+  }
+}
 
 case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) {
 
@@ -29,7 +36,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
   def removeNode(node: Int): DependencyTree = {
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
-    this.copy(nodes = nodes - node)
+    val edgesToRemove = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys
+    DependencyTree(nodes - node, nodeSpans - node, arcs -- edgesToRemove)
   }
 
   override def toString: String = {
@@ -47,8 +55,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
   }
-  
-  def isLeafNode(node: Int): Boolean = {!(arcs.keys exists (_ match { case (f, t) => f == node })) }
+
+  def isLeafNode(node: Int): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
 
 }
 
@@ -128,7 +136,8 @@ object AMRGraph {
       node1 <- amr.nodes
       (label, node2) <- node1.relations
       Relation(relation) = label // label includes the ":"
-    } yield ((node1.id, node2.id) -> relation)).toMap + ((amr.root.id, "ROOT") -> "ROOT")
+      relation2 = if (relation.size == 3 && relation.startsWith("op")) "opN" else relation
+    } yield ((node1.id, node2.id) -> relation2)).toMap + ((amr.root.id, "ROOT") -> "ROOT")
 
     AMRGraph(nodes, nodeSpans, arcs)
   }

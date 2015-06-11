@@ -7,7 +7,7 @@ object testDT {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.2 sec].
+                                                  //| hPCFG.ser.gz ... done [1.1 sec].
                                                   //| dt  : amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> police, 3 -> want, 4 -> to, 5 -> a
                                                   //| rrest, 6 -> Michael, 7 -> Karras, 8 -> in, 9 -> Singapore)
@@ -28,7 +28,9 @@ object testDT {
                                                   //| :op1 (i / international) :op2 (g / government-organization :ARG0-of (g2 / go
                                                   //| vern-01)) :op3 (t / telecommunication) :op4 (t2 / technology) :op5 (s / scie
                                                   //| nce)) "), (NATO CONSIDERS cyber attacks a threat to military and civilian co
-                                                  //| mputer networks after th
+                                                  //| mputer networks after the Estonian Government was struck by cyber attacks in
+                                                  //|  2007.,"(c / consider-02 :ARG0 (m2 / military :name (n / name :op1 "NATO")) 
+                                                  //| :ARG1 (a / attack-01 :mod (c2 / cyber)) :ARG2 (t / thing :ARG1
                                                   //| Output exceeds cutoff limit.
   val s1 = Sentence(testData(2)._1, testData(2)._2)
                                                   //> WARNING: Found duplicate match for concept attack-01
@@ -45,7 +47,10 @@ object testDT {
                                                   //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
                                                   //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16), 16 -> (16,17)
                                                   //| , 17 -> (17,18), 18 -> (18,19), 19 -> (19,20), 20 -> (20,21), 21 -> (21,22),
-                                                  //|  22 -> (22,23), 23 -> (
+                                                  //|  22 -> (22,23), 23 -> (23,24))
+                                                  //| Edges:	Map((0,4) -> root, (3,1) -> nn, (3,2) -> nn, (4,3) -> nsubj, (4,
+                                                  //| 6) -> dobj, (4,7) -> prep, (4,18) -> advcl, (6,5) -> det, (7,12) -> pobj, (8
+                                                  //| ,9) -> cc, (8,10) -> conj, (12,
                                                   //| Output exceeds cutoff limit.
   s1.dependencyTree.nodes foreach println         //> (0,ROOT)
                                                   //| (5,a)
@@ -132,7 +137,9 @@ object testDT {
                                                   //|  (10,11), 0.3.0.2.0 -> (23,24), 0.0 -> (8,9), 0.0.0.0 -> (1,2), 0.2.0 -> (6,
                                                   //| 7), 0.3.0.0 -> (21,22), 0.3.0 -> (18,19), 0.3 -> (13,14), 0.2.0.0.2 -> (11,1
                                                   //| 2), 0 -> (2,3), 0.3.0.1 -> (16,17), 0.2 -> (6,7), 0.3.0.2 -> (23,24), 0.3.0.
-                                                  //| 1.0.0.0.0 -> (15,16), 0.
+                                                  //| 1.0.0.0.0 -> (15,16), 0.2.0.0 -> (9,10), 0.3.0.1.0.0.0 -> (15,16), 0.3.0.0.0
+                                                  //|  -> (20,21)),Map((0.0,0.0.0) -> name, (0.3.0,0.3.0.0) -> ARG0, (0,0.3) -> ti
+                                                  //| me, (0.0.0,0.0.0.0) -> opN, (0.2.0.0.1,0.2.0.0.1.0) -> mod, (0
                                                   //| Output exceeds cutoff limit.
   AMR.nodes foreach println                       //> (0.1,attack-01)
                                                   //| (0.0.0,name)
@@ -185,7 +192,7 @@ object testDT {
   AMR.arcs foreach println                        //> ((0.0,0.0.0),name)
                                                   //| ((0.3.0,0.3.0.0),ARG0)
                                                   //| ((0,0.3),time)
-                                                  //| ((0.0.0,0.0.0.0),op1)
+                                                  //| ((0.0.0,0.0.0.0),opN)
                                                   //| ((0.2.0.0.1,0.2.0.0.1.0),mod)
                                                   //| ((0.1,0.1.0),mod)
                                                   //| ((0.3.0,0.3.0.1),ARG1)
@@ -196,11 +203,11 @@ object testDT {
                                                   //| ((0.2.0.0.0,0.2.0.0.0.0),mod)
                                                   //| ((0.2,0.2.0),ARG1-of)
                                                   //| ((0,ROOT),ROOT)
-                                                  //| ((0.3,0.3.0),op1)
+                                                  //| ((0.3,0.3.0),opN)
                                                   //| ((0.3.0.1.0,0.3.0.1.0.0),ARG1)
-                                                  //| ((0.2.0.0,0.2.0.0.1),op2)
-                                                  //| ((0.2.0.0,0.2.0.0.0),op1)
-                                                  //| ((0.3.0.1.0.0.0,0.3.0.1.0.0.0.0),op1)
+                                                  //| ((0.2.0.0,0.2.0.0.1),opN)
+                                                  //| ((0.2.0.0,0.2.0.0.0),opN)
+                                                  //| ((0.3.0.1.0.0.0,0.3.0.1.0.0.0.0),opN)
                                                   //| ((0.3.0.1,0.3.0.1.0),ARG0-of)
                                                   //| ((0,0.0),ARG0)
                                                   //| ((0.3.0.1.0.0,0.3.0.1.0.0.0),name)

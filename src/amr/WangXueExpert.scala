@@ -29,6 +29,7 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
   }
 
   def conceptForCurrentNode(data: Sentence, state: WangXueTransitionState): Int = {
+    if (state.nodesToProcess.head == 0) return NextNode.getConceptIndex("ROOT")  // special hard-code for the ROOT node  
     val conceptKey = data.mapFromDTtoAMR.getOrElse(state.nodesToProcess.head, "NONE")
     val conceptString = data.amr.get.nodes.getOrElse(conceptKey, "NONE")
     if (debug) {
@@ -39,9 +40,9 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
   }
 
   def relationBetweenSigmaAndBeta(data: Sentence, state: WangXueTransitionState): Int = {
-    val currentNode = data.mapFromDTtoAMR(state.nodesToProcess.head)
-    val childNode = data.mapFromDTtoAMR(state.childrenToProcess.head)
-    val relationString = data.amr.get.arcs((currentNode, childNode))
+    val currentNode = data.mapFromDTtoAMR.getOrElse(state.nodesToProcess.head, "NONE")
+    val childNode = data.mapFromDTtoAMR.getOrElse(state.childrenToProcess.head, "NONE")
+    val relationString = data.amr.get.arcs.getOrElse((currentNode, childNode), "NONE")
     if (debug) {
       println("Edge: " + currentNode + "\t" + childNode + "\t" + relationString)
       println("Index: " + NextEdge.getRelationIndex(relationString))
