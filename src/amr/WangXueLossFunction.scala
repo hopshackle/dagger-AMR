@@ -1,7 +1,7 @@
 package amr
 import dagger.core._
 
-class WangXueLossFunction extends LossFunction[Sentence, WangXueAction ,WangXueTransitionState] {
+class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueTransitionState] {
 
   def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
     // TODO: Clarify what the testActions are for...at the moment we just calculate the loss

@@ -10,7 +10,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = ???
   
   def construct(state: WangXueTransitionState, datum: Sentence): Sentence = {
-    Sentence(datum.rawText, state.currentGraph, state.currentGraph.toAMR)
+    Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.toAMR))
   }
   
   def expertApprox(datum: Sentence, state: WangXueTransitionState): Sentence = ???
@@ -37,7 +37,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     WangXueTransitionState(allNodes, Nil, datum.dependencyTree)
   }
 
-  def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = ???
+  def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
   
   def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 

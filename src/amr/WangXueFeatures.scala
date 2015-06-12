@@ -2,7 +2,7 @@ package amr
 import scala.collection.Map
 import coref.util._
 
-class WangXueFeatures(dict: Index) {
+class WangXueFeatures(dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 

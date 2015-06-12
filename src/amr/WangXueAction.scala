@@ -1,7 +1,9 @@
 package amr
 import dagger.core._
 
-abstract class WangXueAction extends TransitionAction[WangXueTransitionState]
+abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
+  def isPermissible(state: WangXueTransitionState): Boolean
+}
 
 case class NextEdge(relation: Int) extends WangXueAction {
 
@@ -12,6 +14,7 @@ case class NextEdge(relation: Int) extends WangXueAction {
     conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
   }
   override def toString: String = "NextEdge: " + relation + " -> " + NextEdge.relationMaster(relation)
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty
 
 }
 
@@ -19,7 +22,7 @@ object NextEdge {
   private val relationStrings = ImportConcepts.loadRelations("C:\\AMR\\AMR2.txt")
   private val relationMaster = (for {
     (relation, index) <- relationStrings zipWithIndex
-  } yield ((index+1) -> relation)).toMap + (0 -> "UNKNOWN")
+  } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
 
   private val stringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
 
@@ -46,6 +49,7 @@ case class NextNode(concept: Int) extends WangXueAction {
     WangXueTransitionState(newNodesToProcess, childrenOfNewNode, tree)
   }
   override def toString: String = "NextNode: " + concept + " -> " + NextNode.conceptMaster(concept)
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.isEmpty
 
 }
 
@@ -53,7 +57,7 @@ object NextNode {
   private val conceptStrings = ImportConcepts.loadConcepts("C:\\AMR\\AMR2.txt")
   private val conceptMaster = (for {
     (concept, index) <- conceptStrings zipWithIndex
-  } yield ((index+1) -> concept)).toMap + (0 -> "UNKNOWN")
+  } yield ((index + 1) -> concept)).toMap + (0 -> "UNKNOWN")
   private val stringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   def all(): Array[WangXueAction] = {
@@ -85,36 +89,42 @@ case object DeleteNode extends WangXueAction {
     }
     WangXueTransitionState(newNodesToProcess, childrenOfNewTopNode, tree)
   }
-
+  override def isPermissible(state: WangXueTransitionState): Boolean = {
+    state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head)
+  }
 }
 
 case object Swap extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
+  def isPermissible(state: WangXueTransitionState): Boolean = false
 
 }
 
 case object Reattach extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
-
+  def isPermissible(state: WangXueTransitionState): Boolean = false
 }
 
 case object ReplaceHead extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
+  def isPermissible(state: WangXueTransitionState): Boolean = false
 
 }
 
 case object Reentrance extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
+  def isPermissible(state: WangXueTransitionState): Boolean = false
 
 }
 
 case object Merge extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
+  def isPermissible(state: WangXueTransitionState): Boolean = false
 
 }
 
