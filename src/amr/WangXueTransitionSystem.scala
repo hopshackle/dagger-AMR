@@ -8,7 +8,11 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
   def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = ???
-  def construct(state: WangXueTransitionState, datum: Sentence): Sentence = ???
+  
+  def construct(state: WangXueTransitionState, datum: Sentence): Sentence = {
+    Sentence(datum.rawText, state.currentGraph, state.currentGraph.toAMR)
+  }
+  
   def expertApprox(datum: Sentence, state: WangXueTransitionState): Sentence = ???
 
   def init(datum: Sentence): WangXueTransitionState = {
@@ -34,6 +38,6 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   }
 
   def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = ???
-  def isTerminal(state: WangXueTransitionState): Boolean = ???
-
+  
+  def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 }
