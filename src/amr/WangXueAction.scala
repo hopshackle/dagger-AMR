@@ -11,20 +11,25 @@ case class NextEdge(relation: Int) extends WangXueAction {
     val tree = conf.currentGraph.labelArc(conf.nodesToProcess.head, conf.childrenToProcess.head, NextEdge.getRelation(relation))
     conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
   }
+  override def toString: String = "NextEdge: " + relation + " -> " + NextEdge.relationMaster(relation)
 
 }
 
 object NextEdge {
-  private val relationMaster = Map[Int, String]((1 -> "ARG0"), (2 -> "ARG1"), (3 -> "ARG2"),
-    (4 -> "ARG3"), (5 -> "ARG4"), (6 -> "opN"), (7 -> "mod"), (8 -> "time"), (9 -> "manner"), (10 -> "location"))
+  private val relationStrings = ImportConcepts.loadRelations("C:\\AMR\\AMR2.txt")
+  private val relationMaster = (for {
+    (relation, index) <- relationStrings zipWithIndex
+  } yield ((index+1) -> relation)).toMap + (0 -> "UNKNOWN")
+
   private val stringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
 
   def all(): Array[WangXueAction] = {
     (relationMaster.keys map (i => NextEdge(i))).toArray
   }
 
-  def getRelation(index: Int): String = relationMaster(index)
-  def getRelationIndex(string: String): Int = stringToIndex(string)
+  def getRelation(index: Int): String = relationMaster.getOrElse(index, "UNKNOWN")
+  def getRelationIndex(string: String): Int = stringToIndex.getOrElse(string, 0)
+
 }
 
 case class NextNode(concept: Int) extends WangXueAction {
@@ -33,31 +38,52 @@ case class NextNode(concept: Int) extends WangXueAction {
     // label current node
     // pop current node from node stack
     val tree = conf.currentGraph.labelNode(conf.nodesToProcess.head, NextNode.getConcept(concept))
-    conf.copy(nodesToProcess = conf.nodesToProcess.tail, currentGraph = tree)
+    val newNodesToProcess = conf.nodesToProcess.tail
+    val childrenOfNewNode = newNodesToProcess match {
+      case Nil => Nil
+      case _ => NextNode.childrenOfNode(newNodesToProcess.head, tree)
+    }
+    WangXueTransitionState(newNodesToProcess, childrenOfNewNode, tree)
   }
+  override def toString: String = "NextNode: " + concept + " -> " + NextNode.conceptMaster(concept)
 
 }
 
 object NextNode {
-  private val conceptMaster = Map[Int, String]((1 -> "attack-01"), (2 -> "train-01"), (3 -> "threaten-01"),
-    (4 -> "computer"), (5 -> "military"), (6 -> "container"), (7 -> "network"), (8 -> "thing"), (9 -> "kill-01"), (10 -> "explosive"))
+  private val conceptStrings = ImportConcepts.loadConcepts("C:\\AMR\\AMR2.txt")
+  private val conceptMaster = (for {
+    (concept, index) <- conceptStrings zipWithIndex
+  } yield ((index+1) -> concept)).toMap + (0 -> "UNKNOWN")
   private val stringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   def all(): Array[WangXueAction] = {
     (conceptMaster.keys map (i => NextNode(i))).toArray
   }
 
-  def getConcept(index: Int): String = conceptMaster(index)
-  def getConceptIndex(string: String): Int = stringToIndex(string)
+  def childrenOfNode(newHead: Int, tree: DependencyTree): List[Int] = {
+    (for {
+      edge @ ((parent, child), _) <- tree.arcs
+      if parent == newHead
+    } yield child)
+      .toList
+  }
+
+  def getConcept(index: Int): String = conceptMaster.getOrElse(index, "UNKNOWN")
+  def getConceptIndex(string: String): Int = stringToIndex.getOrElse(string, 0)
 }
 
 case object DeleteNode extends WangXueAction {
 
-  def apply(conf: WangXueTransitionState): WangXueTransitionState = {
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
     // delete node from graph (always a leaf, so no complications)
     // and pop it from the stack
-    val tree = conf.currentGraph.removeNode(conf.nodesToProcess.head)
-    conf.copy(nodesToProcess = conf.nodesToProcess.tail, currentGraph = tree)
+    val tree = state.currentGraph.removeNode(state.nodesToProcess.head)
+    val newNodesToProcess = state.nodesToProcess.tail
+    val childrenOfNewTopNode = newNodesToProcess match {
+      case Nil => Nil
+      case _ => NextNode.childrenOfNode(newNodesToProcess.head, tree)
+    }
+    WangXueTransitionState(newNodesToProcess, childrenOfNewTopNode, tree)
   }
 
 }
@@ -91,3 +117,4 @@ case object Merge extends WangXueAction {
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
 
 }
+

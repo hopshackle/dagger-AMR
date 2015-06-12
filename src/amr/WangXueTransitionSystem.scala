@@ -40,4 +40,5 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = ???
   
   def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
+
 }
