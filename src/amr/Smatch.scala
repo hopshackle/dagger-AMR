@@ -57,7 +57,7 @@ object Smatch {
     val allMoves = allVacantMoves ++ allSwapMoves
     
     val allScores = allMoves map (m => fScore(AMR1, AMR2, m))
-    val maxScore = allScores.max
+    val maxScore = if (allScores.isEmpty) 0 else allScores.max
     (allScores zip allMoves) find (_._1 == maxScore) match {
       case None => Map.empty
       case Some((score, move)) => move

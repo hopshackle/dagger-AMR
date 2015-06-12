@@ -7,8 +7,8 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
 
   override def chooseTransition(data: Sentence, state: WangXueTransitionState): WangXueAction = {
 
-    if (debug) println("Considering current node: " + state.nodesToProcess.head + 
-        " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
+    if (debug) println("Considering current node: " + state.nodesToProcess.head +
+      " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
     val chosenAction = state.childrenToProcess match {
       case Nil =>
         if (currentNodeIsNotIncludedInAGoldSpan(data, state) && state.currentGraph.isLeafNode(state.nodesToProcess.head)) DeleteNode
@@ -29,7 +29,7 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
   }
 
   def conceptForCurrentNode(data: Sentence, state: WangXueTransitionState): Int = {
-    if (state.nodesToProcess.head == 0) return NextNode.getConceptIndex("ROOT")  // special hard-code for the ROOT node  
+    if (state.nodesToProcess.head == 0) return NextNode.getConceptIndex("ROOT") // special hard-code for the ROOT node  
     val conceptKey = data.mapFromDTtoAMR.getOrElse(state.nodesToProcess.head, "NONE")
     val conceptString = data.amr.get.nodes.getOrElse(conceptKey, "NONE")
     if (debug) {
@@ -50,4 +50,17 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
     NextEdge.getRelationIndex(relationString)
   }
 
+}
+
+object WangXueExpertCheck {
+
+  def main(args: Array[String]): Unit = {
+    val parsedArgs = new dagger.util.ArgParser(args)
+    val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
+    val sentences = AMRGraph.importFile(fileName) map { case (english, amr) => Sentence(english, amr) }
+    val fScore = sentences map { s => Smatch.fScore(SampleExpertTrajectory.sampleTrajectory(s).amr.get, s.amr.get)}
+    fScore zip sentences foreach { case (score, sentence) => println(f"$score%.2f" + "\t" + sentence.rawText)}
+    val meanScore = (fScore reduce (_ + _)) / fScore.size
+    println(f"Average f-Score of $meanScore%.2f")
+  }
 }

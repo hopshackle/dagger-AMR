@@ -4,6 +4,9 @@ import dagger.core._
 import dagger.ml.MultiClassClassifier
 
 object SampleExpertTrajectory {
+  
+  val debug = false
+  
 
   def sampleTrajectory(data: Sentence, logFile: String = ""): Sentence = {
     val output = if (logFile != "") new FileWriter(logFile) else null
@@ -13,7 +16,7 @@ object SampleExpertTrajectory {
     var finished = false
     while (!finished) {
       var nextAction = expert.chooseTransition(data, nextState)
-      println(nextState.nodesToProcess.head + "\t" + nextAction)
+      if (debug) println(nextState.nodesToProcess.head + "\t" + nextAction)
       var lastState = nextState
       nextState = nextAction(lastState)
       finished = expertSystem.isTerminal(nextState)
@@ -29,12 +32,17 @@ object SampleExpertTrajectory {
   }
 
   def testDAGGERrun: MultiClassClassifier[WangXueAction] = {
-    val args = List("--dagger.output.path", "C:\\AMR\\daggerTest.txt", "--dagger.iterations", "1", "--debug").toArray
+    val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_", "--dagger.iterations", "1", "--debug", "true", "--dagger.print.interval", "1").toArray
     val options = new DAGGEROptions(args)
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     
     val trainData = AMRGraph.importFile("C:\\AMR\\AMR2.txt") map {case (english, amr) => Sentence(english, amr)}
     
-    dagger.train(trainData, new WangXueExpert, (new WangXueFeatures).features, new WangXueTransitionSystem, new WangXueLossFunction, null, null)
+    dagger.train(trainData, new WangXueExpert, (new WangXueFeatures).features, new WangXueTransitionSystem, new WangXueLossFunction, score = null)
   }
+  
+  def main(args: Array[String]): Unit = {
+    testDAGGERrun
+  }
+  
 }
