@@ -1,5 +1,6 @@
 package amr
 import dagger.core._
+import amr.ImportConcepts.{concept, relation, conceptIndex, relationIndex}
 
 class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTransitionState] {
 
@@ -29,14 +30,14 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
   }
 
   def conceptForCurrentNode(data: Sentence, state: WangXueTransitionState): Int = {
-    if (state.nodesToProcess.head == 0) return NextNode.getConceptIndex("ROOT") // special hard-code for the ROOT node  
+    if (state.nodesToProcess.head == 0) return conceptIndex("ROOT") // special hard-code for the ROOT node  
     val conceptKey = data.mapFromDTtoAMR.getOrElse(state.nodesToProcess.head, "NONE")
     val conceptString = data.amr.get.nodes.getOrElse(conceptKey, "NONE")
     if (debug) {
       println("Concept: " + conceptKey + " -> " + conceptString)
-      println("Index: " + NextNode.getConceptIndex(conceptString))
+      println("Index: " + conceptIndex(conceptString))
     }
-    NextNode.getConceptIndex(conceptString)
+    conceptIndex(conceptString)
   }
 
   def relationBetweenSigmaAndBeta(data: Sentence, state: WangXueTransitionState): Int = {
@@ -45,9 +46,9 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
     val relationString = data.amr.get.arcs.getOrElse((currentNode, childNode), "NONE")
     if (debug) {
       println("Edge: " + currentNode + "\t" + childNode + "\t" + relationString)
-      println("Index: " + NextEdge.getRelationIndex(relationString))
+      println("Index: " + relationIndex(relationString))
     }
-    NextEdge.getRelationIndex(relationString)
+    relationIndex(relationString)
   }
 
 }
@@ -58,6 +59,7 @@ object WangXueExpertCheck {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     val sentences = AMRGraph.importFile(fileName) map { case (english, amr) => Sentence(english, amr) }
+    println("Extracted AMR...now calculating scores...")
     val fScore = sentences map { s => Smatch.fScore(SampleExpertTrajectory.sampleTrajectory(s).amr.get, s.amr.get)}
     fScore zip sentences foreach { case (score, sentence) => println(f"$score%.2f" + "\t" + sentence.rawText)}
     val meanScore = (fScore reduce (_ + _)) / fScore.size
