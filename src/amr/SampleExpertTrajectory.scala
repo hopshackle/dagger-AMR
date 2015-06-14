@@ -33,7 +33,6 @@ object SampleExpertTrajectory {
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
-
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
     val devFile = options.getString("--validation.data", "")
@@ -43,7 +42,7 @@ object SampleExpertTrajectory {
   }
 
   def main(args: Array[String]): Unit = {
-    
+   
  //   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
  //    "--dagger.iterations", "3",
  //     "--debug", "true",
