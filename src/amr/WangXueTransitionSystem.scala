@@ -5,14 +5,14 @@ import dagger.core.TransitionSystem
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
   override def actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode)
-  
+
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
   def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = ???
-  
+
   def construct(state: WangXueTransitionState, datum: Sentence): Sentence = {
     Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.toAMR))
   }
-  
+
   def expertApprox(datum: Sentence, state: WangXueTransitionState): Sentence = ???
 
   def init(datum: Sentence): WangXueTransitionState = {
@@ -37,8 +37,11 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     WangXueTransitionState(allNodes, Nil, datum.dependencyTree)
   }
 
+  // helper method - as we don't always have the full Sentence
+  def init(datum: DependencyTree): WangXueTransitionState = init(Sentence("", datum, None))
+
   def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
-  
+
   def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 
 }

@@ -3,6 +3,7 @@ package amr
 
 import edu.cmu.lti.nlp.amr._
 import scala.collection.SortedMap
+import amr.ImportConcepts.{ concept, relation }
 
 // TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as keys
 // This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
@@ -29,16 +30,34 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
   }
 
   def labelNode(node: Int, label: String): DependencyTree = {
-    val newNodes = nodes + (node -> label)
+    // We account for the fact that if we have no idea of the concept, then using the actual word might just work
+    val oldValue = nodes.getOrElse(node, "UNKNOWN")
+    val newLabel = if (label == "UNKNOWN") oldValue else label
+    val newNodes = nodes + (node -> newLabel)
     this.copy(nodes = newNodes)
   }
 
   def removeNode(node: Int): DependencyTree = {
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
-    val edgesToRemove = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys
+    val edgesToRemove = edgesToParents(node)
     DependencyTree(nodes - node, nodeSpans - node, arcs -- edgesToRemove)
   }
+
+  def insertNodeAbove(node: Int, conceptIndex: Int): (Int, DependencyTree) = {
+    // So we to add a new node as a parent, remove the edge from the current node to its current parent, and insert two new edges
+    // ...parent to new, and new to current
+    // we assign a nodeSpan to the new node to match its child
+    val newNode = nodes.keys.max + 1
+    val childSpan = nodeSpans.getOrElse(node, (0, 0))
+    val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
+    val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
+    (newNode, DependencyTree(nodes + (newNode -> concept(conceptIndex)), nodeSpans + (newNode -> childSpan),
+      arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode))
+  }
+
+  def edgesToParents(node: Int): List[(Int, Int)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
+  def edgesToChildren(node: Int): List[(Int, Int)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
 
   override def toString: String = {
     val nodeSort = nodes.foldLeft(SortedMap[Int, String]()) { case (start, (a, b)) => start + (a -> b) }
@@ -46,7 +65,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     val edgeSort = arcs.foldLeft(SortedMap[(Int, Int), String]()) { case (start, (a, b)) => start + (a -> b) }
     "\nNodeMap:\t" + nodeSort.toString +
       "\nSpanMap:\t" + spanSort.toString +
-      "\nEdges:\t" + edgeSort.toString()
+      "\nEdges:\t" + edgeSort.toString
   }
 
   def toAMR: AMRGraph = {

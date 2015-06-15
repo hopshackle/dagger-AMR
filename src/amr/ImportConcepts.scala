@@ -22,6 +22,8 @@ object ImportConcepts {
   } yield ((index + 1) -> concept)).toMap + (0 -> "UNKNOWN")
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
   
+  val insertableConcepts = Set[String]("name", "date-entity", "-")
+  
   def initialise(fileName: String): Unit = {
     amrFile = fileName
   }
@@ -36,7 +38,7 @@ object ImportConcepts {
     (for {
       (sentence, amrString) <- allAMR
       concept <- AMRGraph(amrString, sentence).nodes.values
-    } yield concept).toSet
+    } yield concept).toSet ++ insertableConcepts
 
   }
 

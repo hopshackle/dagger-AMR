@@ -58,6 +58,7 @@ object WangXueExpertCheck {
   def main(args: Array[String]): Unit = {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
+    ImportConcepts.initialise(fileName)
     val sentences = AMRGraph.importFile(fileName) map { case (english, amr) => Sentence(english, amr) }
     println("Extracted AMR...now calculating scores...")
     val fScore = sentences map { s => Smatch.fScore(SampleExpertTrajectory.sampleTrajectory(s).amr.get, s.amr.get)}
