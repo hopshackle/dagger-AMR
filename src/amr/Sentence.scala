@@ -86,11 +86,53 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     case Some(amrGraph) => for {
       //TODO: Problem is that JAMR labels all of the nodes in the AMR - including sub-nodes.
       // This means we have duplicates for any given position - and we really just want the top-most one
+      // This uses the useful fact that the initial sentence parse assigns the keys to each word based
+      // purely on their position in the sentence after stripping out punctuation...so the first word is 1 etc. 
       (amrKey, (start, end)) <- amrGraph.nodeSpans
       i <- start until end
     } yield (i -> amrKey)
   }
+  // Having mapped purely on the basis of nodeSpans - we can now be a little cleverer 
+  // We run through each set of AMR nodes - i.e. that share a NodeSpan
+  // We then get all the DT nodes for those positions
+  // If 1:1 then we're done
+  // If 1:0 (i.e. AMR has nodeSpan of 0, 0) then we're also done [no entry in Map]
+  // If m:n then:
+  //   Find good text matches between AMR concept and word or lemma in DT node and assign greedily.
+  //   For those left over: 
+  //      m > n : unassigned AMR nodes mapped to random top-most DT nodes. Surplus DT nodes not entered into map
+  //      n > m : unassigned DT nodes mapped to random bottom-most AMR nodes. Surplus AMR nodes not entered into map
+  val amrToWordIndices: Map[Seq[String], Seq[Int]] = amr match {
+    case None => Map[Seq[String], Seq[Int]]()
+    case Some(amrGraph) => for {
+      (amrKey, (start, end)) <- amrGraph.nodeSpans
+      val i = start until end
+    } yield (allAMRWithSameSpan(amrKey), i)
+  }
 
+  def allAMRWithSameSpan(amrKey: String): Seq[String] = {
+    val amrNodes = amr.get.nodes.keys
+    val amrNodeSpans = amr.get.nodeSpans
+    val sameSpans = amrNodes filter (amrNodeSpans.getOrElse(_, (0, 0)) == amrNodeSpans(amrKey))
+    sameSpans.toSeq
+  }
+
+  val nextBit = (amrToWordIndices map {
+    case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices)
+  }).flatten.toMap
+
+  def mapAMRtoDTNodes(amrKeys: Seq[String], wordIndices: Seq[Int]): Map[Int, String] = {
+    // TODO: Use rockymadden/stringmetrics here!
+    val amrNodes = amr.get.nodes
+    val t = for {
+      amrKey <- amrKeys
+      val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
+      word <- wordIndices
+      val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
+      if (dtWord == amrConcept)
+    } yield 0
+    Map[Int, String]()
+  }
   val mapFromDTtoAMR = {
     for {
       (dtSpan, (position, _)) <- dependencyTree.nodeSpans
