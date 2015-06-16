@@ -4,7 +4,14 @@ import dagger.core.TransitionSystem
 
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
-  override def actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode)
+  // We currently just use the whole flipping dictionary to define the full set of actions
+  override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all
+
+  // and then add on the actions specific to the nodes of the DependencyTree 
+  def actions(state: WangXueTransitionState): Array[WangXueAction] = {
+    val reattachActions = (state.nodesToProcess.tail map (i => Reattach(i))).toArray
+    actions ++ reattachActions
+  }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
   def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = ???
@@ -44,4 +51,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
 
   def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 
+  override def permissibleActions(state: WangXueTransitionState): Array[WangXueAction] = {
+    actions(state).filter(action => isPermissible(action, state))
+  }
 }

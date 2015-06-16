@@ -1,6 +1,6 @@
 package amr
 import dagger.core._
-import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, relationIndex, conceptIndex }
+import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, relationIndex, conceptIndex, insertableConcepts }
 
 abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
   def isPermissible(state: WangXueTransitionState): Boolean
@@ -90,12 +90,45 @@ case class Insert(conceptIndex: Int) extends WangXueAction {
 
 object Insert {
   val transSystem = new WangXueTransitionSystem
-  
+
   def insertNodeIntoProcessList(node: Int, tree: DependencyTree, currentList: List[Int]): List[Int] = {
     // we create the nodesToProcess list de novo
     // and then remove all those nodes that are not the new one to insert, or any of the existing ones
     val fullList = transSystem.init(tree).nodesToProcess
     fullList intersect (node :: currentList) // intersect retains the order of the first list
+  }
+
+  def all(): Array[WangXueAction] = {
+    (insertableConcepts map (i => Insert(conceptIndex(i)))).toArray
+  }
+}
+
+case class Reattach(newNode: Int) extends WangXueAction {
+  // For the moment we just change the edge - but do NOT label it
+  // TODO: Update Reattach to include the label as a parameter - as per Wang Xue algo
+
+  // We need to pop beta from edge stack, and add a new edge to the partial graph. 
+  // We have two scenarios:
+  // i) The node we connect to has not yet been processed (no issues - we'll deal with this when we get to it)
+  // ii) The node has already been processed. This is a problem in that we would need to revisit it.  Easiest
+  // way to do this is to add it back into the list of nodesToProcess...although this will also re-visit all the
+  // other edges...hence I assume why it makes sense to label the relation at the same time, to avoid this.
+  // In which case, I will exclude this possibility until Phase II - when I include label as a parameter to the action
+  //...may also make sense to have two Actions...ReattachUp and ReattachDown...? After all, if I Reattach an edge to a 
+  // node that us yet to be processed, it makes sense to delay the naming of the relation too!
+
+  def apply(conf: WangXueTransitionState): WangXueTransitionState = {
+    // check node is yet to be processed
+    assert(isPermissible(conf))
+    // then just pop out edge, and update currentGraph
+    val currentEdgeKey = (conf.nodesToProcess.head, conf.childrenToProcess.head)
+    val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
+    val newEdgeKey = (newNode, conf.childrenToProcess.head)
+    val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel))
+    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
+  }
+  def isPermissible(state: WangXueTransitionState): Boolean = {
+    (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
   }
 }
 
@@ -104,12 +137,6 @@ case object Swap extends WangXueAction {
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
   def isPermissible(state: WangXueTransitionState): Boolean = false
 
-}
-
-case object Reattach extends WangXueAction {
-
-  def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
-  def isPermissible(state: WangXueTransitionState): Boolean = false
 }
 
 case object ReplaceHead extends WangXueAction {
