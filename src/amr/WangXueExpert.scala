@@ -14,7 +14,8 @@ class WangXueExpert extends HeuristicPolicy[Sentence, WangXueAction, WangXueTran
       case Nil =>
         if (currentNodeIsNotIncludedInAGoldSpan(data, state) && state.currentGraph.isLeafNode(state.nodesToProcess.head)) DeleteNode
         else NextNode(conceptForCurrentNode(data, state))
-      case head :: tail => NextEdge(relationBetweenSigmaAndBeta(data, state))
+      case head :: tail => 
+        NextEdge(relationBetweenSigmaAndBeta(data, state))
     }
     if (debug) println("Action chosen: " + chosenAction)
     chosenAction
@@ -61,7 +62,7 @@ object WangXueExpertCheck {
     ImportConcepts.initialise(fileName)
     val sentences = AMRGraph.importFile(fileName) map { case (english, amr) => Sentence(english, amr) }
     println("Extracted AMR...now calculating scores...")
-    val fScore = sentences map { s => Smatch.fScore(SampleExpertTrajectory.sampleTrajectory(s).amr.get, s.amr.get)}
+    val fScore = sentences map { s => Smatch.fScore(RunDagger.sampleTrajectory(s).amr.get, s.amr.get)}
     fScore zip sentences foreach { case (score, sentence) => println(f"$score%.2f" + "\t" + sentence.rawText)}
     val meanScore = (fScore reduce (_ + _)) / fScore.size
     println(f"Average f-Score of $meanScore%.2f")

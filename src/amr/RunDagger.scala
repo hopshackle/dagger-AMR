@@ -3,7 +3,7 @@ import java.io._
 import dagger.core._
 import dagger.ml.MultiClassClassifier
 
-object SampleExpertTrajectory {
+object RunDagger {
 
   val debug = false
 

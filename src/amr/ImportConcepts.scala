@@ -22,7 +22,7 @@ object ImportConcepts {
   } yield ((index + 1) -> concept)).toMap + (0 -> "UNKNOWN")
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
   
-  val insertableConcepts = Set[String]("name", "date-entity", "-")
+  val insertableConcepts = Set[String]("name", "date-entity", "-", "country", "continent")
   
   def initialise(fileName: String): Unit = {
     amrFile = fileName

@@ -84,7 +84,7 @@ case class Insert(conceptIndex: Int) extends WangXueAction {
     conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, conf.nodesToProcess), currentGraph = tree)
   }
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
-  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.isEmpty && state.nodesToProcess.size > 1
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1
   override def toString: String = "InsertNode: " + concept(conceptIndex)
 }
 
@@ -128,7 +128,7 @@ case class Reattach(newNode: Int) extends WangXueAction {
     conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
   }
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
+    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
   }
 }
 
