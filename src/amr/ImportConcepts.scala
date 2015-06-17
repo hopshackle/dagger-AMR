@@ -40,7 +40,7 @@ object ImportConcepts {
     (for {
       (sentence, amrString) <- allAMR
       concept <- AMRGraph(amrString, sentence).nodes.values
-      if (quote findFirstIn concept) == None  // ignore anything with quotes
+//      if (quote findFirstIn concept) == None  // ignore anything with quotes
       if numbers.replaceAllIn(concept, "") != "" // and anything that is purely numeric
     } yield concept).toSet ++ insertableConcepts
 
