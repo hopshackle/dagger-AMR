@@ -19,7 +19,7 @@ class WangXueFeatures(dict: Index = new MapIndex) {
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
-
+    val numeric = "[0-9,.]".r
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes(sigma)
 
@@ -27,10 +27,13 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     add(hmap, "SIGMA-WORD=" + sigmaWord)
 
     if (sigma > 0) { // sigma == 0 indicates the dummy root node (which has no parent)
+      val allParents = (state.currentGraph.arcs filter { case ((p, c), l) => (c == sigma) } map { case ((p, c), _) => p }).toList
       val ((_, sigmaParent), parentLabel) = ((state.currentGraph.arcs filter { case ((p, c), l) => (c == sigma) }).toList)(0)
+      add(hmap, "PARENT-SIGMA-NO", allParents.size)
       add(hmap, "PARENT-SIGMA-DEP-LABEL=" + parentLabel)
       add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(sigmaParent))
- //     add(hmap, "PARENT-SIGMA-WORDS=" + state.currentGraph.nodes(sigmaParent) + "-" + sigmaWord)
+      if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
+      //     add(hmap, "PARENT-SIGMA-WORDS=" + state.currentGraph.nodes(sigmaParent) + "-" + sigmaWord)
     }
     hmap
   }
@@ -49,7 +52,7 @@ class WangXueFeatures(dict: Index = new MapIndex) {
 
     add(hmap, "BETA-WORD=" + sigmaWord)
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
-    add(hmap, "SIGMA-BETA-DISTANCE=" + distance)
+    add(hmap, "SIGMA-BETA-DISTANCE", + distance)
     if (distance == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     add(hmap, "SIGMA-BETA-DEP-LABEL=" + dependencyLabel)
 
