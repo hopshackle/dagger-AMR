@@ -16,8 +16,8 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
   }
   def depth(node: String): Int = {
     def depthHelper(nodes: List[String], accum: Int): Int = {
-        val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
-        if (nextNodes.isEmpty) accum else  depthHelper(nextNodes, accum + 1)
+      val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
+      if (nextNodes.isEmpty) accum else depthHelper(nextNodes, accum + 1)
     }
     depthHelper(List(node), 0)
   }
@@ -25,6 +25,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) {
+  val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
     val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\t${nodeSpans(x)._1}\t${nodeSpans(x)._2}\n")
@@ -40,7 +41,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
   def labelNode(node: Int, label: String): DependencyTree = {
     // We account for the fact that if we have no idea of the concept, then using the actual word might just work
     val oldValue = nodes.getOrElse(node, "UNKNOWN")
-    val newLabel = if (label == "UNKNOWN") oldValue else label
+    val newLabel = if (label == "UNKNOWN") {
+      if (numbers.replaceAllIn(oldValue, "") == "") oldValue // purely numeric
+      else """"""" + oldValue + """"""" // add quotes as we assume this is a name
+    } else label
     val newNodes = nodes + (node -> newLabel)
     this.copy(nodes = newNodes)
   }
@@ -114,7 +118,7 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     case None => Map[Seq[String], Seq[Int]]()
     case Some(amrGraph) => for {
       (amrKey, (start, end)) <- amrGraph.nodeSpans
-      val allDTIndices = dependencyTree.nodeSpans filter {case (_, (wordPos, _)) => (start until end) contains wordPos} map {case (index, (wp, _)) => index}
+      val allDTIndices = dependencyTree.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
     } yield (allAMRWithSameSpan(amrKey), allDTIndices.toSeq)
   }
 
