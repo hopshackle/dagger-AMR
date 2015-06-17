@@ -16,11 +16,8 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
   }
   def depth(node: String): Int = {
     def depthHelper(nodes: List[String], accum: Int): Int = {
-      if (nodes contains 0) accum
-      else {
         val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
-        depthHelper(nextNodes, accum + 1)
-      }
+        if (nextNodes.isEmpty) accum else  depthHelper(nextNodes, accum + 1)
     }
     depthHelper(List(node), 0)
   }
@@ -117,9 +114,13 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     case None => Map[Seq[String], Seq[Int]]()
     case Some(amrGraph) => for {
       (amrKey, (start, end)) <- amrGraph.nodeSpans
-      val i = start until end
-    } yield (allAMRWithSameSpan(amrKey), i)
+      val allDTIndices = dependencyTree.nodeSpans filter {case (_, (wordPos, _)) => (start until end) contains wordPos} map {case (index, (wp, _)) => index}
+    } yield (allAMRWithSameSpan(amrKey), allDTIndices.toSeq)
   }
+
+  val positionToAMR = (amrToWordIndices map {
+    case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices)
+  }).flatten.toMap
 
   def allAMRWithSameSpan(amrKey: String): Seq[String] = {
     val amrNodes = amr.get.nodes.keys
@@ -127,10 +128,6 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     val sameSpans = amrNodes filter (amrNodeSpans.getOrElse(_, (0, 0)) == amrNodeSpans(amrKey))
     sameSpans.toSeq
   }
-
-  val positionToAMR = (amrToWordIndices map {
-    case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices)
-  }).flatten.toMap
 
   def mapAMRtoDTNodes(amrKeys: Seq[String], wordIndices: Seq[Int]): Map[Int, String] = {
     // TODO: Use rockymadden/stringmetrics here!
@@ -147,7 +144,7 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     // (up to all of them, with 'topmost' defined as being closest to root of DT)
     val unmappedAMRInDecreasingDepthOrder = amrKeys diff greedyMatch.values.toSeq sortWith (amr.get.depth(_) > amr.get.depth(_))
     val unmappedDTInIncreasingDepthOrder = wordIndices diff greedyMatch.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
-    val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap 
+    val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap
     greedyMatch ++ randomMatch
   }
 

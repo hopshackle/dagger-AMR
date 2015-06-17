@@ -9,6 +9,8 @@ object ImportConcepts {
   // the lazy evaluations of the core concepts doesn't use the default amrFile setting
   
   var amrFile: String = "C:\\AMR\\AMR2.txt"
+  val quote = """"""".r
+  val numbers = "[0-9.,]".r  
 
   lazy val relationStrings = loadRelations(amrFile)
   lazy val relationMaster = (for {
@@ -38,6 +40,8 @@ object ImportConcepts {
     (for {
       (sentence, amrString) <- allAMR
       concept <- AMRGraph(amrString, sentence).nodes.values
+      if (quote findFirstIn concept) == None  // ignore anything with quotes
+      if numbers.replaceAllIn(concept, "") != "" // and anything that is purely numeric
     } yield concept).toSet ++ insertableConcepts
 
   }
