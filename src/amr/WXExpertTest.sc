@@ -1,6 +1,8 @@
 package amr
 
 object WXExpertTest {
+
+
   val testData = AMRGraph.importFile("C:\\AMR\\AMR2.txt")
                                                   //> testData  : IndexedSeq[(String, String)] = Vector((2008-05-14,"(d / date-enti
                                                   //| ty :month 5 :day 14 :year 2008) "), (Estonia (EE); Latvia (LV); Lithuania (LT
@@ -33,24 +35,24 @@ object WXExpertTest {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.1 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [3.8 sec].
+                                                  //| im.crf.ser.gz ... done [4.8 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.0 sec].
+                                                  //| im.crf.ser.gz ... done [2.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.4 sec].
+                                                  //| tsim.crf.ser.gz ... done [3.8 sec].
                                                   //| s1  : amr.Sentence = Sentence(2008-05-14,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14)
                                                   //| SpanMap:	Map(1 -> (1,2))
                                                   //| Edges:	Map((0,1) -> root),Some(AMRGraph(Map(0.1 -> 14, 0.0 -> 5, 0 -> d
                                                   //| ate-entity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,2), 0.2 -> (1,2)),Map((0,
-                                                  //| 0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (0,ROOT) -> ROOT))))
+                                                  //| 0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (0,ROOT) -> ROOT))),Map(1 ->
+                                                  //|  0.2))
                                                   
-  s1.mapFromDTtoAMR                               //> res0: scala.collection.immutable.Map[Int,String] = Map(1 -> 0.2)
-  s1.positionToAMR                                //> res1: scala.collection.immutable.Map[Int,String] = Map(1 -> 0.2)
+  s1.positionToAMR                                //> res0: Map[Int,String] = Map(1 -> 0.2)
                                                   
  val s2 = Sentence(testData(3)._1, testData(3)._2)//> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
@@ -81,18 +83,17 @@ object WXExpertTest {
                                                   //| y, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0.2.0.0 -> and, 0.3.0.1.0.0.0
                                                   //|  -> name, 0.3.0.0.0 -
                                                   //| Output exceeds cutoff limit.
-  s2.mapFromDTtoAMR                               //> res2: scala.collection.immutable.Map[Int,String] = Map(5 -> NONE, 10 -> 0.2.
-                                                  //| 0.0.1.0, 14 -> NONE, 20 -> 0.3.0.0.0, 1 -> 0.0.0.0, 6 -> 0.2, 21 -> 0.3.0.0,
-                                                  //|  9 -> 0.2.0.0, 13 -> 0.3, 2 -> 0, 17 -> NONE, 22 -> NONE, 12 -> 0.2.0.0.0, 7
-                                                  //|  -> NONE, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.2.0.0.2, 23 -> 0.3
-                                                  //| .0.2, 8 -> 0.0, 19 -> NONE, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0)
-  s2.positionToAMR                                //> res3: scala.collection.immutable.Map[Int,String] = Map(10 -> 0.2.0.0.1.0, 20
-                                                  //|  -> 0.3.0.0.0, 1 -> 0.0.0.0, 6 -> 0.2, 21 -> 0.3.0.0, 9 -> 0.2.0.0, 13 -> 0.
-                                                  //| 3, 2 -> 0, 12 -> 0.2.0.0.0, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.
-                                                  //| 2.0.0.2, 23 -> 0.3.0.2, 8 -> 0.0, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0)
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@2e6a8155
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@62
-                                                  //| 21a451
+  s2.positionToAMR                                //> res1: Map[Int,String] = Map(10 -> 0.2.0.0.1.0, 20 -> 0.3.0.0.0, 1 -> 0.0.0.0
+                                                  //| , 6 -> 0.2.0, 21 -> 0.3.0.0, 9 -> 0.2.0.0, 13 -> 0.3, 2 -> 0, 12 -> 0.2.0.0.
+                                                  //| 0, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.2.0.0.2, 23 -> 0.3.0.2.0,
+                                                  //|  8 -> 0.0, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0.0)
+  val expert = new WangXueExpertBasic             //> expert  : amr.WangXueExpertBasic = amr.WangXueExpertBasic@740cae06
+  val expertSystem = new WangXueTransitionSystem  //> WARNING: Found duplicate match for concept attack-01
+                                                  //| WARNING: Found duplicate match for concept cyber
+                                                  //| WARNING: Found duplicate match for concept attack-01
+                                                  //| WARNING: Found duplicate match for concept cyber
+                                                  //| expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@17
+                                                  //| 3ed316
   val startState = expertSystem.init(s2)          //> startState  : amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(23, 10, 9, 22, 20, 14, 21, 15, 8, 11, 12, 19, 13, 1, 17, 5,
                                                   //|  2, 16, 7, 6, 18, 3, 4, 0)
@@ -114,7 +115,7 @@ object WXExpertTest {
                                                   //| 6,15) -> amod, (18,13) -> mark, (18,16) -> nsubjpass, (18,17) -> auxpass, (1
                                                   //| 8,19) -> prep, (19,21) -> pobj, (21,20) -> nn, (21,22) -> prep, (22,23) -> p
                                                   //| obj)
-  s2.amr                                          //> res4: Option[amr.AMRGraph] = Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> na
+  s2.amr                                          //> res2: Option[amr.AMRGraph] = Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> na
                                                   //| me, 0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.
                                                   //| 0 -> civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3
                                                   //| .0.1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> att
@@ -137,9 +138,13 @@ object WXExpertTest {
                                                   //| f, (0,0.0) -> ARG0, (0.3.0.1.0.0,0.3.0.1.0.0.0) -> name, (0.2.0,0.2.0.0) -> 
                                                   //| ARG2, (0.3.0.2,0.3.0.2.0) -> year, (0.2.0.0,0.2.0.0.2) -> mod)))
   var nextAction = expert.chooseTransition(s2, startState)
-                                                  //> WARNING: Found duplicate match for concept attack-01
-                                                  //| WARNING: Found duplicate match for concept cyber
-                                                  //| nextAction  : amr.WangXueAction = NextNode: 5 -> date-entity
+                                                  //> Considering current node: 23 with child Nil
+                                                  //| Position: 23
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.3.0.2.0 -> 2007
+                                                  //| Index: 0
+                                                  //| Action chosen: NextNode: 0 -> UNKNOWN
+                                                  //| nextAction  : amr.WangXueAction = NextNode: 0 -> UNKNOWN
   var nextState = nextAction(startState)          //> nextState  : amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(10, 9, 22, 20, 14, 21, 15, 8, 11, 12, 19, 13, 1, 17, 5, 2, 
                                                   //| 16, 7, 6, 18, 3, 4, 0)
@@ -149,7 +154,7 @@ object WXExpertTest {
                                                   //| ks, 5 -> a, 6 -> threat, 7 -> to, 8 -> military, 9 -> and, 10 -> civilian, 1
                                                   //| 1 -> computer, 12 -> networks, 13 -> after, 14 -> the, 15 -> Estonian, 16 ->
                                                   //|  Government, 17 -> was, 18 -> struck, 19 -> by, 20 -> cyber, 21 -> attacks, 
-                                                  //| 22 -> in, 23 -> date-entity)
+                                                  //| 22 -> in, 23 -> 2007)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
                                                   //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
                                                   //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16), 16 -> (16,17)
@@ -161,52 +166,90 @@ object WXExpertTest {
                                                   //| 6,15) -> amod, (18,13) -> mark, (18,16) -> nsubjpass, (18,17) -> auxpass, (1
                                                   //| 8,19) -> prep, (19,21) -> pobj, (21,20) -> nn, (21,22) -> prep, (22,23) -> p
                                                   //| obj)
-val output = SampleExpertTrajectory.sampleTrajectory(s2, "")
-                                                  //> WARNING: Found duplicate match for concept attack-01
-                                                  //| WARNING: Found duplicate match for concept cyber
-                                                  //| output  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to m
-                                                  //| ilitary and civilian computer networks after the Estonian Government was str
-                                                  //| uck by cyber attacks in 2007.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> "NATO", 2 -> consider-02, 3 -> cyber, 4 -> a
-                                                  //| ttack-01, 6 -> thing, 7 -> to, 8 -> military, 9 -> and, 10 -> civilian, 11 -
-                                                  //| > computer, 12 -> network, 13 -> after, 15 -> name, 16 -> government-organiz
-                                                  //| ation, 18 -> strike-01, 19 -> by, 20 -> cyber, 21 -> attack, 22 -> in, 23 ->
-                                                  //|  date-entity)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 6 -> (6,7), 
-                                                  //| 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12), 12 -> (12
-                                                  //| ,13), 13 -> (13,14), 15 -> (15,16), 16 -> (16,17), 18 -> (18,19), 19 -> (19,
-                                                  //| 20), 20 -> (20,21), 21 -> (21,22), 22 -> (22,23), 23 -> (23,24))
-                                                  //| Edges:	Map((0,4) -> UNKNOWN, (3,1) -> UNKNOWN, (3,2) -> UNKNOWN, (4,3) 
-                                                  //| -> mod, (4,6) -> UNKNOWN, (4,7) -> UNKNOWN, (4,18) -> UNKNOWN, (7,12) -> UNK
-                                                  //| NOWN, (8,9) -> UNKNOWN, (8,10) -> UNKNOWN, (12,8) -> UNKNOWN, (12,11) -> UNK
-                                                  //| NOWN, (16,15) -> UNKNOWN, (18,13) -> UNKNOWN, (18,16) -> ARG1, (18,19) -> UN
-                                                  //| KNOWN, (19,21) -> UNKNOWN, (21,20) -> mod, (21,22) -> UNKNOWN, (22,23) -> UN
-                                                  //| KNOWN),Some(AMRGraph(Map(12 -> network, 8 -> military, 19 -> by, 23 -> date-
-                                                  //| entity, 4 -> attack-01, 15 -> name, 11 -> computer, 9 -> and, 22 -> in, 13 -
-                                                  //| > after, 16 -> government-organization, 10 -> civilian, 21 -> attack, 6 -> t
-                                                  //| hing, 1 -> "NATO", 0 -> ROOT, 20 -> cyber, 2 -> consider-02, 18 -> strike-01
-                                                  //| , 7 -> to, 3 -> cyber),Map(12 -> (12,13), 8 -> (8,9), 19 -> (19,20), 23 -> (
-                                                  //| 23,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 22 -> (22,23)
-                                                  //| , 13 -> (13,14), 16 -> (16,17), 10 -> (10,11), 21 -> (21,22), 6 -> (6,7), 1 
-                                                  //| -> (1,2), 20 -> (20,21), 2 -> (2,3), 18 -> (18,19), 7 -> (7,8), 3 -> (3,
+val output = RunDagger.sampleTrajectory(s2, "", new WangXueExpertBasic)
+                                                  //> Considering current node: 23 with child Nil
+                                                  //| Position: 23
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.3.0.2.0 -> 2007
+                                                  //| Index: 0
+                                                  //| Action chosen: NextNode: 0 -> UNKNOWN
+                                                  //| Considering current node: 10 with child Nil
+                                                  //| Position: 10
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.2.0.0.1.0 -> civilian
+                                                  //| Index: 21
+                                                  //| Action chosen: NextNode: 21 -> civilian
+                                                  //| Considering current node: 9 with child Nil
+                                                  //| Position: 9
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.2.0.0 -> and
+                                                  //| Index: 41
+                                                  //| Action chosen: NextNode: 41 -> and
+                                                  //| Considering current node: 22 with child 23
+                                                  //| Edge: NONE	0.3.0.2.0	NONE
+                                                  //| Index: 0
+                                                  //| Action chosen: NextEdge: 0 -> UNKNOWN
+                                                  //| Considering current node: 22 with child Nil
+                                                  //| Position: 22
+                                                  //| InGoldSpan: false
+                                                  //| Concept: NONE -> NONE
+                                                  //| Index: 0
+                                                  //| Action chosen: NextNode: 0 -> UNKNOWN
+                                                  //| Considering current node: 20 with child Nil
+                                                  //| Position: 20
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.3.0.0.0 -> cyber
+                                                  //| Index: 29
+                                                  //| Action chosen: NextNode: 29 -> cyber
+                                                  //| Considering current node: 14 with child Nil
+                                                  //| Position: 14
+                                                  //| InGoldSpan: false
+                                                  //| Action chosen: DeleteNode
+                                                  //| Considering current node: 21 with child 22
+                                                  //| Edge: 0.3.0.0	NONE	NONE
+                                                  //| Index: 0
+                                                  //| Action chosen: NextEdge: 0 -> UNKNOWN
+                                                  //| Considering current node: 21 with child 20
+                                                  //| Edge: 0.3.0.0	0.3.0.0.0	mod
+                                                  //| Index: 4
+                                                  //| Action chosen: NextEdge: 4 -> mod
+                                                  //| Considering current node: 21 with child Nil
+                                                  //| Position: 21
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.3.0.0 -> attack
+                                                  //| Index: 33
+                                                  //| Action chosen: NextNode: 33 -> attack
+                                                  //| Considering current node: 15 with child Nil
+                                                  //| Position: 15
+                                                  //| InGoldSpan: true
+                                                  //| Concept: 0.3.0.1.0.0.0.0 -> "Estonia"
+                                                  //| Index: 12
+                                                  //| Action chosen: NextNode: 12 -> "Estonia"
+                                                  //| Considering current node: 8 with child 10
+                                                  //| Edge: 0.0	0.2.0.0.1.0	NONE
+                                                  //| Index: 0
+                                                  //| Action chosen: NextEdge: 0 -> UNKNOWN
+                                                  //| Considering current node: 8 with child 9
+                                                  //| Edge: 0.0	0.2.0.0	NONE
+                                                  //| 
                                                   //| Output exceeds cutoff limit.
-val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@298a5e20
-loss(s2, s2, null)                                //> res5: Double = 0.0
-loss(s2, output, null)                            //> res6: Double = 0.5434782608695652
-println(output.amr.get)                           //> AMRGraph(Map(12 -> network, 8 -> military, 19 -> by, 23 -> date-entity, 4 ->
-                                                  //|  attack-01, 15 -> name, 11 -> computer, 9 -> and, 22 -> in, 13 -> after, 16 
-                                                  //| -> government-organization, 10 -> civilian, 21 -> attack, 6 -> thing, 1 -> "
-                                                  //| NATO", 0 -> ROOT, 20 -> cyber, 2 -> consider-02, 18 -> strike-01, 7 -> to, 3
-                                                  //|  -> cyber),Map(12 -> (12,13), 8 -> (8,9), 19 -> (19,20), 23 -> (23,24), 4 ->
-                                                  //|  (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 22 -> (22,23), 13 -> (13,
-                                                  //| 14), 16 -> (16,17), 10 -> (10,11), 21 -> (21,22), 6 -> (6,7), 1 -> (1,2), 20
-                                                  //|  -> (20,21), 2 -> (2,3), 18 -> (18,19), 7 -> (7,8), 3 -> (3,4)),Map((7,12) -
-                                                  //| > UNKNOWN, (12,11) -> UNKNOWN, (18,16) -> ARG1, (3,2) -> UNKNOWN, (16,15) ->
-                                                  //|  UNKNOWN, (12,8) -> UNKNOWN, (4,6) -> UNKNOWN, (4,18) -> UNKNOWN, (21,20) ->
-                                                  //|  mod, (19,21) -> UNKNOWN, (18,19) -> UNKNOWN, (22,23) -> UNKNOWN, (0,4) -> U
-                                                  //| NKNOWN, (3,1) -> UNKNOWN, (4,3) -> mod, (18,13) -> UNKNOWN, (8,9) -> UNKNOWN
-                                                  //| , (21,22) -> UNKNOWN, (8,10) -> UNKNOWN, (4,7) -> UNKNOWN))
-s2.amr.get.toOutputFormat                         //> res7: String = "# ::AMRGraph
+val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@17f62e33
+loss(s2, s2, null)                                //> res3: Double = 0.0
+loss(s2, output, null)                            //> res4: Double = 0.5434782608695652
+println(output.amr.get)                           //> AMRGraph(Map(12 -> network, 8 -> military, 19 -> "by", 23 -> 2007, 4 -> atta
+                                                  //| ck-01, 15 -> "Estonia", 11 -> computer, 9 -> and, 22 -> "in", 13 -> after, 1
+                                                  //| 6 -> government-organization, 10 -> civilian, 21 -> attack, 6 -> threaten-01
+                                                  //| , 1 -> "NATO", 0 -> ROOT, 20 -> cyber, 2 -> consider-02, 18 -> strike-01, 7 
+                                                  //| -> "to", 3 -> cyber),Map(12 -> (12,13), 8 -> (8,9), 19 -> (19,20), 23 -> (23
+                                                  //| ,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 22 -> (22,23), 
+                                                  //| 13 -> (13,14), 16 -> (16,17), 10 -> (10,11), 21 -> (21,22), 6 -> (6,7), 1 ->
+                                                  //|  (1,2), 20 -> (20,21), 2 -> (2,3), 18 -> (18,19), 7 -> (7,8), 3 -> (3,4)),Ma
+                                                  //| p((7,12) -> UNKNOWN, (12,11) -> UNKNOWN, (18,16) -> ARG1, (3,2) -> UNKNOWN, 
+                                                  //| (16,15) -> UNKNOWN, (12,8) -> UNKNOWN, (4,6) -> UNKNOWN, (4,18) -> UNKNOWN, 
+                                                  //| (21,20) -> mod, (19,21) -> UNKNOWN, (18,19) -> UNKNOWN, (22,23) -> UNKNOWN, 
+                                                  //| (0,4) -> UNKNOWN, (3,1) -> UNKNOWN, (4,3) -> mod, (18,13) -> UNKNOWN, (8,9) 
+                                                  //| -> UNKNOWN, (21,22) -> UNKNOWN, (8,10) -> UNKNOWN, (4,7) -> UNKNOWN))
+s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGraph
                                                   //| # ::node	0.1	attack-01
                                                   //| # ::node	0.0.0	name
                                                   //| # ::node	0.3.0.1.0.0	country
@@ -259,4 +302,26 @@ s2.amr.get.toOutputFormat                         //> res7: String = "# ::AMRGra
                                                   //| # ::edge	0.3.0.2	0.3.0.2.0	year
                                                   //| # ::edge	0.2.0.0	0.2.0.0.2	mod
                                                   //| "
+ val outputAdv = RunDagger.sampleTrajectory(s2, "", new WangXueExpert)
+                                                  //> Considering current node: 23 with child Nil
+                                                  //| java.util.NoSuchElementException: key not found: 22
+                                                  //| 	at scala.collection.MapLike$class.default(MapLike.scala:228)
+                                                  //| 	at scala.collection.AbstractMap.default(Map.scala:59)
+                                                  //| 	at scala.collection.MapLike$class.apply(MapLike.scala:141)
+                                                  //| 	at scala.collection.AbstractMap.apply(Map.scala:59)
+                                                  //| 	at amr.WangXueExpert$$anonfun$2.apply(WangXueExpert.scala:26)
+                                                  //| 	at amr.WangXueExpert$$anonfun$2.apply(WangXueExpert.scala:26)
+                                                  //| 	at scala.collection.immutable.List.map(List.scala:277)
+                                                  //| 	at amr.WangXueExpert.chooseTransition(WangXueExpert.scala:26)
+                                                  //| 	at amr.RunDagger$.sampleTrajectory(RunDagger.scala:16)
+                                                  //| 	at amr.WXExpertTest$$anonfun$main$1.apply$mcV$sp(amr.WXExpertTest.scala:
+                                                  //| 25)
+                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$$anonfun$$exe
+                                                  //| cute$1.apply$mcV$sp(WorksheetSupport.scala:76)
+                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$.redirected(W
+                                                  //| orksheetSupport.scala:65)
+                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$.$execute(Wor
+                                                  //| ksheetSupport.scala:75)
+                                                  //| 	at amr.WXExpertTest$.main(amr.WXExpertTest.scala:3)
+                                                  //| 	at amr.WXExpertTest.main(amr.WXExpertTest.scala)
 }

@@ -7,9 +7,8 @@ object RunDagger {
 
   val debug = false
 
-  def sampleTrajectory(data: Sentence, logFile: String = ""): Sentence = {
+  def sampleTrajectory(data: Sentence, logFile: String = "", expert: WangXueExpertBasic = new WangXueExpertBasic): Sentence = {
     val output = if (logFile != "") new FileWriter(logFile) else null
-    val expert = new WangXueExpert
     val expertSystem = new WangXueTransitionSystem
     var nextState = expertSystem.init(data)
     var finished = false

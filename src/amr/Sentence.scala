@@ -18,7 +18,7 @@ abstract class Graph[K] {
     depthHelper(List(node), 0)
   }
   def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
-  def parentsOf(node: K): List[K] = (arcs map { case ((p, `node`), _) => p }).toList
+  def parentsOf(node: K): List[K] = edgesToParents(node) map {case (p, c) => p}
   def labelsBetween(parent: K, child: K): List[String] = (arcs map { case ((`parent`, `child`), label) => label }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
@@ -96,9 +96,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {
-
   val AMRToPosition = positionToAMR map { case (i, s) => (s -> i) }
-
 }
 
 object Sentence {
@@ -113,7 +111,6 @@ object Sentence {
   }
 
   def positionToAMR(amr: Option[AMRGraph], dt: DependencyTree): Map[Int, String] = {
-
     // We run through each set of AMR nodes - i.e. that share a NodeSpan
     // We then get all the DT nodes for those positions
     // If 1:1 then we're done

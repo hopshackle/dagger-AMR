@@ -7,7 +7,8 @@ object testDT {;import org.scalaide.worksheet.runtime.library.WorksheetSupport._
   val s1 = Sentence(testData(2)._1, testData(2)._2);System.out.println("""s1  : amr.Sentence = """ + $show(s1 ));$skip(42); 
   s1.dependencyTree.nodes foreach println;$skip(46); 
   s1.dependencyTree.nodeSpans foreach println;$skip(41); 
-  s1.dependencyTree.arcs foreach println;$skip(79); 
+  s1.dependencyTree.arcs foreach println;$skip(35); val res$0 = 
+    s1.dependencyTree.parentsOf(7);System.out.println("""res0: List[Int] = """ + $show(res$0));$skip(79); 
   val AMR = s1.amr match {
     case None => null
     case Some(amr) => amr

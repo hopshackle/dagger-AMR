@@ -4,7 +4,7 @@ import amr.ImportConcepts.{concept, relation, conceptIndex, relationIndex}
 
 class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXueTransitionState] {
 
-  val debug = false
+  val debug = true
 
   override def chooseTransition(data: Sentence, state: WangXueTransitionState): WangXueAction = {
 
