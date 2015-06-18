@@ -5,29 +5,35 @@ import edu.cmu.lti.nlp.amr._
 import scala.collection.SortedMap
 import amr.ImportConcepts.{ concept, relation }
 
-// TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as keys
-// This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
+abstract class Graph[K] {
+  def nodes: Map[K, String]
+  def nodeSpans: Map[K, (Int, Int)]
+  def arcs: Map[(K, K), String]
 
-case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) {
+  def depth(node: K): Int = {
+    def depthHelper(nodes: List[K], accum: Int): Int = {
+      val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
+      if (nextNodes.isEmpty) accum else depthHelper(nextNodes, accum + 1)
+    }
+    depthHelper(List(node), 0)
+  }
+  def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
+  def parentsOf(node: K): List[K] = (arcs map { case ((p, `node`), _) => p }).toList
+  def labelsBetween(parent: K, child: K): List[String] = (arcs map { case ((`parent`, `child`), label) => label }).toList
+  def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
+  def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
+}
+
+case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) extends Graph[String] {
   def toOutputFormat: String = {
     val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\n")
     val arcOutput = arcs map (x => s"# ::edge\t${x._1._1}\t${x._1._2}\t${x._2}\n")
 
     "# ::AMRGraph\n" + nodeOutput.mkString + arcOutput.mkString
   }
-  def depth(node: String): Int = {
-    def depthHelper(nodes: List[String], accum: Int): Int = {
-      val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
-      if (nextNodes.isEmpty) accum else depthHelper(nextNodes, accum + 1)
-    }
-    depthHelper(List(node), 0)
-  }
-  def edgesToParents(node: String): List[(String, String)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
-  def parentsOf(node: String): List[String] = (arcs map {case ((p, `node`), _) => p}).toList
-  def labelsBetween(parent: String, child: String): List[String] = (arcs map {case ((`parent`, `child`), label) => label}).toList
 }
 
-case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) {
+case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -71,24 +77,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
       arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode))
   }
 
- //       val ((_, sigmaParent), parentLabel) = ((state.currentGraph.arcs filter { case ((p, c), l) => (c == sigma) }).toList)(0)
-        
-  def parentsOf(node: Int): List[Int] = (arcs map {case ((p, `node`), _) => p}).toList
-  def labelsBetween(parent: Int, child: Int): List[String] = (arcs map {case ((`parent`, `child`), label) => label}).toList
-  def edgesToParents(node: Int): List[(Int, Int)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
-  def edgesToChildren(node: Int): List[(Int, Int)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
-
-  def depth(node: Int): Int = {
-    def depthHelper(nodes: List[Int], accum: Int): Int = {
-      if (nodes contains 0) accum
-      else {
-        val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
-        depthHelper(nextNodes, accum + 1)
-      }
-    }
-    depthHelper(List(node), 0)
-  }
-
   override def toString: String = {
     val nodeSort = nodes.foldLeft(SortedMap[Int, String]()) { case (start, (a, b)) => start + (a -> b) }
     val spanSort = nodeSpans.foldLeft(SortedMap[Int, (Int, Int)]()) { case (start, (a, b)) => start + (a -> b) }
@@ -105,44 +93,55 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
   }
 
-  def isLeafNode(node: Int): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
+}
+
+case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {
+
+  val AMRToPosition = positionToAMR map { case (i, s) => (s -> i) }
 
 }
 
-case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph]) {
-
-  // Having mapped purely on the basis of nodeSpans - we can now be a little cleverer 
-  // We run through each set of AMR nodes - i.e. that share a NodeSpan
-  // We then get all the DT nodes for those positions
-  // If 1:1 then we're done
-  // If 1:0 (i.e. AMR has nodeSpan of 0, 0) then we're also done [no entry in Map]
-  // If m:n then:
-  //   Find good text matches between AMR concept and word or lemma in DT node and assign greedily.
-  //   For those left over: 
-  //      m > n : unassigned AMR nodes mapped to random top-most DT nodes. Surplus DT nodes not entered into map
-  //      n > m : unassigned DT nodes mapped to random bottom-most AMR nodes. Surplus AMR nodes not entered into map
-  private val amrToWordIndices: Map[Seq[String], Seq[Int]] = amr match {
-    case None => Map[Seq[String], Seq[Int]]()
-    case Some(amrGraph) => for {
-      (amrKey, (start, end)) <- amrGraph.nodeSpans
-      val allDTIndices = dependencyTree.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
-    } yield (allAMRWithSameSpan(amrKey), allDTIndices.toSeq)
+object Sentence {
+  def apply(sentence: String): Sentence = {
+    Sentence(sentence, DependencyTree(sentence), None, Map[Int, String]())
+  }
+  def apply(sentence: String, rawAMR: String): Sentence = {
+    Sentence(sentence, DependencyTree(sentence), Some(AMRGraph(rawAMR, sentence)))
+  }
+  def apply(sentence: String, dt: DependencyTree, amr: Option[AMRGraph]): Sentence = {
+    Sentence(sentence, dt, amr, positionToAMR(amr, dt))
   }
 
-  val positionToAMR = (amrToWordIndices map {
-    case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices)
-  }).flatten.toMap
+  def positionToAMR(amr: Option[AMRGraph], dt: DependencyTree): Map[Int, String] = {
 
-  val AMRToPosition = positionToAMR map {case (i,  s) => (s -> i)}
+    // We run through each set of AMR nodes - i.e. that share a NodeSpan
+    // We then get all the DT nodes for those positions
+    // If 1:1 then we're done
+    // If 1:0 (i.e. AMR has nodeSpan of 0, 0) then we're also done [no entry in Map]
+    // If m:n then:
+    //   Find good text matches between AMR concept and word or lemma in DT node and assign greedily.
+    //   For those left over: 
+    //      m > n : unassigned AMR nodes mapped to random top-most DT nodes. Surplus DT nodes not entered into map
+    //      n > m : unassigned DT nodes mapped to random bottom-most AMR nodes. Surplus AMR nodes not entered into map
 
-  def allAMRWithSameSpan(amrKey: String): Seq[String] = {
+    val amrToWordIndices: Map[Seq[String], Seq[Int]] = amr match {
+      case None => Map[Seq[String], Seq[Int]]()
+      case Some(amrGraph) => for {
+        (amrKey, (start, end)) <- amrGraph.nodeSpans
+        val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
+      } yield (allAMRWithSameSpan(amrKey, amr), allDTIndices.toSeq)
+    }
+    (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
+  }
+
+  def allAMRWithSameSpan(amrKey: String, amr: Option[AMRGraph]): Seq[String] = {
     val amrNodes = amr.get.nodes.keys
     val amrNodeSpans = amr.get.nodeSpans
     val sameSpans = amrNodes filter (amrNodeSpans.getOrElse(_, (0, 0)) == amrNodeSpans(amrKey))
     sameSpans.toSeq
   }
 
-  def mapAMRtoDTNodes(amrKeys: Seq[String], wordIndices: Seq[Int]): Map[Int, String] = {
+  def mapAMRtoDTNodes(amrKeys: Seq[String], wordIndices: Seq[Int], amr: Option[AMRGraph], dependencyTree: DependencyTree): Map[Int, String] = {
     // TODO: Use rockymadden/stringmetrics here!
     val amrNodes = amr.get.nodes
     val greedyMatch = (for {
@@ -159,15 +158,6 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     val unmappedDTInIncreasingDepthOrder = wordIndices diff greedyMatch.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
     val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap
     greedyMatch ++ randomMatch
-  }
-}
-
-object Sentence {
-  def apply(sentence: String): Sentence = {
-    Sentence(sentence, DependencyTree(sentence), None)
-  }
-  def apply(sentence: String, rawAMR: String): Sentence = {
-    Sentence(sentence, DependencyTree(sentence), Some(AMRGraph(rawAMR, sentence)))
   }
 }
 
