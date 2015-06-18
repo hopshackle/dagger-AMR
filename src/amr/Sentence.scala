@@ -7,6 +7,7 @@ import amr.ImportConcepts.{ concept, relation }
 
 // TODO: Currently the only difference between AMRGraph and DependencyTree is the use of String or Int as keys
 // This derives from use of String in JAMR code I'm using. Might be better to merge these two case classes.
+
 case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) {
   def toOutputFormat: String = {
     val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\n")
@@ -22,6 +23,8 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
     depthHelper(List(node), 0)
   }
   def edgesToParents(node: String): List[(String, String)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
+  def parentsOf(node: String): List[String] = (arcs map {case ((p, `node`), _) => p}).toList
+  def labelsBetween(parent: String, child: String): List[String] = (arcs map {case ((`parent`, `child`), label) => label}).toList
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) {
@@ -68,6 +71,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
       arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode))
   }
 
+ //       val ((_, sigmaParent), parentLabel) = ((state.currentGraph.arcs filter { case ((p, c), l) => (c == sigma) }).toList)(0)
+        
+  def parentsOf(node: Int): List[Int] = (arcs map {case ((p, `node`), _) => p}).toList
+  def labelsBetween(parent: Int, child: Int): List[String] = (arcs map {case ((`parent`, `child`), label) => label}).toList
   def edgesToParents(node: Int): List[(Int, Int)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
   def edgesToChildren(node: Int): List[(Int, Int)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
 
@@ -114,7 +121,7 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
   //   For those left over: 
   //      m > n : unassigned AMR nodes mapped to random top-most DT nodes. Surplus DT nodes not entered into map
   //      n > m : unassigned DT nodes mapped to random bottom-most AMR nodes. Surplus AMR nodes not entered into map
-  val amrToWordIndices: Map[Seq[String], Seq[Int]] = amr match {
+  private val amrToWordIndices: Map[Seq[String], Seq[Int]] = amr match {
     case None => Map[Seq[String], Seq[Int]]()
     case Some(amrGraph) => for {
       (amrKey, (start, end)) <- amrGraph.nodeSpans
@@ -125,6 +132,8 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
   val positionToAMR = (amrToWordIndices map {
     case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices)
   }).flatten.toMap
+
+  val AMRToPosition = positionToAMR map {case (i,  s) => (s -> i)}
 
   def allAMRWithSameSpan(amrKey: String): Seq[String] = {
     val amrNodes = amr.get.nodes.keys
@@ -150,12 +159,6 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
     val unmappedDTInIncreasingDepthOrder = wordIndices diff greedyMatch.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
     val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap
     greedyMatch ++ randomMatch
-  }
-
-  val mapFromDTtoAMR = {
-    for {
-      (dtSpan, (position, _)) <- dependencyTree.nodeSpans
-    } yield (dtSpan -> positionToAMR.getOrElse(position, "NONE"))
   }
 }
 

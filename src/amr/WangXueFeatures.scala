@@ -27,10 +27,18 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     add(hmap, "SIGMA-WORD=" + sigmaWord)
 
     if (sigma > 0) { // sigma == 0 indicates the dummy root node (which has no parent)
-      val ((_, sigmaParent), parentLabel) = ((state.currentGraph.arcs filter { case ((p, c), l) => (c == sigma) }).toList)(0)
-      add(hmap, "PARENT-SIGMA-DEP-LABEL=" + parentLabel)
-      add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(sigmaParent))
- //     add(hmap, "PARENT-SIGMA-WORDS=" + state.currentGraph.nodes(sigmaParent) + "-" + sigmaWord)
+      val sigmaParents = state.currentGraph.parentsOf(sigma)
+      val parentLabelCombos = for {
+        parent <- sigmaParents
+        label <- state.currentGraph.labelsBetween(parent, sigma)
+      } yield (parent, label)
+
+      parentLabelCombos foreach {
+        case (parent, label) =>
+          add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
+          add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(parent))
+      }
+      //     add(hmap, "PARENT-SIGMA-WORDS=" + state.currentGraph.nodes(sigmaParent) + "-" + sigmaWord)
     }
     hmap
   }
