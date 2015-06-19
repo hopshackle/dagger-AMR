@@ -19,7 +19,7 @@ class WangXueFeatures(dict: Index = new MapIndex) {
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
-
+    val numeric = "[0-9,.]".r
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes(sigma)
 
@@ -32,9 +32,11 @@ class WangXueFeatures(dict: Index = new MapIndex) {
         parent <- sigmaParents
         label <- state.currentGraph.labelsBetween(parent, sigma)
       } yield (parent, label)
-
+      add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
+      if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
       parentLabelCombos foreach {
         case (parent, label) =>
+
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(parent))
       }
@@ -57,7 +59,7 @@ class WangXueFeatures(dict: Index = new MapIndex) {
 
     add(hmap, "BETA-WORD=" + sigmaWord)
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
-    add(hmap, "SIGMA-BETA-DISTANCE=" + distance)
+    add(hmap, "SIGMA-BETA-DISTANCE", +distance)
     if (distance == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     add(hmap, "SIGMA-BETA-DEP-LABEL=" + dependencyLabel)
 
