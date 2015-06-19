@@ -8,6 +8,30 @@ class WangXueExpert extends WangXueExpertBasic {
   override def chooseTransition(data: Sentence, state: WangXueTransitionState): WangXueAction = {
     if (debug) println("Considering current node: " + state.nodesToProcess.head +
       " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
+      
+    def getAMRParents(nodeAMR: Option[String]): List[String] = nodeAMR match {
+      case None => List[String]()
+      case Some(amrKey) => data.amr.get.parentsOf(amrKey)
+    }
+    
+        // Perhaps I could insert something here...on the basis that some actions *might* have been taken by
+    // a non-expert since we last did anything. And in this case we need to inspect the Inserted Nodes, and see
+    // if they should be mapped to an AMR node in any obvious way.
+    // We can get a list of these nodes by looking for all insertedNodes with otherRef = ""
+    // We then iterate through them to get children
+    // we're looking for children that map to AMR nodes which have unmapped AMR node parents
+    // with the same concept as the new inserted node. We assign greedily if we find a match on this basis.
+    val initialMapDTtoAMR = state.currentGraph.insertedNodes ++ data.positionToAMR
+    val initialMapAMRtoDT = initialMapDTtoAMR map { case (key, value) => (value -> key) }
+    val nodesInsertedWithoutRefs = state.currentGraph.insertedNodes filter { case (_, amrRef) => amrRef == "" } map { case (dtRef, _) => dtRef }
+    val childrenOfEachUnreferencedNode = nodesInsertedWithoutRefs map state.currentGraph.childrenOf
+    val childrenByAMRRef = childrenOfEachUnreferencedNode map { for { childRef <- _ } yield initialMapDTtoAMR.get(childRef) }
+    val filteredByPossessionOfUnmatchedParents = childrenByAMRRef map { x =>
+      x map { amrRef => getAMRParents(amrRef) filter (z => !(initialMapAMRtoDT contains z))} flatten 
+    }
+    // We now have List of the unmatched AMR Refs of parents for each child that IS matched
+    // Run through it until we find one that matches the concept of the current unmatched inserted node
+    // Greedily make this assignation of inserted node -> unmatched parental AMR Ref
 
     val fullMapDTtoAMR = state.currentGraph.insertedNodes ++ data.positionToAMR
     val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
@@ -18,15 +42,10 @@ class WangXueExpert extends WangXueExpertBasic {
     val SIGMAAMR = fullMapDTtoAMR.get(sigma)
     if (debug) println(s"SIGMAAMR = $SIGMAAMR")
     val BETAAMR = if (BETA == -1) None else fullMapDTtoAMR.get(BETA)
-    val sigmaAMRParents = SIGMAAMR match {
-      case None => List[String]()
-      case Some(amr) => data.amr.get.parentsOf(amr)
-    }
+
+    val sigmaAMRParents = getAMRParents(SIGMAAMR)
     if (debug) println(sigmaAMRParents)
-    val betaAMRParents = BETAAMR match {
-      case None => List[String]()
-      case Some(amr) => data.amr.get.parentsOf(amr)
-    }
+    val betaAMRParents = getAMRParents(BETAAMR)
     val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
 
     val unmatchedParents = sigmaAMRParents filter { x => !fullMapAMRtoDT.contains(x) }

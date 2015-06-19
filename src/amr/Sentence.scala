@@ -20,6 +20,7 @@ abstract class Graph[K] {
   }
   def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
   def parentsOf(node: K): List[K] = edgesToParents(node) map { case (p, c) => p }
+  def childrenOf(node: K): List[K] = edgesToChildren(node) map { case (p, c) => c}
   def labelsBetween(parent: K, child: K): List[String] = (arcs filter (x => x match { case ((p, c), l) => p == parent && c == child }) map { case ((p, c), l) => l }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
