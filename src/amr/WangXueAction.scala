@@ -75,17 +75,19 @@ case object DeleteNode extends WangXueAction {
   }
 }
 
-case class Insert(conceptIndex: Int) extends WangXueAction {
+case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueAction {
+  // otherRef is a hack to allow us to track mapping of AMR and DT nodes during expert parsing
+  // Really should be encapsulated elsewhere
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
     // We create a new node, and insert it as parent of this node
     // We then continue processing the current node
-    val (newNode, tree) = conf.currentGraph.insertNodeAbove(conf.nodesToProcess.head, conceptIndex)
+    val (newNode, tree) = conf.currentGraph.insertNodeAbove(conf.nodesToProcess.head, conceptIndex, otherRef)
     conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, conf.nodesToProcess), currentGraph = tree)
   }
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1
-  override def toString: String = "InsertNode: " + concept(conceptIndex)
+  override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
 }
 
 object Insert {

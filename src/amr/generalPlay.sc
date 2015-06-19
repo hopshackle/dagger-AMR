@@ -7,4 +7,6 @@ object generalPlay {
   val c = List("four", "five", "one")             //> c  : List[String] = List(four, five, one)
   b contains c                                    //> res1: Boolean = false
   b contains c(2)                                 //> res2: Boolean = true
+  b diff c                                        //> res3: List[String] = List(two, three)
+  a diff c                                        //> res4: List[String] = List()
 }

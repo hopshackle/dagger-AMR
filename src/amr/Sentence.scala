@@ -22,6 +22,7 @@ abstract class Graph[K] {
   def labelsBetween(parent: K, child: K): List[String] = (arcs filter (x => x match { case ((p, c), l) => p == parent && c == child }) map { case ((p, c), l) => l }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
+
 }
 
 case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String]) extends Graph[String] {
@@ -33,7 +34,8 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
   }
 }
 
-case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String]) extends Graph[Int] {
+case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
+  insertedNodes: Map[Int, String]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -63,10 +65,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
     val edgesToRemove = edgesToParents(node)
-    DependencyTree(nodes - node, nodeSpans - node, arcs -- edgesToRemove)
+    DependencyTree(nodes - node, nodeSpans - node, arcs -- edgesToRemove, insertedNodes)
   }
 
-  def insertNodeAbove(node: Int, conceptIndex: Int): (Int, DependencyTree) = {
+  def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
     // So we to add a new node as a parent, remove the edge from the current node to its current parent, and insert two new edges
     // ...parent to new, and new to current
     // we assign a nodeSpan to the new node to match its child
@@ -75,7 +77,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, DependencyTree(nodes + (newNode -> concept(conceptIndex)), nodeSpans + (newNode -> childSpan),
-      arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode))
+      arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes + (newNode -> otherRef)))
   }
 
   override def toString: String = {
@@ -97,7 +99,21 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {
-  val AMRToPosition = positionToAMR map { case (i, s) => (s -> i) }
+  val AMRToPosition: Map[String, Int] = positionToAMR map { case (i, s) => (s -> i) }
+  def unmatchedAMRNodesByConcept: Map[String, String] = amr match {
+    case None => Map()
+    case Some(graph) =>
+      val filterForInitialMatches = graph.nodes filter {
+        case (key, concept) =>
+          !(AMRToPosition contains key)
+      }
+      val filterForInsertedMatches = filterForInitialMatches filter {
+        case (key, concept) =>
+          !(dependencyTree.insertedNodes.values.toList contains key)
+      }
+      val finalResult = filterForInsertedMatches map { case (key, concept) => (concept -> key) }
+      finalResult
+  }
 }
 
 object Sentence {
@@ -155,7 +171,8 @@ object Sentence {
     val unmappedAMRInDecreasingDepthOrder = amrKeys diff greedyMatch.values.toSeq sortWith (amr.get.depth(_) > amr.get.depth(_))
     val unmappedDTInIncreasingDepthOrder = wordIndices diff greedyMatch.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
     val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap
-    greedyMatch ++ randomMatch
+    // we then concatenate the greedy and random matches, plus a hard-coded mapping of the Root nodes
+    greedyMatch ++ randomMatch + (0 -> "ROOT")
   }
 }
 
@@ -181,7 +198,7 @@ object DependencyTree {
       (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel), wordCount) <- (parseTree.filter(x => x.deprel.getOrElse("") != "punct").zipWithIndex)
     } yield (index -> (wordCount + 1, wordCount + 2))).toMap
 
-    DependencyTree(nodes, nodeSpans, arcs)
+    DependencyTree(nodes, nodeSpans, arcs, Map())
   }
 }
 
@@ -208,7 +225,7 @@ object AMRGraph {
       (label, node2) <- node1.relations
       Relation(relation) = label // label includes the ":"
       relation2 = if (relation.size == 3 && relation.startsWith("op")) "opN" else relation
-    } yield ((node1.id, node2.id) -> relation2)).toMap + ((amr.root.id, "ROOT") -> "ROOT")
+    } yield ((node1.id, node2.id) -> relation2)).toMap + (("ROOT", amr.root.id) -> "ROOT")
 
     AMRGraph(nodes, nodeSpans, arcs)
   }
