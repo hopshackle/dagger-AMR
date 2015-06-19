@@ -1,6 +1,6 @@
 package amr
 import dagger.core._
-import amr.ImportConcepts.{concept, relation, conceptIndex, relationIndex}
+import amr.ImportConcepts.{ concept, relation, conceptIndex, relationIndex }
 
 class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXueTransitionState] {
 
@@ -14,7 +14,7 @@ class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXu
       case Nil =>
         if (currentNodeIsNotIncludedInAGoldSpan(data, state) && state.currentGraph.isLeafNode(state.nodesToProcess.head)) DeleteNode
         else NextNode(conceptForCurrentNode(data, state))
-      case head :: tail => 
+      case head :: tail =>
         NextEdge(relationBetweenSigmaAndBeta(data, state))
     }
     if (debug) println("Action chosen: " + chosenAction)
@@ -57,14 +57,21 @@ class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXu
 object WangXueExpertCheck {
 
   def main(args: Array[String]): Unit = {
+
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
-    val sentences = AMRGraph.importFile(fileName) map { case (english, amr) => Sentence(english, amr) }
-    println("Extracted AMR...now calculating scores...")
-    val fScore = sentences map { s => Smatch.fScore(RunDagger.sampleTrajectory(s).amr.get, s.amr.get)}
-    fScore zip sentences foreach { case (score, sentence) => println(f"$score%.2f" + "\t" + sentence.rawText)}
-    val meanScore = (fScore reduce (_ + _)) / fScore.size
+    val rawData = AMRGraph.importFile(fileName)
+    var allScores = List[Double]()
+    rawData foreach { x =>
+      val (english, amr) = x
+      val sentence = Sentence(english, amr)
+      val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get)
+      allScores = fScore :: allScores
+      println(f"$fScore%.2f" + "\t" + sentence.rawText)
+    }
+
+    val meanScore = (allScores reduce (_ + _)) / allScores.size
     println(f"Average f-Score of $meanScore%.2f")
   }
 }

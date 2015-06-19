@@ -9,11 +9,12 @@ abstract class Graph[K] {
   def nodes: Map[K, String]
   def nodeSpans: Map[K, (Int, Int)]
   def arcs: Map[(K, K), String]
+  def isRoot(node: K): Boolean
 
   def depth(node: K): Int = {
     def depthHelper(nodes: List[K], accum: Int): Int = {
       val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
-      if (nextNodes.isEmpty) accum else depthHelper(nextNodes, accum + 1)
+      if (nextNodes exists isRoot) accum else depthHelper(nextNodes, accum + 1)
     }
     depthHelper(List(node), 0)
   }
@@ -32,6 +33,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 
     "# ::AMRGraph\n" + nodeOutput.mkString + arcOutput.mkString
   }
+  override def isRoot(node: String): Boolean = nodes(node) == "ROOT"
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
@@ -95,7 +97,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
   }
-
+  
+  override def isRoot(node: Int): Boolean = edgesToParents(node).size == 0
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {
@@ -117,6 +120,7 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
 }
 
 object Sentence {
+  val debug = false
   def apply(sentence: String): Sentence = {
     Sentence(sentence, DependencyTree(sentence), None, Map[Int, String]())
   }
@@ -145,7 +149,7 @@ object Sentence {
         val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
       } yield (allAMRWithSameSpan(amrKey, amr), allDTIndices.toSeq)
     }
-    (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
+    (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap + (0 -> "ROOT")
   }
 
   def allAMRWithSameSpan(amrKey: String, amr: Option[AMRGraph]): Seq[String] = {
@@ -158,6 +162,8 @@ object Sentence {
   def mapAMRtoDTNodes(amrKeys: Seq[String], wordIndices: Seq[Int], amr: Option[AMRGraph], dependencyTree: DependencyTree): Map[Int, String] = {
     // TODO: Use rockymadden/stringmetrics here!
     val amrNodes = amr.get.nodes
+    if (debug) println(amrKeys)
+    if (debug) println(wordIndices)
     val greedyMatch = (for {
       amrKey <- amrKeys
       val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
@@ -165,14 +171,18 @@ object Sentence {
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       if (dtWord == amrConcept)
     } yield (word -> amrKey)).toMap
+    if (debug) println("Greedy mapping: " + greedyMatch)
     // At this stage we have mapped any DT to AMR nodes with an exact String match
     // We then select the topmost DT nodes that are required to match the remaining unmapped AMR nodes
     // (up to all of them, with 'topmost' defined as being closest to root of DT)
     val unmappedAMRInDecreasingDepthOrder = amrKeys diff greedyMatch.values.toSeq sortWith (amr.get.depth(_) > amr.get.depth(_))
+    if (debug && unmappedAMRInDecreasingDepthOrder.size > 0) println("AMR Dec: " + unmappedAMRInDecreasingDepthOrder)
     val unmappedDTInIncreasingDepthOrder = wordIndices diff greedyMatch.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
+    if (debug && unmappedDTInIncreasingDepthOrder.size > 0) println("DT Inc: " + unmappedDTInIncreasingDepthOrder)
     val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap
     // we then concatenate the greedy and random matches, plus a hard-coded mapping of the Root nodes
-    greedyMatch ++ randomMatch + (0 -> "ROOT")
+    if (debug) println("Random mapping: " + randomMatch)
+    greedyMatch ++ randomMatch
   }
 }
 
