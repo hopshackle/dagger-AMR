@@ -18,8 +18,8 @@ abstract class Graph[K] {
     depthHelper(List(node), 0)
   }
   def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
-  def parentsOf(node: K): List[K] = edgesToParents(node) map {case (p, c) => p}
-  def labelsBetween(parent: K, child: K): List[String] = (arcs map { case ((`parent`, `child`), label) => label }).toList
+  def parentsOf(node: K): List[K] = edgesToParents(node) map { case (p, c) => p }
+  def labelsBetween(parent: K, child: K): List[String] = (arcs filter (x => x match { case ((p, c), l) => p == parent && c == child }) map { case ((p, c), l) => l }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
 }
@@ -51,8 +51,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     // We account for the fact that if we have no idea of the concept, then using the actual word might just work
     val oldValue = nodes.getOrElse(node, "UNKNOWN")
     val newLabel = if (label == "UNKNOWN") {
-      if (numbers.replaceAllIn(oldValue, "") == "") oldValue // purely numeric
-      else """"""" + oldValue + """"""" // add quotes as we assume this is a name
+      //      if (numbers.replaceAllIn(oldValue, "") == "") oldValue // purely numeric
+      //     else """"""" + oldValue + """"""" // add quotes as we assume this is a name
+      oldValue
     } else label
     val newNodes = nodes + (node -> newLabel)
     this.copy(nodes = newNodes)

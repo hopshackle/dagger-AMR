@@ -35,15 +35,15 @@ object WXExpertTest {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.2 sec].
+                                                  //| hPCFG.ser.gz ... done [1.1 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.8 sec].
+                                                  //| im.crf.ser.gz ... done [3.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.1 sec].
+                                                  //| im.crf.ser.gz ... done [3.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [3.8 sec].
+                                                  //| tsim.crf.ser.gz ... done [2.6 sec].
                                                   //| s1  : amr.Sentence = Sentence(2008-05-14,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14)
                                                   //| SpanMap:	Map(1 -> (1,2))
@@ -236,19 +236,19 @@ val output = RunDagger.sampleTrajectory(s2, "", new WangXueExpertBasic)
 val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@17f62e33
 loss(s2, s2, null)                                //> res3: Double = 0.0
 loss(s2, output, null)                            //> res4: Double = 0.5434782608695652
-println(output.amr.get)                           //> AMRGraph(Map(12 -> network, 8 -> military, 19 -> "by", 23 -> 2007, 4 -> atta
-                                                  //| ck-01, 15 -> "Estonia", 11 -> computer, 9 -> and, 22 -> "in", 13 -> after, 1
-                                                  //| 6 -> government-organization, 10 -> civilian, 21 -> attack, 6 -> threaten-01
-                                                  //| , 1 -> "NATO", 0 -> ROOT, 20 -> cyber, 2 -> consider-02, 18 -> strike-01, 7 
-                                                  //| -> "to", 3 -> cyber),Map(12 -> (12,13), 8 -> (8,9), 19 -> (19,20), 23 -> (23
-                                                  //| ,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 22 -> (22,23), 
-                                                  //| 13 -> (13,14), 16 -> (16,17), 10 -> (10,11), 21 -> (21,22), 6 -> (6,7), 1 ->
-                                                  //|  (1,2), 20 -> (20,21), 2 -> (2,3), 18 -> (18,19), 7 -> (7,8), 3 -> (3,4)),Ma
-                                                  //| p((7,12) -> UNKNOWN, (12,11) -> UNKNOWN, (18,16) -> ARG1, (3,2) -> UNKNOWN, 
-                                                  //| (16,15) -> UNKNOWN, (12,8) -> UNKNOWN, (4,6) -> UNKNOWN, (4,18) -> UNKNOWN, 
-                                                  //| (21,20) -> mod, (19,21) -> UNKNOWN, (18,19) -> UNKNOWN, (22,23) -> UNKNOWN, 
-                                                  //| (0,4) -> UNKNOWN, (3,1) -> UNKNOWN, (4,3) -> mod, (18,13) -> UNKNOWN, (8,9) 
-                                                  //| -> UNKNOWN, (21,22) -> UNKNOWN, (8,10) -> UNKNOWN, (4,7) -> UNKNOWN))
+println(output.amr.get)                           //> AMRGraph(Map(12 -> network, 8 -> military, 19 -> by, 23 -> 2007, 4 -> attack
+                                                  //| -01, 15 -> "Estonia", 11 -> computer, 9 -> and, 22 -> in, 13 -> after, 16 ->
+                                                  //|  government-organization, 10 -> civilian, 21 -> attack, 6 -> threaten-01, 1 
+                                                  //| -> "NATO", 0 -> ROOT, 20 -> cyber, 2 -> consider-02, 18 -> strike-01, 7 -> t
+                                                  //| o, 3 -> cyber),Map(12 -> (12,13), 8 -> (8,9), 19 -> (19,20), 23 -> (23,24), 
+                                                  //| 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 22 -> (22,23), 13 -> 
+                                                  //| (13,14), 16 -> (16,17), 10 -> (10,11), 21 -> (21,22), 6 -> (6,7), 1 -> (1,2)
+                                                  //| , 20 -> (20,21), 2 -> (2,3), 18 -> (18,19), 7 -> (7,8), 3 -> (3,4)),Map((7,1
+                                                  //| 2) -> UNKNOWN, (12,11) -> UNKNOWN, (18,16) -> ARG1, (3,2) -> UNKNOWN, (16,15
+                                                  //| ) -> UNKNOWN, (12,8) -> UNKNOWN, (4,6) -> UNKNOWN, (4,18) -> UNKNOWN, (21,20
+                                                  //| ) -> mod, (19,21) -> UNKNOWN, (18,19) -> UNKNOWN, (22,23) -> UNKNOWN, (0,4) 
+                                                  //| -> UNKNOWN, (3,1) -> UNKNOWN, (4,3) -> mod, (18,13) -> UNKNOWN, (8,9) -> UNK
+                                                  //| NOWN, (21,22) -> UNKNOWN, (8,10) -> UNKNOWN, (4,7) -> UNKNOWN))
 s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGraph
                                                   //| # ::node	0.1	attack-01
                                                   //| # ::node	0.0.0	name
@@ -302,26 +302,86 @@ s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGra
                                                   //| # ::edge	0.3.0.2	0.3.0.2.0	year
                                                   //| # ::edge	0.2.0.0	0.2.0.0.2	mod
                                                   //| "
- val outputAdv = RunDagger.sampleTrajectory(s2, "", new WangXueExpert)
-                                                  //> Considering current node: 23 with child Nil
-                                                  //| java.util.NoSuchElementException: key not found: 22
-                                                  //| 	at scala.collection.MapLike$class.default(MapLike.scala:228)
-                                                  //| 	at scala.collection.AbstractMap.default(Map.scala:59)
-                                                  //| 	at scala.collection.MapLike$class.apply(MapLike.scala:141)
-                                                  //| 	at scala.collection.AbstractMap.apply(Map.scala:59)
-                                                  //| 	at amr.WangXueExpert$$anonfun$2.apply(WangXueExpert.scala:26)
-                                                  //| 	at amr.WangXueExpert$$anonfun$2.apply(WangXueExpert.scala:26)
-                                                  //| 	at scala.collection.immutable.List.map(List.scala:277)
-                                                  //| 	at amr.WangXueExpert.chooseTransition(WangXueExpert.scala:26)
-                                                  //| 	at amr.RunDagger$.sampleTrajectory(RunDagger.scala:16)
-                                                  //| 	at amr.WXExpertTest$$anonfun$main$1.apply$mcV$sp(amr.WXExpertTest.scala:
-                                                  //| 25)
-                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$$anonfun$$exe
-                                                  //| cute$1.apply$mcV$sp(WorksheetSupport.scala:76)
-                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$.redirected(W
-                                                  //| orksheetSupport.scala:65)
-                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$.$execute(Wor
-                                                  //| ksheetSupport.scala:75)
-                                                  //| 	at amr.WXExpertTest$.main(amr.WXExpertTest.scala:3)
-                                                  //| 	at amr.WXExpertTest.main(amr.WXExpertTest.scala)
+ val outputAdv = RunDagger.sampleTrajectory(s1, "", new WangXueExpert)
+                                                  //> Considering current node: 1 with child Nil
+                                                  //| Matched AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 1 with child Nil
+                                                  //| Matched AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List()
+                                                  //| Action chosen: NextNode: 0 -> UNKNOWN
+                                                  //| Considering current node: 2 with child 1
+                                                  //| No matching AMR
+                                                  //| Matched AMR
+                                                  //| List()
+                                                  //| List()
+                                                  //| List()
+                                                  //| Action chosen: NextEdge: 0 -> UNKNOWN
+                                                  //| Considering current node: 2 with child Nil
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List()
+                                                  //| List()
+                                                  //| List()
+                                                  //| Action chosen: NextNode: 0 -> UNKNOWN
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No matching AMR
+                                                  //| No matching AMR
+                                                  //| List(0)
+                                                  //| List(0)
+                                                  //| List(date-entity)
+                                                  //| Action chosen: InsertNode: date-entity
+                                                  //| Considering current node: 0 with child 2
+                                                  //| No ma
+                                                  //| Output exceeds cutoff limit./
+outputAdv
 }

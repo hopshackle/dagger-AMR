@@ -9,24 +9,42 @@ class WangXueExpert extends WangXueExpertBasic {
     if (debug) println("Considering current node: " + state.nodesToProcess.head +
       " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
 
+    def findNodeAMRMatch(node: Int): Option[String] = {
+      data.positionToAMR.get(node) match {
+        case None => // now look for a match on an inserted node
+          println("No matching AMR")
+          val label = state.currentGraph.nodes(node)
+          if (data.amr.get.nodes.values.toList contains label) {
+            val amrNode = (data.amr.get.nodes filter { case (i, s) => s == label } map { case (i, s) => i }).toList(0)
+            if (data.amr.get.nodeSpans.getOrElse(amrNode, (0, 0)) == (0, 0)) Some(amrNode) else None
+          } else None
+        case Some(index) => 
+          println("Matched AMR")
+          Some(index) // if a match on initial process, we just return that
+      }
+    }
+
     val sigma = state.nodesToProcess.head
     val SIGMAPARENTS = if (sigma == 0) List() else state.currentGraph.parentsOf(sigma)
     val parentLabels = SIGMAPARENTS map (state.currentGraph.nodes(_))
     val BETA = if (state.childrenToProcess.isEmpty) 0 else state.childrenToProcess.head
-    val SIGMAAMR = data.positionToAMR.get(sigma)
-    val BETAAMR = data.positionToAMR.get(BETA)
+    val SIGMAAMR = findNodeAMRMatch(sigma)
+    val BETAAMR = findNodeAMRMatch(BETA)
     val SIGMAAMRPARENT = SIGMAAMR match {
       case None => List[String]()
       case Some(amr) => data.amr.get.parentsOf(amr)
     }
+    println(SIGMAAMRPARENT)
     val betaAMRParents = BETAAMR match {
       case None => List[String]()
       case Some(amr) => data.amr.get.parentsOf(amr)
     }
-    val nodesToProcessAMR = state.nodesToProcess map (data.positionToAMR(_))
+    val nodesToProcessAMR = state.nodesToProcess map (data.positionToAMR.getOrElse(_, "")) filter (_ != "")
     val unmatchedParents = SIGMAAMRPARENT filter { x => !data.AMRToPosition.contains(x) } // those with initial AMR to DT mapping
+    println(unmatchedParents)
     val unmatchedParentLabels = unmatchedParents map (data.amr.get.nodes(_)) diff parentLabels // and remove those for which we've already Inserted a node
     // TODO: This currently won't insert two levels of missing parent nodes - just the ones above DT nodes originally mapped to AMR
+    println(unmatchedParentLabels)
 
     val chosenAction = (SIGMAAMR, unmatchedParentLabels.isEmpty, BETA, BETAAMR, betaAMRParents.isEmpty) match {
       // cases to cover: no beta - Delete, Insert or NextNode
@@ -45,7 +63,7 @@ class WangXueExpert extends WangXueExpertBasic {
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
       case (Some(sigmaAMR), false, _, _, _) => Insert(conceptIndex(unmatchedParentLabels.head))
       case (Some(sigmaAMR), _, 0, _, _) => NextNode(conceptIndex(data.amr.get.nodes(sigmaAMR)))
-      case (None, _, 0, _, _) => DeleteNode
+      case (None, _, 0, _, _) => if (DeleteNode.isPermissible(state)) DeleteNode else NextNode(0)
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) =>
         if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
         else if (nodesToProcessAMR contains betaAMRParents.head) {
