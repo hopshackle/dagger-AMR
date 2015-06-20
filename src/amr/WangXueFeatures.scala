@@ -23,11 +23,13 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes(sigma)
 
-    add(hmap, "BIAS")
     add(hmap, "SIGMA-WORD=" + sigmaWord)
+    add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS.getOrElse(sigma, "NONE"))
+    add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas.getOrElse(sigma, "NONE"))
+    add(hmap, "SIGMA-NER=" + state.currentGraph.nodeNER.getOrElse(sigma, "NONE"))
 
-    if (sigma > 0) { // sigma == 0 indicates the dummy root node (which has no parent)
-      val sigmaParents = state.currentGraph.parentsOf(sigma)
+    val sigmaParents = state.currentGraph.parentsOf(sigma)
+    if (sigmaParents.nonEmpty) {
       val parentLabelCombos = for {
         parent <- sigmaParents
         label <- state.currentGraph.labelsBetween(parent, sigma)
@@ -36,7 +38,6 @@ class WangXueFeatures(dict: Index = new MapIndex) {
       if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
       parentLabelCombos foreach {
         case (parent, label) =>
-
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(parent))
       }
@@ -56,13 +57,24 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     val (sigmaPosition, _) = state.currentGraph.nodeSpans.getOrElse(sigma, (0, 0))
     val (betaPosition, _) = state.currentGraph.nodeSpans.getOrElse(beta, (0, 0))
     val distance = if (sigmaPosition > 0 && betaPosition > 0) Math.abs(sigmaPosition - betaPosition) else 0
+    val betaPOS = state.currentGraph.nodePOS.getOrElse(beta, "NONE")
+    val betaLemma = state.currentGraph.nodeLemmas.getOrElse(beta, "NONE")
+    val betaNER = state.currentGraph.nodeNER.getOrElse(beta, "NONE")
+    val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "NONE")
+    val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "NONE")
+    val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "NONE")
 
+    add(hmap, "BIAS-BETA")
     add(hmap, "BETA-WORD=" + sigmaWord)
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
+    add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
+    add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
     add(hmap, "SIGMA-BETA-DISTANCE", +distance)
     if (distance == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     add(hmap, "SIGMA-BETA-DEP-LABEL=" + dependencyLabel)
-
+    add(hmap, "BETA-POS=" + betaPOS)
+    add(hmap, "BETA-LEMMA=" + betaLemma)
+    add(hmap, "BETA-NER=" + betaNER)
     sigmaFeatures(sentence, state) ++ hmap
   }
 

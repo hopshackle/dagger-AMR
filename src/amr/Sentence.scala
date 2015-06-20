@@ -20,7 +20,7 @@ abstract class Graph[K] {
   }
   def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
   def parentsOf(node: K): List[K] = edgesToParents(node) map { case (p, c) => p }
-  def childrenOf(node: K): List[K] = edgesToChildren(node) map { case (p, c) => c}
+  def childrenOf(node: K): List[K] = edgesToChildren(node) map { case (p, c) => c }
   def labelsBetween(parent: K, child: K): List[String] = (arcs filter (x => x match { case ((p, c), l) => p == parent && c == child }) map { case ((p, c), l) => l }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
@@ -37,7 +37,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
   override def isRoot(node: String): Boolean = nodes(node) == "ROOT"
 }
 
-case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
+case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
   insertedNodes: Map[Int, String]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
@@ -68,7 +68,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
     val edgesToRemove = edgesToParents(node)
-    DependencyTree(nodes - node, nodeSpans - node, arcs -- edgesToRemove, insertedNodes)
+    this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove)
   }
 
   def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
@@ -79,8 +79,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
-    (newNode, DependencyTree(nodes + (newNode -> concept(conceptIndex)), nodeSpans + (newNode -> childSpan),
-      arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes + (newNode -> otherRef)))
+    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeSpans = this.nodeSpans + (newNode -> childSpan),
+      arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes = this.insertedNodes + (newNode -> otherRef)))
   }
 
   override def toString: String = {
@@ -98,7 +98,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeSpans: Map[Int, (Int, Int
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
   }
-  
+
   override def isRoot(node: Int): Boolean = edgesToParents(node).size == 0
 }
 
@@ -193,23 +193,35 @@ object DependencyTree {
 
   def apply(sentence: String): DependencyTree = {
 
-    val parseTree = processor.parse(sentence).head
+    val parseTree = (processor.parse(sentence).head) filter (x => x.deprel.getOrElse("") != "punct") zipWithIndex
 
     val nodes = (for {
-      ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, pdeprel) <- parseTree
+      (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
       if deprel != "punct"
     } yield (index -> form)).toMap + (0 -> "ROOT")
 
     val arcs = (for {
-      ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel) <- parseTree
+      (ConllToken(Some(index), _, lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
       if deprel.getOrElse("") != "punct"
     } yield ((parentIndex, index) -> deprel.getOrElse("UNK"))).toMap
 
     val nodeSpans = (for {
-      (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel), wordCount) <- (parseTree.filter(x => x.deprel.getOrElse("") != "punct").zipWithIndex)
+      (ConllToken(Some(index), _, lemma, pos, cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
     } yield (index -> (wordCount + 1, wordCount + 2))).toMap
 
-    DependencyTree(nodes, nodeSpans, arcs, Map())
+    val nodeLemmas = (for {
+      (ConllToken(Some(index), Some(form), Some(lemma), pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
+    } yield (index -> lemma)).toMap
+
+    val nodePOS = (for {
+      (ConllToken(Some(index), _, _, Some(pos), cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
+    } yield (index -> pos)).toMap
+
+    val nodeNER = (for {
+      (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
+    } yield (index -> ner)).toMap
+
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, Map())
   }
 }
 
