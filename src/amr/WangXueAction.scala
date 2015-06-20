@@ -36,7 +36,7 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
       case Nil => Nil
       case _ => NextNode.childrenOfNode(newNodesToProcess.head, tree)
     }
-    WangXueTransitionState(newNodesToProcess, childrenOfNewNode, tree)
+    conf.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewNode, currentGraph = tree)
   }
   override def toString: String = "NextNode: " + conceptIndex + " -> " + concept(conceptIndex)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.isEmpty
@@ -68,7 +68,7 @@ case object DeleteNode extends WangXueAction {
       case Nil => Nil
       case _ => NextNode.childrenOfNode(newNodesToProcess.head, tree)
     }
-    WangXueTransitionState(newNodesToProcess, childrenOfNewTopNode, tree)
+    state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewTopNode, currentGraph = tree)
   }
   override def isPermissible(state: WangXueTransitionState): Boolean = {
     state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head)
@@ -79,15 +79,42 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
   // otherRef is a hack to allow us to track mapping of AMR and DT nodes during expert parsing
   // Really should be encapsulated elsewhere
 
-  def apply(conf: WangXueTransitionState): WangXueTransitionState = {
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
     // We create a new node, and insert it as parent of this node
     // We then continue processing the current node
-    val (newNode, tree) = conf.currentGraph.insertNodeAbove(conf.nodesToProcess.head, conceptIndex, otherRef)
-    conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, conf.nodesToProcess), currentGraph = tree)
+    // We try a few heuristics to match up AMR node to the newly inserted node
+    val amrRef = if (otherRef == "") estimatedAMRRef(state) else otherRef
+    val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex, amrRef)
+    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree)
   }
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1
   override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
+
+  def estimatedAMRRef(state: WangXueTransitionState): String = {
+    def getAMRParents(nodeAMR: Option[String]): List[String] = nodeAMR match {
+      case None => List[String]()
+      case Some(amrKey) => state.originalInput.get.amr.get.parentsOf(amrKey)
+    }
+    if (state.originalInput.isEmpty) "" else {
+      val conceptToMatch = concept(conceptIndex)
+      val amr = state.originalInput.get.amr.get
+      val fullMapDTtoAMR = state.originalInput.get.positionToAMR ++ state.currentGraph.insertedNodes
+      val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
+      val currentNode = state.nodesToProcess.head
+      val currentParents = if (currentNode == 0) List() else state.currentGraph.parentsOf(currentNode)
+      val currentNodeAMR = fullMapDTtoAMR.get(currentNode)
+      val sigmaAMRParents = getAMRParents(currentNodeAMR)
+      val unmatchedParents = sigmaAMRParents filter (!fullMapAMRtoDT.contains(_))
+      val unmatchedParentLabels = unmatchedParents map (amr.nodes(_))
+      val actualMatches = (unmatchedParentLabels zip unmatchedParents) filter {case (label, ref) => label == conceptToMatch}       
+      actualMatches match {
+        case Nil => ""
+        case head :: tail => head._2
+      }
+    }
+  }
+
 }
 
 object Insert {

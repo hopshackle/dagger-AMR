@@ -31,15 +31,15 @@ object WXExpertTest {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.4 sec].
+                                                  //| hPCFG.ser.gz ... done [1.0 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [3.9 sec].
+                                                  //| im.crf.ser.gz ... done [4.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
                                                   //| im.crf.ser.gz ... done [3.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.6 sec].
+                                                  //| tsim.crf.ser.gz ... done [2.4 sec].
                                                   //| s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
                                                   //| > Lithuania, 13 -> LT)
@@ -53,11 +53,11 @@ object WXExpertTest {
                                                   //|  -> (1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6))
                                                   //| ,Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1
                                                   //| .0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.
-                                                  //| 2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0, 0
-                                                  //|  -> ROOT, 1 -> 0.0.0.0, 6 -> 0.1.0.0))
+                                                  //| 2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0, 1
+                                                  //|  -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
                                                   
-  s1.positionToAMR                                //> res0: Map[Int,String] = Map(11 -> 0.2.0.0, 0 -> ROOT, 1 -> 0.0.0.0, 6 -> 0.1
-                                                  //| .0.0)
+  s1.positionToAMR                                //> res0: Map[Int,String] = Map(11 -> 0.2.0.0, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> 
+                                                  //| ROOT)
                                                   
  val s2 = Sentence(testData(3)._1, testData(3)._2)//> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
@@ -86,25 +86,19 @@ object WXExpertTest {
                                                   //|  0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 -> computer, 0 -> consider
                                                   //| -02, 0.3.0.1 -> government-organization, 0.2 -> thing, 0.3.0.2 -> date-entit
                                                   //| y, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0.2.0.0 -> and, 0.3.0.1.0.0.0
-                                                  //|  -> name, 0.3.0.0.0 -> cyber),Map(0.1 -> (4,5), 0.0.0 -> (1,2), 0.3.0.1.0.0 
-                                                  //| -> (15,16), 0.2.0.0.0 -> (12,13), 0.1.0 -> (3,4), 0.2.0.0.1.0 -> (10,11), 0.
-                                                  //| 3.0.2.0 -> (23,24), 0.0 -> (8,9), 0.0.0.0 -> (1,2), 0.2.0 -> (6,7), 0.3.0.0 
-                                                  //| -> (21,22), 0.3.0 -> (18,19), 0.3 -> (13,14), 0.2.0.0.2 -> (11,12), 0 -> (2,
-                                                  //| 3), 0.3.0.1 -> (16,17), 0.2 -> (6,7), 0.3.0.2 -> (23,24), 0.3.0.1.0.0.0.0 ->
-                                                  //|  (15,16), 0.2.0.0 -> (9,10), 0.3.0.1.0.0.0 -> (15,16), 0.3.0.0.0 -> (20,21))
-                                                  //| ,Map((0.0,0.0.0) -> name, (0.3.0,0.
+                                                  //|  -> name, 0.3.0.0.0 -
                                                   //| Output exceeds cutoff limit.
   s2.positionToAMR                                //> res1: Map[Int,String] = Map(0 -> ROOT, 10 -> 0.2.0.0.1.0, 20 -> 0.3.0.0.0, 1
                                                   //|  -> 0.0.0.0, 6 -> 0.2.0, 21 -> 0.3.0.0, 9 -> 0.2.0.0, 13 -> 0.3, 2 -> 0, 12 
                                                   //| -> 0.2.0.0.0, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.2.0.0.2, 23 ->
                                                   //|  0.3.0.2.0, 8 -> 0.0, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0.0)
-  val expert = new WangXueExpertBasic             //> expert  : amr.WangXueExpertBasic = amr.WangXueExpertBasic@4a83a74a
+  val expert = new WangXueExpertBasic             //> expert  : amr.WangXueExpertBasic = amr.WangXueExpertBasic@3f191845
   val expertSystem = new WangXueTransitionSystem  //> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
-                                                  //| expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@16
-                                                  //| eb3ea3
+                                                  //| expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@40
+                                                  //| 2c4085
   val startState = expertSystem.init(s2)          //> startState  : amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(23, 10, 9, 22, 20, 14, 21, 15, 8, 11, 12, 19, 13, 1, 17, 5,
                                                   //|  2, 16, 7, 6, 18, 3, 4, 0)
@@ -172,51 +166,7 @@ object WXExpertTest {
                                                   //| 8,19) -> prep, (19,21) -> pobj, (21,20) -> nn, (21,22) -> prep, (22,23) -> p
                                                   //| obj)
 val output = RunDagger.sampleTrajectory(s2, "", new WangXueExpertBasic)
-                                                  //> 23	NextNode: 0 -> UNKNOWN
-                                                  //| 10	NextNode: 19 -> civilian
-                                                  //| 9	NextNode: 35 -> and
-                                                  //| 22	NextEdge: 0 -> UNKNOWN
-                                                  //| 22	NextNode: 0 -> UNKNOWN
-                                                  //| 20	NextNode: 26 -> cyber
-                                                  //| 14	DeleteNode
-                                                  //| 21	NextEdge: 0 -> UNKNOWN
-                                                  //| 21	NextEdge: 4 -> mod
-                                                  //| 21	NextNode: 29 -> attack
-                                                  //| 15	NextNode: 10 -> "Estonia"
-                                                  //| 8	NextEdge: 0 -> UNKNOWN
-                                                  //| 8	NextEdge: 0 -> UNKNOWN
-                                                  //| 8	NextNode: 34 -> military
-                                                  //| 11	NextNode: 14 -> computer
-                                                  //| 12	NextEdge: 0 -> UNKNOWN
-                                                  //| 12	NextEdge: 0 -> UNKNOWN
-                                                  //| 12	NextNode: 2 -> network
-                                                  //| 19	NextEdge: 0 -> UNKNOWN
-                                                  //| 19	NextNode: 0 -> UNKNOWN
-                                                  //| 13	NextNode: 23 -> after
-                                                  //| 1	NextNode: 30 -> "NATO"
-                                                  //| 17	DeleteNode
-                                                  //| 5	DeleteNode
-                                                  //| 2	NextNode: 25 -> consider-02
-                                                  //| 16	NextEdge: 0 -> UNKNOWN
-                                                  //| 16	NextNode: 38 -> government-organization
-                                                  //| 7	NextEdge: 0 -> UNKNOWN
-                                                  //| 7	NextNode: 0 -> UNKNOWN
-                                                  //| 6	NextNode: 6 -> threaten-01
-                                                  //| 18	NextEdge: 0 -> UNKNOWN
-                                                  //| 18	NextEdge: 0 -> UNKNOWN
-                                                  //| 18	NextEdge: 6 -> ARG1
-                                                  //| 18	NextNode: 11 -> strike-01
-                                                  //| 3	NextEdge: 0 -> UNKNOWN
-                                                  //| 3	NextEdge: 0 -> UNKNOWN
-                                                  //| 3	NextNode: 26 -> cyber
-                                                  //| 4	NextEdge: 0 -> UNKNOWN
-                                                  //| 4	NextEdge: 0 -> UNKNOWN
-                                                  //| 4	NextEdge: 0 -> UNKNOWN
-                                                  //| 4	NextEdge: 4 -> mod
-                                                  //| 4	NextNode: 27 -> attack-01
-                                                  //| 0	NextEdge: 0 -> UNKNOWN
-                                                  //| 0	NextNode: 33 -> ROOT
-                                                  //| output  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to m
+                                                  //> output  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to m
                                                   //| ilitary and civilian computer networks after the Estonian Government was str
                                                   //| uck by cyber attacks in 2007.,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> "NATO", 2 -> consider-02, 3 -> cyber, 4 -> a
@@ -232,7 +182,19 @@ val output = RunDagger.sampleTrajectory(s2, "", new WangXueExpertBasic)
                                                   //| -> mod, (4,6) -> UNKNOWN, (4,7) -> UNKNOWN, (4,18) -> UNKNOWN, (7,12) -> UNK
                                                   //| NOWN, (8,9) -> UNKNOWN, (8,10) -> UNKNOWN, (12,8) -> UNKNOWN, (12,11) -> UNK
                                                   //| NOWN, (16,15) -> UNKNOWN, (18,13) -> UNKNOWN, (18,16) -> ARG1, (18,19) -> UN
-val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@1a75e76a
+                                                  //| KNOWN, (19,21) -> UNKNOWN, (21,20) -> mod, (21,22) -> UNKNOWN, (22,23) -> UN
+                                                  //| KNOWN),Some(AMRGraph(Map(12 -> network, 8 -> military, 19 -> by, 23 -> 2007,
+                                                  //|  4 -> attack-01, 15 -> "Estonia", 11 -> computer, 9 -> and, 22 -> in, 13 -> 
+                                                  //| after, 16 -> government-organization, 10 -> civilian, 21 -> attack, 6 -> thr
+                                                  //| eaten-01, 1 -> "NATO", 0 -> ROOT, 20 -> cyber, 2 -> consider-02, 18 -> strik
+                                                  //| e-01, 7 -> to, 3 -> cyber),Map(12 -> (12,13), 8 -> (8,9), 19 -> (19,20), 23 
+                                                  //| -> (23,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 22 -> (22
+                                                  //| ,23), 13 -> (13,14), 16 -> (16,17), 10 -> (10,11), 21 -> (21,22), 6 -> (6,7)
+                                                  //| , 1 -> (1,2), 20 -> (20,21), 2 -> (2,3), 18 -> (18,19), 7 -> (7,8), 3 -> (3,
+                                                  //| 4)),Map((7,12) -> UNKNOWN, (12,11) -> UNKNOWN, (18,16) -> ARG1, (3,2) -> UNK
+                                                  //| NOWN, (16,15) -> U
+                                                  //| Output exceeds cutoff limit.
+val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@710c2b53
 loss(s2, s2, null)                                //> res3: Double = 0.0
 loss(s2, output, null)                            //> res4: Double = 0.5434782608695652
 println(output.amr.get)                           //> AMRGraph(Map(12 -> network, 8 -> military, 19 -> by, 23 -> 2007, 4 -> attack
@@ -302,40 +264,7 @@ s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGra
                                                   //| # ::edge	0.2.0.0	0.2.0.0.2	mod
                                                   //| "
  val outputAdv = RunDagger.sampleTrajectory(s1, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
-                                                  //> 13	DeleteNode
-                                                  //| 8	DeleteNode
-                                                  //| 11	InsertNode: name (Ref: 0.2.0)
-                                                  //| 11	NextNode: 20 -> "Lithuania"
-                                                  //| 12	InsertNode: country (Ref: 0.2)
-                                                  //| 12	NextEdge: 9 -> opN
-                                                  //| 12	NextNode: 3 -> name
-                                                  //| 13	InsertNode: and (Ref: 0)
-                                                  //| 13	NextEdge: 1 -> name
-                                                  //| 13	NextNode: 13 -> country
-                                                  //| 14	NextEdge: 9 -> opN
-                                                  //| 14	NextNode: 35 -> and
-                                                  //| 1	InsertNode: name (Ref: 0.0.0)
-                                                  //| 1	NextNode: 10 -> "Estonia"
-                                                  //| 6	InsertNode: name (Ref: 0.1.0)
-                                                  //| 6	Reattach(3)
-                                                  //| 6	NextNode: 32 -> "Latvia"
-                                                  //| 15	InsertNode: country (Ref: 0.0)
-                                                  //| 15	NextEdge: 9 -> opN
-                                                  //| 15	NextNode: 3 -> name
-                                                  //| 16	InsertNode: country (Ref: 0.1)
-                                                  //| 16	NextEdge: 9 -> opN
-                                                  //| 16	NextNode: 3 -> name
-                                                  //| 18	NextEdge: 1 -> name
-                                                  //| 18	NextNode: 13 -> country
-                                                  //| 17	NextEdge: 1 -> name
-                                                  //| 17	NextNode: 13 -> country
-                                                  //| 3	NextEdge: 0 -> UNKNOWN
-                                                  //| 3	NextEdge: 0 -> UNKNOWN
-                                                  //| 3	NextEdge: 0 -> UNKNOWN
-                                                  //| 3	NextNode: 0 -> UNKNOWN
-                                                  //| 0	NextEdge: 0 -> UNKNOWN
-                                                  //| 0	NextNode: 33 -> ROOT
-                                                  //| outputAdv  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (L
+                                                  //> outputAdv  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (L
                                                   //| T),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> "Estonia", 3 -> EE, 6 -> "Latvia", 11 -> "Li
                                                   //| thuania", 12 -> name, 13 -> country, 14 -> and, 15 -> name, 16 -> name, 17 -

@@ -1,7 +1,7 @@
 package amr
 import dagger.core._
 
-case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree) extends TransitionState {
+case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree, originalInput: Option[Sentence]) extends TransitionState {
 
   
   
@@ -10,6 +10,9 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
   override def toString: String = {
     "\nNodesToGo:\t" + nodesToProcess.toString +
       "\nChildren:\t" + childrenToProcess.toString +
-      "\nPartialGraph:\t" + currentGraph.toString
+      "\nPartialGraph:\t" + currentGraph.toString + 
+      (if (originalInput.isEmpty) "" else 
+        "\nMappings:\t" + ((originalInput.get.positionToAMR ++ currentGraph.insertedNodes) map (x => x._1 + " -> " + x._2 + "\n")).mkString
+        )
   }
 }

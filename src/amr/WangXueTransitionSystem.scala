@@ -41,7 +41,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)
     // and the complete dependency tree
-    WangXueTransitionState(allNodes, Nil, datum.dependencyTree)
+    WangXueTransitionState(allNodes, Nil, datum.dependencyTree, Some(datum))
   }
 
   // helper method - as we don't always have the full Sentence

@@ -14,37 +14,8 @@ class WangXueExpert extends WangXueExpertBasic {
       case Some(amrKey) => data.amr.get.parentsOf(amrKey)
     }
 
-    // Perhaps I could insert something here...on the basis that some actions *might* have been taken by
-    // a non-expert since we last did anything. And in this case we need to inspect the Inserted Nodes, and see
-    // if they should be mapped to an AMR node in any obvious way.
-    // We can get a list of these nodes by looking for all insertedNodes with otherRef = ""
-    // We then iterate through them to get children
-    // we're looking for children that map to AMR nodes which have unmapped AMR node parents
-    // with the same concept as the new inserted node. We assign greedily if we find a match on this basis.
-    val initialMapDTtoAMR = state.currentGraph.insertedNodes ++ data.positionToAMR
-    val initialMapAMRtoDT = initialMapDTtoAMR map { case (key, value) => (value -> key) }
-    val nodesInsertedWithoutRefs = state.currentGraph.insertedNodes filter { case (_, amrRef) => amrRef == "" } map { case (dtRef, _) => dtRef }
-    val childrenOfEachUnreferencedNode = nodesInsertedWithoutRefs map state.currentGraph.childrenOf
-    val childrenByAMRRef = childrenOfEachUnreferencedNode map { for { childRef <- _ } yield initialMapDTtoAMR.get(childRef) }
-    val unmatchedParentsOfChildren = childrenByAMRRef map { x =>
-      x map { amrRef => getAMRParents(amrRef) filter (z => !(initialMapAMRtoDT contains z)) } flatten
-    }
-    // We now have a List of the unmatched AMR Refs of parents for each child that IS matched
-    // Run through it until we find one that matches the concept of the current unmatched inserted node
-    // Greedily make this assignation of inserted node -> unmatched parental AMR Ref
-    val mappingsToAdd = (for {
-      (nodeToAssign, parents) <- nodesInsertedWithoutRefs zip unmatchedParentsOfChildren
-      val firstMatch = parents.find { x => data.amr.get.nodes(x) == state.currentGraph.nodes(nodeToAssign) }
-      if !firstMatch.isEmpty
-    } yield (nodeToAssign, firstMatch.get)) 
-
-    val fullMapDTtoAMR = initialMapDTtoAMR ++ mappingsToAdd
-    // Hmm...there is no way from here to update the state...
-    // that would have to be done in WXActions...but that does not have access to the AMR in Sentence!
-    // State *is* the best place to put all of this information...which suggests I need to put the AMR 
-    // into State as well as Sentence purely for the convenience of the Expert policy in training.
-    
-    val fullMapAMRtoDT = initialMapDTtoAMR ++ mappingsToAdd map { case (key, value) => (value -> key) }
+    val fullMapDTtoAMR = state.currentGraph.insertedNodes ++ data.positionToAMR
+    val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
 
     val sigma = state.nodesToProcess.head
     val sigmaParents = if (sigma == 0) List() else state.currentGraph.parentsOf(sigma)
