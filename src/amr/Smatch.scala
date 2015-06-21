@@ -3,10 +3,10 @@ import scala.util.Random
 
 object Smatch {
 
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph): Double = {
+  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4): Double = {
     val smallGraph = if (AMR1.nodes.size < AMR2.nodes.size) AMR1 else AMR2
     val largeGraph = if (AMR1.nodes.size >= AMR2.nodes.size) AMR1 else AMR2
-    val allScores = 1 to 5 map (_ => oneIteration(largeGraph, smallGraph))
+    val allScores = 1 to attempts map (_ => oneIteration(largeGraph, smallGraph))
     allScores.max
   }
   

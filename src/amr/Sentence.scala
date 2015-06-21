@@ -16,13 +16,13 @@ abstract class Graph[K] {
       val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
       if (nextNodes exists isRoot) accum else depthHelper(nextNodes, accum + 1)
     }
-    depthHelper(List(node), 0)
+    if (isRoot(node)) 0 else depthHelper(List(node), 1)
   }
-  def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList
+  def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList filter (_ != node)
   def parentsOf(node: K): List[K] = edgesToParents(node) map { case (p, c) => p }
   def childrenOf(node: K): List[K] = edgesToChildren(node) map { case (p, c) => c }
   def labelsBetween(parent: K, child: K): List[String] = (arcs filter (x => x match { case ((p, c), l) => p == parent && c == child }) map { case ((p, c), l) => l }).toList
-  def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList
+  def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
 
 }
@@ -78,9 +78,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newNode = nodes.keys.max + 1
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
+    val newInsertedNodes = if (otherRef == "") this.insertedNodes else this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeSpans = this.nodeSpans + (newNode -> childSpan),
-      arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes = this.insertedNodes + (newNode -> otherRef)))
+      arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes = newInsertedNodes))
   }
 
   override def toString: String = {
@@ -99,7 +100,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
   }
 
-  override def isRoot(node: Int): Boolean = edgesToParents(node).size == 0
+  override def isRoot(node: Int): Boolean = edgesToParents(node).isEmpty
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {

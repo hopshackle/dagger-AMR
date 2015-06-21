@@ -22,6 +22,7 @@ class WangXueExpert extends WangXueExpertBasic {
     val BETA = if (state.childrenToProcess.isEmpty) -1 else state.childrenToProcess.head
     val SIGMAAMR = fullMapDTtoAMR.get(sigma)
     if (debug) println(s"SIGMAAMR = $SIGMAAMR")
+
     val BETAAMR = if (BETA == -1) None else fullMapDTtoAMR.get(BETA)
 
     val sigmaAMRParents = getAMRParents(SIGMAAMR)
@@ -50,9 +51,15 @@ class WangXueExpert extends WangXueExpertBasic {
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
       case (Some(sigmaAMR), false, _, _, _) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
-      case (Some(sigmaAMR), _, -1, _, _) => NextNode(conceptIndex(data.amr.get.nodes(sigmaAMR)))
+      case (Some(sigmaAMR), _, -1, _, _) =>
+        val concept = data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN")
+        if (concept == "UNKNOWN") {
+          println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
+          println(state.currentGraph.insertedNodes)
+        }
+        NextNode(conceptIndex(concept))
       case (None, _, -1, _, _) => if (DeleteNode.isPermissible(state)) DeleteNode else NextNode(0)
-      case (Some(sigmaAMR), _, beta, Some(betaAMR), false) =>
+      case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
         else if (nodesToProcessAMR contains betaAMRParents.head) {
           val parentIndex = state.nodesToProcess(nodesToProcessAMR.indexOf(betaAMRParents.head))
