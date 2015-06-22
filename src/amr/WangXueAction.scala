@@ -34,7 +34,7 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
     val newNodesToProcess = conf.nodesToProcess.tail
     val childrenOfNewNode = newNodesToProcess match {
       case Nil => Nil
-      case _ => NextNode.childrenOfNode(newNodesToProcess.head, tree)
+      case _ => tree.childrenOf(newNodesToProcess.head)
     }
     conf.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewNode, currentGraph = tree)
   }
@@ -47,14 +47,6 @@ object NextNode {
   def all(): Array[WangXueAction] = {
     (conceptMaster.keys map (i => NextNode(i))).toArray
   }
-
-  def childrenOfNode(newHead: Int, tree: DependencyTree): List[Int] = {
-    (for {
-      edge @ ((parent, child), _) <- tree.arcs
-      if parent == newHead
-    } yield child)
-      .toList
-  }
 }
 
 case object DeleteNode extends WangXueAction {
@@ -66,7 +58,7 @@ case object DeleteNode extends WangXueAction {
     val newNodesToProcess = state.nodesToProcess.tail
     val childrenOfNewTopNode = newNodesToProcess match {
       case Nil => Nil
-      case _ => NextNode.childrenOfNode(newNodesToProcess.head, tree)
+      case _ => tree.childrenOf(newNodesToProcess.head)
     }
     state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewTopNode, currentGraph = tree)
   }
