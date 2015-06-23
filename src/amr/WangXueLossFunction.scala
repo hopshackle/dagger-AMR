@@ -4,8 +4,8 @@ import amr.ImportConcepts.{ concept, relation }
 
 class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueTransitionState] {
 
-  private var nodeDefault: Array[Double] = Array()
-  private var edgeDefault: Array[Double] = Array()
+  private var nodeDefault: Array[Double] = Array(1)
+  private var edgeDefault: Array[Double] = Array(1)
   private var node, edge: Boolean = false
   private var sampleSize: Int = 1
   private var count: Int = 0
@@ -35,12 +35,27 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
       }
     }
 
+    count += 1
+    if (count > sampleSize) count = 1
+
     trialAction match {
       case NextNode(nodeConcept) => if (conceptNotInAMR(nodeConcept)) {
-        if (node) nodeDefault else { nodeDefault = apply(gold, test, testActions); node = true; nodeDefault }
+        if (node)
+          nodeDefault(count - 1)
+        else {
+          nodeDefault(count - 1) = apply(gold, test, testActions)
+          if (count == sampleSize) node = true
+          nodeDefault(count - 1)
+        }
       } else apply(gold, test, testActions)
       case NextEdge(edgeLabel) => if (labelNotInAMR(edgeLabel)) {
-        if (edge) edgeDefault else { edgeDefault = apply(gold, test, testActions); edge = true; edgeDefault }
+        if (edge)
+          edgeDefault(count - 1)
+        else {
+          edgeDefault(count - 1) = apply(gold, test, testActions)
+          if (count == sampleSize) edge = true
+          edgeDefault(count - 1)
+        }
       } else apply(gold, test, testActions)
       case _ => apply(gold, test, testActions)
     }
