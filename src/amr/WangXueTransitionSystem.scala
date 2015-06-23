@@ -24,19 +24,16 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
 
   def init(datum: Sentence): WangXueTransitionState = {
 
-    def getAllNodes(previousLevel: List[Int]): List[Int] = {
-      previousLevel match {
-        case Nil => Nil
-        case _ =>
-          val nextLevel = for {
-            ((parent, child), label) <- datum.dependencyTree.arcs
-            if previousLevel contains parent
-          } yield child
-          getAllNodes(nextLevel.toList) ++ previousLevel
-      }
+    def getAllChildren(parentList: List[Int]): List[Int] = {
+      val newChildren = ((parentList flatMap datum.dependencyTree.childrenOf).toSet diff parentList.toSet).toList
+      // we don't care what order the new children are in
+      if (newChildren.isEmpty)
+        parentList  // we're done
+      else 
+        getAllChildren(newChildren) ++ parentList
     }
 
-    val allNodes = getAllNodes(List(0)) // we start with the root node, which is always 0
+    val allNodes = getAllChildren(List(0)) // we start with the root node, which is always 0
 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)
