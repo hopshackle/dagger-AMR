@@ -23,15 +23,19 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction], trialAction: WangXueAction): Double = {
     def conceptNotInAMR(c: Int): Boolean = {
-      gold.amr match {
-        case None => false
-        case Some(amr) => !(amr.nodes.values.toSet contains concept(c))
+      if (c == 0) false else {
+        gold.amr match {
+          case None => false
+          case Some(amr) => !(amr.nodes.values.toSet contains concept(c))
+        }
       }
     }
     def labelNotInAMR(l: Int): Boolean = {
-      gold.amr match {
-        case None => false
-        case Some(amr) => !(amr.arcs.values.toSet contains relation(l))
+      if (l == 0) false else {
+        gold.amr match {
+          case None => false
+          case Some(amr) => !(amr.arcs.values.toSet contains relation(l))
+        }
       }
     }
 
