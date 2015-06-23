@@ -4,13 +4,21 @@ import amr.ImportConcepts.{ concept, relation }
 
 class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueTransitionState] {
 
-  private var nodeDefault: Double = 0.0
-  private var edgeDefault: Double = 0.0
+  private var nodeDefault: Array[Double] = Array()
+  private var edgeDefault: Array[Double] = Array()
   private var node, edge: Boolean = false
+  private var sampleSize: Int = 1
+  private var count: Int = 0
 
   override def clearCache: Unit = {
     node = false
     edge = false
+    count = 0
+  }
+  override def setSamples(s: Int): Unit = {
+    sampleSize = s
+    nodeDefault = new Array[Double](s)
+    edgeDefault = new Array[Double](s)
   }
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction], trialAction: WangXueAction): Double = {
