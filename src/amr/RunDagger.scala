@@ -37,17 +37,18 @@ object RunDagger {
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
-    dagger.train(trainData, new WangXueExpert, (new WangXueFeatures).features, new WangXueTransitionSystem, new WangXueLossFunction, devData, score = null)
+    def score = (i: Iterable[(Sentence, Sentence)]) => 1.0
+    dagger.train(trainData, new WangXueExpert, (new WangXueFeatures).features, new WangXueTransitionSystem, new WangXueLossFunction, devData, score)
   }
 
   def main(args: Array[String]): Unit = {
-   
- //   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
- //    "--dagger.iterations", "3",
- //     "--debug", "true",
- //     "--dagger.print.interval", "1",
- //     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
- //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
+
+    //   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
+    //    "--dagger.iterations", "3",
+    //     "--debug", "true",
+    //     "--dagger.print.interval", "1",
+    //     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
+    //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
 
     val options = new DAGGEROptions(args)
     testDAGGERrun(options)
