@@ -44,9 +44,9 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   // helper method - as we don't always have the full Sentence
   def init(datum: DependencyTree): WangXueTransitionState = init(Sentence("", datum, None))
 
-  def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
+  override def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
 
-  def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
+  override def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 
   override def permissibleActions(state: WangXueTransitionState): Array[WangXueAction] = {
     actions(state).filter(action => isPermissible(action, state))

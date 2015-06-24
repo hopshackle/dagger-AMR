@@ -1,6 +1,7 @@
 package amr
 import scala.collection.Map
 import coref.util._
+import ImportConcepts.{ concept }
 
 class WangXueFeatures(dict: Index = new MapIndex) {
 
@@ -38,10 +39,12 @@ class WangXueFeatures(dict: Index = new MapIndex) {
       if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
       parentLabelCombos foreach {
         case (parent, label) =>
+          val parentWord = concept(parent)
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(parent))
+          add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
       }
-      //     add(hmap, "PARENT-SIGMA-WORDS=" + state.currentGraph.nodes(sigmaParent) + "-" + sigmaWord)
+
     }
     hmap
   }
@@ -63,8 +66,13 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "NONE")
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "NONE")
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "NONE")
+    val sigmaInserted = state.currentGraph.insertedNodes contains sigma
+    val betaInserted = state.currentGraph.insertedNodes contains beta
 
     add(hmap, "BIAS-BETA")
+    if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
+    if (betaInserted) add(hmap, "BETA-INSERTED")
+    if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
     add(hmap, "BETA-WORD=" + sigmaWord)
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
     add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
