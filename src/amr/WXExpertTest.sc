@@ -35,15 +35,15 @@ object WXExpertTest {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.3 sec].
+                                                  //| hPCFG.ser.gz ... done [1.1 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.4 sec].
+                                                  //| im.crf.ser.gz ... done [4.6 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.6 sec].
+                                                  //| im.crf.ser.gz ... done [3.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [6.3 sec].
+                                                  //| tsim.crf.ser.gz ... done [2.5 sec].
                                                   //| s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT); Ger
                                                   //| many (DE): Italy (IT); Spain (ES); Slovakia (SK); United States (US),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
@@ -57,12 +57,13 @@ object WXExpertTest {
                                                   //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
                                                   //| ,11) -> dep, (6,16) -> dep, (6,21) -> dep, (6,26) -> dep, (6,31) -> dep, (6,
                                                   //| 37) -> dep, (11,13) -> appos, (16,18) -> appos, (21,23) -> dep, (26,28) -> a
-                                                  //| ppos, (31,33) -> appos, (37,36) -> nn, (37,39) -> appos),Some(AMRGraph(Map(0
-                                                  //| .1 -> country, 0.0.0 -> name, 0.6.0.0 -> "Slovakia", 0.6.0 -> name, 0.1.0 ->
-                                                  //|  name, 0.7.0 -> name, 0.5 -> country, 0.7.0.0 -> "United", 0.0 -> country, 0
-                                                  //| .4 -> country, 0.0.0.0 -> "Estonia", 0.5.0 -> name, 0.2.0 -> name, 0.3.0.0 -
-                                                  //| > "Germany", 0.3.0 -> name, 0.1.0.0 -> "Latvia", 0.4.0.0 -> "Italy", 0.5.0.0
-                                                  //|  -> "Spain", 0.3 -> country, 0.4.0 -> name, 0 -> and, 0.6 -
+                                                  //| ppos, (31,33) -> appos, (37,36) -> nn, (37,39) -> appos)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNode:	Map(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 0.6.0.0 -
+                                                  //| > "Slovakia", 0.6.0 -> name, 0.1.0 -> name, 0.7.0 -> name, 0.5 -> country, 0
+                                                  //| .7.0.0 -> "United", 0.0 -> country, 0.4 -> country, 0.0.0.0 -> "Estonia", 0.
+                                                  //| 5.0 -> name, 0.2.0 -> name, 0.3.0.0 -> "Germany", 0.3.0 -> name, 0.1.0.0 -> 
+                                                  //| "Latvia", 0.4.0.0 -> "Italy", 0.5.0.0 -> "Spain", 0.3 
                                                   //| Output exceeds cutoff limit.
                                                   
   s1.positionToAMR                                //> res0: Map[Int,String] = Map(0 -> ROOT, 37 -> 0.7.0.1, 1 -> 0.0.0.0, 6 -> 0.1
@@ -75,22 +76,24 @@ object WXExpertTest {
                                                   //| , 7 -> technology, 9 -> science)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6))
                                                   //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,5) -> dep, (3,7) -> dep, (7,
-                                                  //| 9) -> dep),Some(AMRGraph(Map(0.1 -> government-organization, 0.1.0 -> govern
-                                                  //| -01, 0.0 -> international, 0.4 -> science, 0.3 -> technology, 0 -> and, 0.2 
-                                                  //| -> telecommunication, ROOT -> ROOT),Map(0.1 -> (2,3), 0.0 -> (1,2), 0.4 -> (
-                                                  //| 5,6), 0.3 -> (4,5), 0.2 -> (3,4)),Map((ROOT,0) -> ROOT, (0,0.3) -> opN, (0.1
-                                                  //| ,0.1.0) -> ARG0-of, (0,0.2) -> opN, (0,0.1) -> opN, (0,0.4) -> opN, (0,0.0) 
-                                                  //| -> opN))),Map(0 -> ROOT, 5 -> 0.2, 1 -> 0.0, 9 -> 0.4, 7 -> 0.3, 3 -> 0.1))
-                                                  //| 
+                                                  //| 9) -> dep)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNode:	Map(),Some(AMRGraph(Map(0.1 -> government-organization, 0.1.0 ->
+                                                  //|  govern-01, 0.0 -> international, 0.4 -> science, 0.3 -> technology, 0 -> an
+                                                  //| d, 0.2 -> telecommunication, ROOT -> ROOT),Map(0.1 -> (2,3), 0.0 -> (1,2), 0
+                                                  //| .4 -> (5,6), 0.3 -> (4,5), 0.2 -> (3,4)),Map((ROOT,0) -> ROOT, (0,0.3) -> op
+                                                  //| N, (0.1,0.1.0) -> ARG0-of, (0,0.2) -> opN, (0,0.1) -> opN, (0,0.4) -> opN, (
+                                                  //| 0,0.0) -> opN))),Map(0 -> ROOT, 5 -> 0.2, 1 -> 0.0, 9 -> 0.4, 7 -> 0.3, 3 ->
+                                                  //|  0.1))
   s2.positionToAMR                                //> res1: Map[Int,String] = Map(0 -> ROOT, 5 -> 0.2, 1 -> 0.0, 9 -> 0.4, 7 -> 0.
                                                   //| 3, 3 -> 0.1)
-  val expert = new WangXueExpertBasic             //> expert  : amr.WangXueExpertBasic = amr.WangXueExpertBasic@563f38c4
+  val expert = new WangXueExpertBasic             //> expert  : amr.WangXueExpertBasic = amr.WangXueExpertBasic@3b0fe47a
   val expertSystem = new WangXueTransitionSystem  //> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
-                                                  //| expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@75
-                                                  //| 437611
+                                                  //| expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@4c
+                                                  //| 60d6e9
   val startState = expertSystem.init(s2)          //> startState  : amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(9, 5, 7, 3, 1, 0)
                                                   //| Children:	List()
@@ -100,6 +103,8 @@ object WXExpertTest {
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6))
                                                   //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,5) -> dep, (3,7) -> dep, (7,
                                                   //| 9) -> dep)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNode:	Map()
                                                   //| Mappings:	0 -> ROOT
                                                   //| 5 -> 0.2
                                                   //| 1 -> 0.0
@@ -124,6 +129,8 @@ object WXExpertTest {
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6))
                                                   //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,5) -> dep, (3,7) -> dep, (7,
                                                   //| 9) -> dep)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNode:	Map()
                                                   //| Mappings:	0 -> ROOT
                                                   //| 5 -> 0.2
                                                   //| 1 -> 0.0
@@ -138,13 +145,14 @@ val output = RunDagger.sampleTrajectory(s2, "", new WangXueExpertBasic)
                                                   //|  5 -> telecommunication, 7 -> technology, 9 -> science)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6))
                                                   //| Edges:	Map((0,1) -> UNKNOWN, (1,3) -> UNKNOWN, (3,5) -> UNKNOWN, (3,7) 
-                                                  //| -> UNKNOWN, (7,9) -> UNKNOWN),Some(AMRGraph(Map(9 -> science, 5 -> telecommu
-                                                  //| nication, 1 -> international, 0 -> ROOT, 7 -> technology, 3 -> government-or
-                                                  //| ganization),Map(9 -> (5,6), 5 -> (3,4), 1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),
-                                                  //| Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) -> UNKNOWN, 
-                                                  //| (7,9) -> UNKNOWN))),Map(0 -> ROOT, 5 -> 5, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
-                                                  //| 
-val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@350aac89
+                                                  //| -> UNKNOWN, (7,9) -> UNKNOWN)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNode:	Map(),Some(AMRGraph(Map(9 -> science, 5 -> telecommunication, 1 
+                                                  //| -> international, 0 -> ROOT, 7 -> technology, 3 -> government-organization),
+                                                  //| Map(9 -> (5,6), 5 -> (3,4), 1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((3,5) ->
+                                                  //|  UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) -> UNKNOWN, (7,9) -> UNK
+                                                  //| NOWN))),Map(0 -> ROOT, 5 -> 5, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
+val loss = new WangXueLossFunction                //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@7f485fda
 loss(s2, s2, null)                                //> res3: Double = 0.0
 loss(s2, output, null)                            //> res4: Double = 0.5384615384615385
 println(output.amr.get)                           //> AMRGraph(Map(9 -> science, 5 -> telecommunication, 1 -> international, 0 -> 
@@ -176,12 +184,14 @@ s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGra
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6), 
                                                   //| 10 -> (5,6))
                                                   //| Edges:	Map((0,1) -> UNKNOWN, (0,10) -> ROOT, (1,3) -> UNKNOWN, (3,5) ->
-                                                  //|  UNKNOWN, (3,7) -> UNKNOWN, (10,9) -> opN),Some(AMRGraph(Map(9 -> science, 5
-                                                  //|  -> telecommunication, 10 -> and, 1 -> international, 0 -> ROOT, 7 -> techno
-                                                  //| logy, 3 -> government-organization),Map(9 -> (5,6), 5 -> (3,4), 10 -> (5,6),
-                                                  //|  1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN,
-                                                  //|  (3,7) -> UNKNOWN, (0,1) -> UNKNOWN, (10,9) -> opN, (0,10) -> ROOT))),Map(0 
-                                                  //| -> ROOT, 5 -> 5, 10 -> 10, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
+                                                  //|  UNKNOWN, (3,7) -> UNKNOWN, (10,9) -> opN)
+                                                  //| InsertedNodes:	Map(10 -> 0)
+                                                  //| MergedNode:	Map(),Some(AMRGraph(Map(9 -> science, 5 -> telecommunication, 10
+                                                  //|  -> and, 1 -> international, 0 -> ROOT, 7 -> technology, 3 -> government-org
+                                                  //| anization),Map(9 -> (5,6), 5 -> (3,4), 10 -> (5,6), 1 -> (1,2), 7 -> (4,5), 
+                                                  //| 3 -> (2,3)),Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) 
+                                                  //| -> UNKNOWN, (10,9) -> opN, (0,10) -> ROOT))),Map(0 -> ROOT, 5 -> 5, 10 -> 10
+                                                  //| , 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
 outputAdv                                         //> res6: amr.Sentence = Sentence(International; Government; Telecom; technology
                                                   //| ; science,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> international, 3 -> government-organization,
@@ -189,10 +199,12 @@ outputAdv                                         //> res6: amr.Sentence = Sente
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6), 
                                                   //| 10 -> (5,6))
                                                   //| Edges:	Map((0,1) -> UNKNOWN, (0,10) -> ROOT, (1,3) -> UNKNOWN, (3,5) ->
-                                                  //|  UNKNOWN, (3,7) -> UNKNOWN, (10,9) -> opN),Some(AMRGraph(Map(9 -> science, 5
-                                                  //|  -> telecommunication, 10 -> and, 1 -> international, 0 -> ROOT, 7 -> techno
-                                                  //| logy, 3 -> government-organization),Map(9 -> (5,6), 5 -> (3,4), 10 -> (5,6),
-                                                  //|  1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN,
-                                                  //|  (3,7) -> UNKNOWN, (0,1) -> UNKNOWN, (10,9) -> opN, (0,10) -> ROOT))),Map(0 
-                                                  //| -> ROOT, 5 -> 5, 10 -> 10, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
+                                                  //|  UNKNOWN, (3,7) -> UNKNOWN, (10,9) -> opN)
+                                                  //| InsertedNodes:	Map(10 -> 0)
+                                                  //| MergedNode:	Map(),Some(AMRGraph(Map(9 -> science, 5 -> telecommunication, 10
+                                                  //|  -> and, 1 -> international, 0 -> ROOT, 7 -> technology, 3 -> government-org
+                                                  //| anization),Map(9 -> (5,6), 5 -> (3,4), 10 -> (5,6), 1 -> (1,2), 7 -> (4,5), 
+                                                  //| 3 -> (2,3)),Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) 
+                                                  //| -> UNKNOWN, (10,9) -> opN, (0,10) -> ROOT))),Map(0 -> ROOT, 5 -> 5, 10 -> 10
+                                                  //| , 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
 }

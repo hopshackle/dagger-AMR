@@ -88,7 +88,7 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
       case None => List[String]()
       case Some(amrKey) => state.originalInput.get.amr.get.parentsOf(amrKey)
     }
-    if (state.originalInput.isEmpty) "" else {
+    if (state.originalInput.isEmpty || state.originalInput.get.amr.isEmpty) "" else {
       val conceptToMatch = concept(conceptIndex)
       val amr = state.originalInput.get.amr.get
       val fullMapDTtoAMR = state.originalInput.get.positionToAMR ++ state.currentGraph.insertedNodes
@@ -155,15 +155,21 @@ case class Reattach(newNode: Int) extends WangXueAction {
 
 case object Swap extends WangXueAction {
 
-  def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
-  def isPermissible(state: WangXueTransitionState): Boolean = false
+  def apply(state: WangXueTransitionState): WangXueTransitionState = ???
+  def isPermissible(state: WangXueTransitionState): Boolean = ???
 
 }
 
 case object ReplaceHead extends WangXueAction {
 
-  def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
-  def isPermissible(state: WangXueTransitionState): Boolean = false
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
+    // We delete sigma, and move all arcs in/out of sigma to be in/out of beta
+    // and move beta to top of stack, without otherwise changing the order
+    val tree = state.currentGraph.mergeNodes(state.nodesToProcess.head, state.childrenToProcess.head)
+    state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess.tail, 
+        childrenToProcess = tree.childrenOf(state.childrenToProcess.head), currentGraph = tree)
+  }
+  def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty
 
 }
 

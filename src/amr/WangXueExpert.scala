@@ -14,7 +14,9 @@ class WangXueExpert extends WangXueExpertBasic {
       case Some(amrKey) => data.amr.get.parentsOf(amrKey)
     }
 
-    val fullMapDTtoAMR = state.currentGraph.insertedNodes ++ data.positionToAMR
+    // nodes inserted without an AMR ref are ignored by the expert - if AMR exists, then we estimate
+    // the AMR ref of a node Inserted by a non-expert policy at the time of insertion
+    val fullMapDTtoAMR = (state.currentGraph.insertedNodes filter {case (i, ref) => ref != ""}) ++ data.positionToAMR
     val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
 
     val sigma = state.nodesToProcess.head

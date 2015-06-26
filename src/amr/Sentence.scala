@@ -37,7 +37,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
-  insertedNodes: Map[Int, String]) extends Graph[Int] {
+  insertedNodes: Map[Int, String], mergedNodes: Map[Int, (Int, String)]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -77,10 +77,27 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newNode = nodes.keys.max + 1
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
-    val newInsertedNodes = if (otherRef == "") this.insertedNodes else this.insertedNodes + (newNode -> otherRef)
+    val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeSpans = this.nodeSpans + (newNode -> childSpan),
       arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes = newInsertedNodes))
+  }
+
+  def mergeNodes(nodeToRemove: Int, nodeToKeep: Int): DependencyTree = {
+    val newEdgesIn = edgesToParents(nodeToRemove) map { case (from, to) => ((from, nodeToKeep), arcs((from, to))) } 
+    val newEdgesOut = edgesToChildren(nodeToRemove) map { case (from, to) => ((nodeToKeep, to), arcs((from, to))) }
+    val oldEdges = edgesToParents(nodeToRemove) ++ edgesToChildren(nodeToRemove)
+    val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
+    this.copy(nodes = this.nodes - nodeToRemove, nodeSpans = newSpans, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut - ((nodeToKeep, nodeToKeep)),
+      mergedNodes = this.mergedNodes + (nodeToKeep -> (nodeToRemove, this.nodes(nodeToRemove))))
+  }
+
+  def mergedSpan(node1: Int, node2: Int): (Int, Int) = {
+    val (s1, e1) = nodeSpans(node1)
+    val (s2, e2) = nodeSpans(node2)
+    val s = Math.min(if (s1 == 0) 999 else s1, if (s2 == 0) 999 else s2)
+    val e = Math.max(if (s1 == 0) 999 else s1, if (s2 == 0) 999 else s2)
+    (if (s == 999) 0 else s, if (e == 999) 0 else e)
   }
 
   override def toString: String = {
@@ -89,7 +106,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val edgeSort = arcs.foldLeft(SortedMap[(Int, Int), String]()) { case (start, (a, b)) => start + (a -> b) }
     "\nNodeMap:\t" + nodeSort.toString +
       "\nSpanMap:\t" + spanSort.toString +
-      "\nEdges:\t" + edgeSort.toString
+      "\nEdges:\t" + edgeSort.toString +
+      "\nInsertedNodes:\t" + insertedNodes.toString +
+      "\nMergedNode:\t" + mergedNodes.toString
   }
 
   def toAMR: AMRGraph = {
@@ -219,7 +238,7 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, Map())
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, Map(), Map())
   }
 }
 
