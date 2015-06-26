@@ -39,11 +39,11 @@ object WXExpertTest {
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.6 sec].
+                                                  //| im.crf.ser.gz ... done [4.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.5 sec].
+                                                  //| im.crf.ser.gz ... done [2.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.5 sec].
+                                                  //| tsim.crf.ser.gz ... done [3.7 sec].
                                                   //| s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT); Ger
                                                   //| many (DE): Italy (IT); Spain (ES); Slovakia (SK); United States (US),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
@@ -176,9 +176,9 @@ s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGra
                                                   //| # ::edge	0	0.4	opN
                                                   //| # ::edge	0	0.0	opN
                                                   //| "
- val outputAdv = RunDagger.sampleTrajectory(s2, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
-                                                  //> outputAdv  : amr.Sentence = Sentence(International; Government; Telecom; tec
-                                                  //| hnology; science,
+ val outputAdv2 = RunDagger.sampleTrajectory(s2, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
+                                                  //> outputAdv2  : amr.Sentence = Sentence(International; Government; Telecom; te
+                                                  //| chnology; science,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> international, 3 -> government-organization,
                                                   //|  5 -> telecommunication, 7 -> technology, 9 -> science, 10 -> and)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6), 
@@ -192,7 +192,7 @@ s2.amr.get.toOutputFormat                         //> res5: String = "# ::AMRGra
                                                   //| 3 -> (2,3)),Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) 
                                                   //| -> UNKNOWN, (10,9) -> opN, (0,10) -> ROOT))),Map(0 -> ROOT, 5 -> 5, 10 -> 10
                                                   //| , 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
-outputAdv                                         //> res6: amr.Sentence = Sentence(International; Government; Telecom; technology
+outputAdv2                                        //> res6: amr.Sentence = Sentence(International; Government; Telecom; technology
                                                   //| ; science,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> international, 3 -> government-organization,
                                                   //|  5 -> telecommunication, 7 -> technology, 9 -> science, 10 -> and)
@@ -207,4 +207,62 @@ outputAdv                                         //> res6: amr.Sentence = Sente
                                                   //| 3 -> (2,3)),Map((3,5) -> UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) 
                                                   //| -> UNKNOWN, (10,9) -> opN, (0,10) -> ROOT))),Map(0 -> ROOT, 5 -> 5, 10 -> 10
                                                   //| , 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
+val outputAdv1 = RunDagger.sampleTrajectory(s1, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
+                                                  //> outputAdv1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania 
+                                                  //| (LT); Germany (DE): Italy (IT); Spain (ES); Slovakia (SK); United States (U
+                                                  //| S),
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> "Estonia", 6 -> "Latvia", 11 -> "Lithuania",
+                                                  //|  16 -> Germany, 21 -> Italy, 26 -> Spain, 31 -> Slovakia, 36 -> United, 37 
+                                                  //| -> States, 38 -> name, 39 -> country, 40 -> and, 41 -> name, 42 -> country,
+                                                  //|  43 -> name, 44 -> name, 45 -> country, 46 -> name, 47 -> country, 48 -> co
+                                                  //| untry, 49 -> name, 50 -> country, 51 -> name, 52 -> name, 53 -> country, 54
+                                                  //|  -> country)
+                                                  //| SpanMap:	Map(1 -> (1,2), 6 -> (3,4), 11 -> (5,6), 16 -> (7,8), 21 -> (9,1
+                                                  //| 0), 26 -> (11,12), 31 -> (13,14), 36 -> (15,16), 37 -> (16,17), 38 -> (15,1
+                                                  //| 6), 39 -> (15,16), 40 -> (2,15), 41 -> (9,10), 42 -> (9,10), 43 -> (7,8), 4
+                                                  //| 4 -> (13,14), 45 -> (13,14), 46 -> (5,6), 47 -> (5,6), 48 -> (7,8), 49 -> (
+                                                  //| 11,12), 50 -> (11,12), 51 -> (1,2), 52 -> (3,4), 53 -> (3,4), 54 -> (1,2))
+                                                  //| Edges:	Map((0,40) -> ROOT, (6,37) -> UNKNOWN, (6,42) -> UNKNOWN, (6,45)
+                                                  //|  -> UNKNOWN, (6,47) -> UNKNOWN, (6,48) -> UNKNOWN, (6,50) -> UNKNOWN, (38,3
+                                                  //| 6) -> opN, (39,38) -> name, (40,39) -> opN, (40,53) -> opN, (40,54) -> opN,
+                                                  //|  (41,21) -> opN, (42,41) -> name, (43,16) -> opN, (44,31) -> opN, (45,44) -
+                                                  //| > name, (46,11) -> opN, (47,46) -> name, (48,43) -> name, (49,26) -> opN, (
+                                                  //| 50,49) -> name, (51,1) -> opN, (52,6) -> opN, (53,52) -> name, (54,51) -> n
+                                                  //| ame)
+                                                  //| InsertedNodes:	Map(42 -> 0.4, 52 -> 0.1.0, 46 -> 0.2.0, 38 -> 0.7.0, 53
+                                                  //|  -> 0.1, 41 -> 0.4.0, 45 -> 0.6, 44 -> 0.6.0, 54 -> 0.0, 49 -> 0.5.0, 39 ->
+                                                  //|  0.7, 48 -> 0.3, 50 -> 0.5, 43 -> 0.3.0, 40 -> 0, 51 -> 0.0.0, 47 -> 0.2)
+                                                  //| MergedNode:	Map(40 -> List((3,EE))),Some(AMRGraph(Map(45 -> country,
+                                                  //|  51 -> name, 40 -> and, 11 -> "Lithuania", 44 -> name, 26 -> Spain, 50 -> c
+                                                  //| ountry, 37 -> States, 46 -> name, 16 -> Germany, 48 -> country, 21 -> Italy
+                                                  //| , 54 -> country, 43 -> name, 49 -> n
+                                                  //| Output exceeds cutoff limit.
+ outputAdv1                                       //> res7: amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT); Ge
+                                                  //| rmany (DE): Italy (IT); Spain (ES); Slovakia (SK); United States (US),
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> "Estonia", 6 -> "Latvia", 11 -> "Lithuania",
+                                                  //|  16 -> Germany, 21 -> Italy, 26 -> Spain, 31 -> Slovakia, 36 -> United, 37 
+                                                  //| -> States, 38 -> name, 39 -> country, 40 -> and, 41 -> name, 42 -> country,
+                                                  //|  43 -> name, 44 -> name, 45 -> country, 46 -> name, 47 -> country, 48 -> co
+                                                  //| untry, 49 -> name, 50 -> country, 51 -> name, 52 -> name, 53 -> country, 54
+                                                  //|  -> country)
+                                                  //| SpanMap:	Map(1 -> (1,2), 6 -> (3,4), 11 -> (5,6), 16 -> (7,8), 21 -> (9,1
+                                                  //| 0), 26 -> (11,12), 31 -> (13,14), 36 -> (15,16), 37 -> (16,17), 38 -> (15,1
+                                                  //| 6), 39 -> (15,16), 40 -> (2,15), 41 -> (9,10), 42 -> (9,10), 43 -> (7,8), 4
+                                                  //| 4 -> (13,14), 45 -> (13,14), 46 -> (5,6), 47 -> (5,6), 48 -> (7,8), 49 -> (
+                                                  //| 11,12), 50 -> (11,12), 51 -> (1,2), 52 -> (3,4), 53 -> (3,4), 54 -> (1,2))
+                                                  //| Edges:	Map((0,40) -> ROOT, (6,37) -> UNKNOWN, (6,42) -> UNKNOWN, (6,45)
+                                                  //|  -> UNKNOWN, (6,47) -> UNKNOWN, (6,48) -> UNKNOWN, (6,50) -> UNKNOWN, (38,3
+                                                  //| 6) -> opN, (39,38) -> name, (40,39) -> opN, (40,53) -> opN, (40,54) -> opN,
+                                                  //|  (41,21) -> opN, (42,41) -> name, (43,16) -> opN, (44,31) -> opN, (45,44) -
+                                                  //| > name, (46,11) -> opN, (47,46) -> name, (48,43) -> name, (49,26) -> opN, (
+                                                  //| 50,49) -> name, (51,1) -> opN, (52,6) -> opN, (53,52) -> name, (54,51) -> n
+                                                  //| ame)
+                                                  //| InsertedNodes:	Map(42 -> 0.4, 52 -> 0.1.0, 46 -> 0.2.0, 38 -> 0.7.0, 53
+                                                  //|  -> 0.1, 41 -> 0.4.0, 45 -> 0.6, 44 -> 0.6.0, 54 -> 0.0, 49 -> 0.5.0, 39 ->
+                                                  //|  0.7, 48 -> 0.3, 50 -> 0.5, 43 -> 0.3.0, 40 -> 0, 51 -> 0.0.0, 47 -> 0.2)
+                                                  //| MergedNode:	Map(40 -> List((3,EE))),Some(AMRGraph(Map(45 -> country,
+                                                  //|  51 -> name, 40 -> and, 11 -> "Lithuania", 44 -> name, 26 -> Spain, 50 -> c
+                                                  //| ountry, 37 -> States, 46 -> name, 16 -> Germany, 48 -> country, 21 -> Italy
+                                                  //| , 54 -> country, 43 -> name, 49 -> name, 6 -> "Lat
+                                                  //| Output exceeds cutoff limit.
 }

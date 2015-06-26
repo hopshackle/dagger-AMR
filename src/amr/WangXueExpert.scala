@@ -47,7 +47,7 @@ class WangXueExpert extends WangXueExpertBasic {
       //    If betaAMR and its parent AMR node is matched with another DT node that is not sigma, then Reattach (if valid)
       //    If betaAMR and its parent is matched to sigma, then NextEdge
       //    If betaAMR and its parent is unmatched (and sigmaAMR) then...? [Next Edge ... we need a MERGE action for this one]
-      //    If betaAMR and its parent is unmatched (and NOT sigmaAMR) then...? [Next Edge...similarly, we need further actions to cope]
+      //    If betaAMR and its parent is unmatched (and NOT sigmaAMR) then we ReplaceHead - and delete sigma, merging it into beta
       //    If NOT betaAMR...should be impossible, as we assign all lower nodes to AMR nodes as we climb the tree...which might 
       //      happen if Classifier policy has been making some decisions, even if it would never happen with only this expert policy.
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
@@ -61,6 +61,7 @@ class WangXueExpert extends WangXueExpertBasic {
         }
         NextNode(conceptIndex(concept))
       case (None, _, -1, _, _) => if (DeleteNode.isPermissible(state)) DeleteNode else NextNode(0)
+      case (None, _, beta, Some(betaAMR), _) if (!(state.currentGraph.insertedNodes contains sigma)) =>  ReplaceHead // Never replace a sigma we inserted
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
         else if (nodesToProcessAMR contains betaAMRParents.head) {

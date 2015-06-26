@@ -83,6 +83,13 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     add(hmap, "BETA-POS=" + betaPOS)
     add(hmap, "BETA-LEMMA=" + betaLemma)
     add(hmap, "BETA-NER=" + betaNER)
+
+    val mergedNodes = state.currentGraph.mergedNodes.get(beta) match {
+      case None => Nil
+      case Some(mergedNodes) => mergedNodes
+    }
+    mergedNodes foreach { case (n, label) => add(hmap, "BETA-REPH=" + label) }
+
     sigmaFeatures(sentence, state) ++ hmap
   }
 

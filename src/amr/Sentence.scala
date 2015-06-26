@@ -20,6 +20,7 @@ abstract class Graph[K] {
   }
   def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList filter (_ != node)
   def parentsOf(node: K): List[K] = edgesToParents(node) map { case (p, c) => p }
+  def parentLabels(node: K): List[String] = (parentsOf(node) map (x => nodes(x))).toList
   def childrenOf(node: K): List[K] = edgesToChildren(node) map { case (p, c) => c }
   def labelsBetween(parent: K, child: K): List[String] = (arcs filter { case ((p, c), l) => p == parent && c == child } map { case ((p, c), l) => l }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
@@ -37,7 +38,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
-  insertedNodes: Map[Int, String], mergedNodes: Map[Int, (Int, String)]) extends Graph[Int] {
+  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -88,13 +89,15 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgesOut = edgesToChildren(nodeToRemove) map { case (from, to) => ((nodeToKeep, to), arcs((from, to))) }
     val oldEdges = edgesToParents(nodeToRemove) ++ edgesToChildren(nodeToRemove)
     val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
+    val alreadyMergedNodes = this.mergedNodes.get(nodeToKeep) match {case None => List(); case Some(mergedNodes) => mergedNodes}
+    val newMergedNodes = (nodeToRemove, this.nodes(nodeToRemove)) :: alreadyMergedNodes
     this.copy(nodes = this.nodes - nodeToRemove, nodeSpans = newSpans, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut - ((nodeToKeep, nodeToKeep)),
-      mergedNodes = this.mergedNodes + (nodeToKeep -> (nodeToRemove, this.nodes(nodeToRemove))))
+      mergedNodes = this.mergedNodes + (nodeToKeep -> newMergedNodes))
   }
 
   def mergedSpan(node1: Int, node2: Int): (Int, Int) = {
-    val (s1, e1) = nodeSpans(node1)
-    val (s2, e2) = nodeSpans(node2)
+    val (s1, e1) = nodeSpans.getOrElse(node1, (0, 0))
+    val (s2, e2) = nodeSpans.getOrElse(node2, (0, 0))
     val s = Math.min(if (s1 == 0) 999 else s1, if (s2 == 0) 999 else s2)
     val e = Math.max(if (s1 == 0) 999 else s1, if (s2 == 0) 999 else s2)
     (if (s == 999) 0 else s, if (e == 999) 0 else e)
@@ -112,6 +115,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def toAMR: AMRGraph = {
+  //      val amrNodes: Map[String, String] = (nodes map {
+   //   case (key, value) => if (parentLabels(key) contains "name") { (key.toString -> """"""" + value + """"""") }
+   //   else { (key.toString -> value) }.toMap
+  //  }
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrNodeSpan = nodeSpans map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }

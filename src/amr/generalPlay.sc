@@ -12,4 +12,6 @@ object generalPlay {
   a.size                                          //> res5: Int = 0
   a.isEmpty                                       //> res6: Boolean = true
   a == Nil                                        //> res7: Boolean = true
+  val value = "text"                              //> value  : String = text
+  val newValue = """"""" + value + """""""        //> newValue  : String = "text"
 }

@@ -99,7 +99,7 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
       val sigmaAMRParents = getAMRParents(currentNodeAMR)
       val unmatchedParents = sigmaAMRParents filter (!fullMapAMRtoDT.contains(_))
       val unmatchedParentLabels = unmatchedParents map (amr.nodes(_))
-      val actualMatches = (unmatchedParentLabels zip unmatchedParents) filter {case (label, ref) => label == conceptToMatch}       
+      val actualMatches = (unmatchedParentLabels zip unmatchedParents) filter { case (label, ref) => label == conceptToMatch }
       actualMatches match {
         case Nil => ""
         case head :: tail => head._2
@@ -166,11 +166,11 @@ case object ReplaceHead extends WangXueAction {
     // We delete sigma, and move all arcs in/out of sigma to be in/out of beta
     // and move beta to top of stack, without otherwise changing the order
     val tree = state.currentGraph.mergeNodes(state.nodesToProcess.head, state.childrenToProcess.head)
-    state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess.tail, 
-        childrenToProcess = tree.childrenOf(state.childrenToProcess.head), currentGraph = tree)
+    state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess.tail,
+      childrenToProcess = tree.childrenOf(state.childrenToProcess.head), currentGraph = tree)
   }
-  def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty
-
+  def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
+    !(state.currentGraph.insertedNodes contains state.nodesToProcess.head)
 }
 
 case object Reentrance extends WangXueAction {
