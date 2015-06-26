@@ -9,7 +9,7 @@ abstract class Graph[K] {
   def nodes: Map[K, String]
   def nodeSpans: Map[K, (Int, Int)]
   def arcs: Map[(K, K), String]
-  def isRoot(node: K): Boolean
+  def isRoot(node: K): Boolean = edgesToParents(node).isEmpty
 
   def depth(node: K): Int = {
     def depthHelper(nodes: List[K], accum: Int): Int = {
@@ -34,7 +34,6 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 
     "# ::AMRGraph\n" + nodeOutput.mkString + arcOutput.mkString
   }
-  override def isRoot(node: String): Boolean = nodes(node) == "ROOT"
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
@@ -99,8 +98,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
   }
-
-  override def isRoot(node: Int): Boolean = edgesToParents(node).isEmpty
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {
