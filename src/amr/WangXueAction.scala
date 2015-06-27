@@ -155,8 +155,15 @@ case class Reattach(newNode: Int) extends WangXueAction {
 
 case object Swap extends WangXueAction {
 
-  def apply(state: WangXueTransitionState): WangXueTransitionState = ???
-  def isPermissible(state: WangXueTransitionState): Boolean = ???
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
+    // We just swap the direction of the arc - and make beta the new currentNode (keeping sigma in the list)
+    val sigma = state.nodesToProcess.head
+    val beta = state.childrenToProcess.head
+    val tree = state.currentGraph.swapArc(sigma, beta)
+    state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess, childrenToProcess = tree.childrenOf(state.childrenToProcess.head))
+  }
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
+    !(state.currentGraph.swappedArcs contains ((state.childrenToProcess.head, state.nodesToProcess.head)))
 
 }
 

@@ -38,7 +38,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
-  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
+  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -85,14 +85,23 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def mergeNodes(nodeToRemove: Int, nodeToKeep: Int): DependencyTree = {
-    val newEdgesIn = edgesToParents(nodeToRemove) map { case (from, to) => ((from, nodeToKeep), arcs((from, to))) } 
+    val newEdgesIn = edgesToParents(nodeToRemove) map { case (from, to) => ((from, nodeToKeep), arcs((from, to))) }
     val newEdgesOut = edgesToChildren(nodeToRemove) map { case (from, to) => ((nodeToKeep, to), arcs((from, to))) }
     val oldEdges = edgesToParents(nodeToRemove) ++ edgesToChildren(nodeToRemove)
     val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
-    val alreadyMergedNodes = this.mergedNodes.get(nodeToKeep) match {case None => List(); case Some(mergedNodes) => mergedNodes}
+    val alreadyMergedNodes = this.mergedNodes.get(nodeToKeep) match { case None => List(); case Some(mergedNodes) => mergedNodes }
     val newMergedNodes = (nodeToRemove, this.nodes(nodeToRemove)) :: alreadyMergedNodes
     this.copy(nodes = this.nodes - nodeToRemove, nodeSpans = newSpans, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut - ((nodeToKeep, nodeToKeep)),
       mergedNodes = this.mergedNodes + (nodeToKeep -> newMergedNodes))
+  }
+
+  def swapArc(currentParent: Int, currentChild: Int): DependencyTree = {
+    val currentLabel = labelsBetween(currentParent, currentChild) match {
+      case Nil => assert(false, "No such arc to swap in DependencyTree.swapArc " + currentParent + " -> " + currentChild); "NONE"
+      case head :: tail => head
+    }
+    this.copy(arcs = this.arcs - ((currentParent, currentChild)) + ((currentChild, currentParent) -> currentLabel), 
+        swappedArcs = this.swappedArcs + ((currentParent, currentChild)))
   }
 
   def mergedSpan(node1: Int, node2: Int): (Int, Int) = {
@@ -111,14 +120,15 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       "\nSpanMap:\t" + spanSort.toString +
       "\nEdges:\t" + edgeSort.toString +
       "\nInsertedNodes:\t" + insertedNodes.toString +
-      "\nMergedNode:\t" + mergedNodes.toString
+      "\nMergedNodes:\t" + mergedNodes.toString +
+      "\nSwappedArcs:\t" + swappedArcs.toString
   }
 
   def toAMR: AMRGraph = {
-  //      val amrNodes: Map[String, String] = (nodes map {
-   //   case (key, value) => if (parentLabels(key) contains "name") { (key.toString -> """"""" + value + """"""") }
-   //   else { (key.toString -> value) }.toMap
-  //  }
+    //      val amrNodes: Map[String, String] = (nodes map {
+    //   case (key, value) => if (parentLabels(key) contains "name") { (key.toString -> """"""" + value + """"""") }
+    //   else { (key.toString -> value) }.toMap
+    //  }
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrNodeSpan = nodeSpans map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
@@ -245,7 +255,7 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, Map(), Map())
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, Map(), Map(), Set())
   }
 }
 
