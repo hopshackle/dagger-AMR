@@ -115,8 +115,9 @@ object Insert {
   def insertNodeIntoProcessList(node: Int, tree: DependencyTree, currentList: List[Int]): List[Int] = {
     // we create the nodesToProcess list de novo
     // and then remove all those nodes that are not the new one to insert, or any of the existing ones
+    // we also need to make sure that the first node in the returned List is unchanged
     val fullList = transSystem.init(tree).nodesToProcess
-    fullList intersect (node :: currentList) // intersect retains the order of the first list
+    currentList.head :: (fullList intersect (node :: currentList.tail)) // intersect retains the order of the first list
   }
 
   def all(): Array[WangXueAction] = {
@@ -156,11 +157,12 @@ case class Reattach(newNode: Int) extends WangXueAction {
 case object Swap extends WangXueAction {
 
   def apply(state: WangXueTransitionState): WangXueTransitionState = {
-    // We just swap the direction of the arc - and make beta the new currentNode (keeping sigma in the list)
+    // We swap the direction of the arc - and make beta the new currentNode (keeping sigma in the list)
+    // We also make Beta the head of the subgraph - i.e. arcs that link sigma to its parents are moved to beta, with a single arc from beta to sigma
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val tree = state.currentGraph.swapArc(sigma, beta)
-    state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess, childrenToProcess = tree.childrenOf(state.childrenToProcess.head))
+    state.copy(nodesToProcess = sigma :: beta :: state.nodesToProcess.tail, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree)
   }
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
     !(state.currentGraph.swappedArcs contains ((state.childrenToProcess.head, state.nodesToProcess.head)))

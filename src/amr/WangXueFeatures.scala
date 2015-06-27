@@ -83,6 +83,8 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     add(hmap, "BETA-POS=" + betaPOS)
     add(hmap, "BETA-LEMMA=" + betaLemma)
     add(hmap, "BETA-NER=" + betaNER)
+    
+    if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")
 
     val mergedNodes = state.currentGraph.mergedNodes.get(beta) match {
       case None => Nil

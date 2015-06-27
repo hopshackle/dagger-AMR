@@ -5,7 +5,7 @@ import dagger.core.TransitionSystem
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
   // We currently just use the whole flipping dictionary to define the full set of actions
-  lazy override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all ++ Array(ReplaceHead)
+  lazy override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all ++ Array(ReplaceHead) ++ Array(Swap)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
@@ -33,7 +33,8 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
         getAllChildren(newChildren) ++ parentList
     }
 
-    val allNodes = getAllChildren(List(0)) // we start with the root node, which is always 0
+    val rootNode = datum.dependencyTree.getRoots.head
+    val allNodes = getAllChildren(List(rootNode))  // we start with the root node, which is usually 0
 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)

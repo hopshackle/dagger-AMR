@@ -25,6 +25,7 @@ abstract class Graph[K] {
   def labelsBetween(parent: K, child: K): List[String] = (arcs filter { case ((p, c), l) => p == parent && c == child } map { case ((p, c), l) => l }).toList
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
+  def getRoots: Set[K] = nodes.keySet filter isRoot
 
 }
 
@@ -97,11 +98,13 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 
   def swapArc(currentParent: Int, currentChild: Int): DependencyTree = {
     val currentLabel = labelsBetween(currentParent, currentChild) match {
-      case Nil => assert(false, "No such arc to swap in DependencyTree.swapArc " + currentParent + " -> " + currentChild); "NONE"
+      case Nil =>
+        assert(false, "No such arc to swap in DependencyTree.swapArc " + currentParent + " -> " + currentChild + "\n" + this); "NONE"
       case head :: tail => head
     }
-    this.copy(arcs = this.arcs - ((currentParent, currentChild)) + ((currentChild, currentParent) -> currentLabel), 
-        swappedArcs = this.swappedArcs + ((currentParent, currentChild)))
+    val newEdgesFromParent = edgesToParents(currentParent) map { case (from, to) => ((from, currentChild), arcs((from, to))) }
+    this.copy(arcs = this.arcs -- edgesToParents(currentParent) ++ newEdgesFromParent - ((currentParent, currentChild)) + ((currentChild, currentParent) -> currentLabel),
+      swappedArcs = this.swappedArcs + ((currentParent, currentChild)))
   }
 
   def mergedSpan(node1: Int, node2: Int): (Int, Int) = {

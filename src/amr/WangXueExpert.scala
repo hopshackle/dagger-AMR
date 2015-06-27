@@ -16,7 +16,7 @@ class WangXueExpert extends WangXueExpertBasic {
 
     // nodes inserted without an AMR ref are ignored by the expert - if AMR exists, then we estimate
     // the AMR ref of a node Inserted by a non-expert policy at the time of insertion
-    val fullMapDTtoAMR = (state.currentGraph.insertedNodes filter {case (i, ref) => ref != ""}) ++ data.positionToAMR
+    val fullMapDTtoAMR = (state.currentGraph.insertedNodes filter { case (i, ref) => ref != "" }) ++ data.positionToAMR
     val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
 
     val sigma = state.nodesToProcess.head
@@ -60,10 +60,11 @@ class WangXueExpert extends WangXueExpertBasic {
           println(state.currentGraph.insertedNodes)
         }
         NextNode(conceptIndex(concept))
-      case (None, _, -1, _, _) => if (DeleteNode.isPermissible(state)) DeleteNode else NextNode(0)
-      case (None, _, beta, Some(betaAMR), _) if (!(state.currentGraph.insertedNodes contains sigma)) =>  ReplaceHead // Never replace a sigma we inserted
+      case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
+      case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead 
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
+        else if (sigmaAMRParents contains betaAMR) Swap
         else if (nodesToProcessAMR contains betaAMRParents.head) {
           val parentIndex = state.nodesToProcess(nodesToProcessAMR.indexOf(betaAMRParents.head))
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
