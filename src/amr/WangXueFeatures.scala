@@ -2,20 +2,36 @@ package amr
 import scala.collection.Map
 import coref.util._
 import ImportConcepts.{ concept }
+import java.io._
+import scala.util.Random
+import dagger.core._
 
-class WangXueFeatures(dict: Index = new MapIndex) {
+class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
+
+  val debug = true
+  val random = new Random()
 
   def add(map: java.util.HashMap[Int, Double], feat: String, value: Double = 1.0) = {
     map.put(dict.index(feat), value)
   }
 
   def features(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
-    state.childrenToProcess match {
+    val thisDebug = if (debug && random.nextDouble < 0.01) true else false
+
+    val output = state.childrenToProcess match {
       case Nil => sigmaFeatures(sentence, state)
       case head :: tail => sigmaBetaFeatures(sentence, state)
     }
+
+    if (thisDebug) {
+      val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "_WXfeatures_debug.txt", true)
+      featuresDebug.write(state.toString)
+      output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
+      featuresDebug.close
+    }
+    output
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
@@ -25,9 +41,9 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     val sigmaWord = state.currentGraph.nodes(sigma)
 
     add(hmap, "SIGMA-WORD=" + sigmaWord)
-    add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS.getOrElse(sigma, "NONE"))
-    add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas.getOrElse(sigma, "NONE"))
-    add(hmap, "SIGMA-NER=" + state.currentGraph.nodeNER.getOrElse(sigma, "NONE"))
+    if (state.currentGraph.nodePOS contains sigma) add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS(sigma))
+    if (state.currentGraph.nodeLemmas contains sigma) add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas(sigma))
+    if (state.currentGraph.nodeNER contains sigma) add(hmap, "SIGMA-NER=" + state.currentGraph.nodeNER(sigma))
 
     val sigmaParents = state.currentGraph.parentsOf(sigma)
     if (sigmaParents.nonEmpty) {
@@ -40,6 +56,10 @@ class WangXueFeatures(dict: Index = new MapIndex) {
       parentLabelCombos foreach {
         case (parent, label) =>
           val parentWord = concept(parent)
+          if (state.currentGraph.insertedNodes contains parent) {
+            add(hmap, "PARENT-INSERTED=" + parentWord)
+            if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
+          }
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(parent))
           add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
@@ -60,12 +80,12 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     val (sigmaPosition, _) = state.currentGraph.nodeSpans.getOrElse(sigma, (0, 0))
     val (betaPosition, _) = state.currentGraph.nodeSpans.getOrElse(beta, (0, 0))
     val distance = if (sigmaPosition > 0 && betaPosition > 0) Math.abs(sigmaPosition - betaPosition) else 0
-    val betaPOS = state.currentGraph.nodePOS.getOrElse(beta, "NONE")
-    val betaLemma = state.currentGraph.nodeLemmas.getOrElse(beta, "NONE")
-    val betaNER = state.currentGraph.nodeNER.getOrElse(beta, "NONE")
-    val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "NONE")
-    val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "NONE")
-    val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "NONE")
+    val betaPOS = state.currentGraph.nodePOS.getOrElse(beta, "")
+    val betaLemma = state.currentGraph.nodeLemmas.getOrElse(beta, "")
+    val betaNER = state.currentGraph.nodeNER.getOrElse(beta, "")
+    val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
+    val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
+    val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     val sigmaInserted = state.currentGraph.insertedNodes contains sigma
     val betaInserted = state.currentGraph.insertedNodes contains beta
 
@@ -73,17 +93,17 @@ class WangXueFeatures(dict: Index = new MapIndex) {
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
     if (betaInserted) add(hmap, "BETA-INSERTED")
     if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
-    add(hmap, "BETA-WORD=" + sigmaWord)
+    add(hmap, "BETA-WORD=" + betaWord)
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
-    add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
-    add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
+    if (sigmaPOS != "" && betaPOS != "") add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
+    if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
     add(hmap, "SIGMA-BETA-DISTANCE", +distance)
-    if (distance == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
+    if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     add(hmap, "SIGMA-BETA-DEP-LABEL=" + dependencyLabel)
-    add(hmap, "BETA-POS=" + betaPOS)
-    add(hmap, "BETA-LEMMA=" + betaLemma)
-    add(hmap, "BETA-NER=" + betaNER)
-    
+    if (betaPOS != "") add(hmap, "BETA-POS=" + betaPOS)
+    if (betaLemma != "") add(hmap, "BETA-LEMMA=" + betaLemma)
+    if (betaNER != "") add(hmap, "BETA-NER=" + betaNER)
+
     if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")
 
     val mergedNodes = state.currentGraph.mergedNodes.get(beta) match {
