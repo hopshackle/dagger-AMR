@@ -150,7 +150,8 @@ case class Reattach(newNode: Int) extends WangXueAction {
     conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
   }
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
+    false
+//    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
   }
 }
 
