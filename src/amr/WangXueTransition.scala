@@ -1,7 +1,7 @@
 package amr
 import dagger.core._
 
-case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree, originalInput: Option[Sentence]) extends TransitionState {
+case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], upwardNodes: List[Int], currentGraph: DependencyTree, originalInput: Option[Sentence]) extends TransitionState {
 
   
   

@@ -125,7 +125,7 @@ object Insert {
   }
 }
 
-case class Reattach(newNode: Int) extends WangXueAction {
+case object Reattach extends WangXueAction {
   // For the moment we just change the edge - but do NOT label it
   // TODO: Update Reattach to include the label as a parameter - as per Wang Xue algo
 
@@ -145,12 +145,24 @@ case class Reattach(newNode: Int) extends WangXueAction {
     // then just pop out edge, and update currentGraph
     val currentEdgeKey = (conf.nodesToProcess.head, conf.childrenToProcess.head)
     val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
-    val newEdgeKey = (newNode, conf.childrenToProcess.head)
+    val newEdgeKey = (conf.nodesToProcess.head, conf.childrenToProcess.head)
     val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel))
-    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
+    conf.copy(childrenToProcess = conf.childrenToProcess.tail, upwardNodes = (conf.nodesToProcess.tail filter (x => withinRange(x, conf.childrenToProcess.head, 2))),
+      currentGraph = tree)
   }
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
+    state.childrenToProcess.nonEmpty && state.upwardNodes.nonEmpty
+  }
+
+  def withinRange(node1: Int, node2: Int, distance: Int): Boolean = {
+    
+  }
+}
+
+case object Wait extends WangXueAction {
+  def apply(state: WangXueTransitionState): WangXueTransitionState = state.copy(upwardNodes = state.upwardNodes.tail)
+  def isPermissible(state: WangXueTransitionState): Boolean = {
+    state.childrenToProcess.nonEmpty && state.upwardNodes.nonEmpty
   }
 }
 
