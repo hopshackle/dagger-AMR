@@ -55,13 +55,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
       parentLabelCombos foreach {
         case (parent, label) =>
-          val parentWord = concept(parent)
+          val parentWord = state.currentGraph.nodes(parent)
           if (state.currentGraph.insertedNodes contains parent) {
             add(hmap, "PARENT-INSERTED=" + parentWord)
             if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
           }
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
-          add(hmap, "PARENT-WORD=" + state.currentGraph.nodes(parent))
+          add(hmap, "PARENT-WORD=" + parentWord)
           add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
       }
 
