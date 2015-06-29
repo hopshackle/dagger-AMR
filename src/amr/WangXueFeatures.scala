@@ -113,14 +113,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
     mergedNodes foreach { case (n, label) => add(hmap, "BETA-REPH=" + label) }
 
-    if (action.isInstanceOf[Reattach] || action.isInstanceOf[Reentrance])
-      kFeatures(sentence, state, action) ++ sigmaFeatures(sentence, state, action) ++ hmap
+    if (action.isInstanceOf[hasNodeAsParameter])
+      kFeatures(sentence, state, action, action.asInstanceOf[hasNodeAsParameter].parameterNode) ++ sigmaFeatures(sentence, state, action) ++ hmap
     else
       sigmaFeatures(sentence, state, action) ++ hmap
   }
 
-  def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
-
+  def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Double] = {
+    
   }
 
 }

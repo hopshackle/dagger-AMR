@@ -7,6 +7,10 @@ abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
   def name: String
 }
 
+trait hasNodeAsParameter {
+  def parameterNode: Int
+}
+
 case class NextEdge(relIndex: Int) extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
@@ -130,7 +134,7 @@ object Insert {
   }
 }
 
-case class Reattach(newNode: Int) extends WangXueAction {
+case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter {
   // For the moment we just change the edge - but do NOT label it
   // TODO: Update Reattach to include the label as a parameter - as per Wang Xue algo
 
@@ -143,7 +147,7 @@ case class Reattach(newNode: Int) extends WangXueAction {
   // In which case, I will exclude this possibility until Phase II - when I include label as a parameter to the action
   //...may also make sense to have two Actions...ReattachUp and ReattachDown...? After all, if I Reattach an edge to a 
   // node that us yet to be processed, it makes sense to delay the naming of the relation too!
-
+  override val parameterNode = newNode
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
     // check node is yet to be processed
     assert(isPermissible(conf))
@@ -191,7 +195,8 @@ case object ReplaceHead extends WangXueAction {
     !(state.currentGraph.insertedNodes contains state.nodesToProcess.head)
 }
 
-case class Reentrance(newNode: Int) extends WangXueAction {
+case class Reentrance(newNode: Int) extends WangXueAction with hasNodeAsParameter {
+  override val parameterNode = newNode
 }
 case object Reentrance extends WangXueAction {
 
