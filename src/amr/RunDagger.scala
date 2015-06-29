@@ -38,7 +38,8 @@ object RunDagger {
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
     def score = (i: Iterable[(Sentence, Sentence)]) => 1.0
-    dagger.train(trainData, new WangXueExpert, (new WangXueFeatures(options)).features, new WangXueTransitionSystem, new WangXueLossFunction, devData, score)
+    def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options)).features(d, s, a)
+    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score)
   }
 
   def main(args: Array[String]): Unit = {

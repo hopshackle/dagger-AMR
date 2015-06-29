@@ -160,8 +160,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   }
   override def name: String = "Reattach"
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    false
-    //    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
+    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
   }
 }
 
@@ -197,11 +196,8 @@ case object ReplaceHead extends WangXueAction {
 
 case class Reentrance(newNode: Int) extends WangXueAction with hasNodeAsParameter {
   override val parameterNode = newNode
-}
-case object Reentrance extends WangXueAction {
-
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
   def isPermissible(state: WangXueTransitionState): Boolean = false
   override def name: String = "Reentrance"
-
 }
+

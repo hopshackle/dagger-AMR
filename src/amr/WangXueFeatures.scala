@@ -120,7 +120,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   }
 
   def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Double] = {
-       val hmap = new java.util.HashMap[Int, Double]
+    val hmap = new java.util.HashMap[Int, Double]
 
     val beta = state.childrenToProcess.head
     val betaWord = state.currentGraph.nodes(beta)
@@ -144,7 +144,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
     add(hmap, "KAPPA-BETA-DISTANCE", +distance)
     if (kappaPosition == 0 || betaPosition == 0) add(hmap, "KAPPA-BETA-DISTANCE-UNKNOWN")
-    
+
     hmap
   }
 
