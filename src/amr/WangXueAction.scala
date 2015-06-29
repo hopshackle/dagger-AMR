@@ -191,6 +191,8 @@ case object ReplaceHead extends WangXueAction {
     !(state.currentGraph.insertedNodes contains state.nodesToProcess.head)
 }
 
+case class Reentrance(newNode: Int) extends WangXueAction {
+}
 case object Reentrance extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???

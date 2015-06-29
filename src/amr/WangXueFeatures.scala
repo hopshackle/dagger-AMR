@@ -116,12 +116,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     if (action.isInstanceOf[Reattach] || action.isInstanceOf[Reentrance])
       kFeatures(sentence, state, action) ++ sigmaFeatures(sentence, state, action) ++ hmap
     else
-    sigmaFeatures(sentence, state, action) ++ hmap
+      sigmaFeatures(sentence, state, action) ++ hmap
   }
-  
+
   def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
-    
-    
+
   }
 
 }
