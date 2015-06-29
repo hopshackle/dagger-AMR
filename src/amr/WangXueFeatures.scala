@@ -120,7 +120,32 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   }
 
   def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Double] = {
+       val hmap = new java.util.HashMap[Int, Double]
+
+    val beta = state.childrenToProcess.head
+    val betaWord = state.currentGraph.nodes(beta)
+    val kappaWord = state.currentGraph.nodes(parameterNode)
+    val (betaPosition, _) = state.currentGraph.nodeSpans.getOrElse(beta, (0, 0))
+    val (kappaPosition, _) = state.currentGraph.nodeSpans.getOrElse(parameterNode, (0, 0))
+    val distance = if (kappaPosition > 0 && betaPosition > 0) Math.abs(kappaPosition - betaPosition) else 0
+    val betaPOS = state.currentGraph.nodePOS.getOrElse(beta, "")
+    val betaLemma = state.currentGraph.nodeLemmas.getOrElse(beta, "")
+    val betaNER = state.currentGraph.nodeNER.getOrElse(beta, "")
+    val kappaPOS = state.currentGraph.nodePOS.getOrElse(parameterNode, "")
+    val kappaLemma = state.currentGraph.nodeLemmas.getOrElse(parameterNode, "")
+    val kappaNER = state.currentGraph.nodeNER.getOrElse(parameterNode, "")
+    val kappaInserted = state.currentGraph.insertedNodes contains parameterNode
+    val betaInserted = state.currentGraph.insertedNodes contains beta
+
+    if (kappaInserted) add(hmap, "KAPPA-INSERTED")
+    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
+    add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
+    if (kappaPOS != "" && betaPOS != "") add(hmap, "KAPPA-BETA-POS=" + kappaPOS + "-" + betaPOS)
+    if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
+    add(hmap, "KAPPA-BETA-DISTANCE", +distance)
+    if (kappaPosition == 0 || betaPosition == 0) add(hmap, "KAPPA-BETA-DISTANCE-UNKNOWN")
     
+    hmap
   }
 
 }
