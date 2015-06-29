@@ -32,14 +32,14 @@ object RunDagger {
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
-    dagger.testPrint
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
     def score = (i: Iterable[(Sentence, Sentence)]) => 1.0
-    def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options)).features(d, s, a)
+    val featureIndex = new MapIndex
+    def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options, featureIndex)).features(d, s, a)
     dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score)
   }
 
