@@ -17,12 +17,12 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     map.put(dict.index(feat), value)
   }
 
-  def features(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
+  def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val thisDebug = if (debug && random.nextDouble < 0.01) true else false
 
     val output = state.childrenToProcess match {
-      case Nil => sigmaFeatures(sentence, state)
-      case head :: tail => sigmaBetaFeatures(sentence, state)
+      case Nil => sigmaFeatures(sentence, state, action)
+      case head :: tail => sigmaBetaFeatures(sentence, state, action)
     }
 
     if (thisDebug) {
@@ -34,12 +34,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     output
   }
 
-  def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
+  def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
     val numeric = "[0-9,.]".r
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes(sigma)
 
+    add(hmap, "ACTION-TYPE=" + action.name)
     add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (state.currentGraph.nodePOS contains sigma) add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS(sigma))
     if (state.currentGraph.nodeLemmas contains sigma) add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas(sigma))
@@ -69,7 +70,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     hmap
   }
 
-  def sigmaBetaFeatures(sentence: Sentence, state: WangXueTransitionState): Map[Int, Double] = {
+  def sigmaBetaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
 
     val sigma = state.nodesToProcess.head
@@ -112,7 +113,15 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
     mergedNodes foreach { case (n, label) => add(hmap, "BETA-REPH=" + label) }
 
-    sigmaFeatures(sentence, state) ++ hmap
+    if (action.isInstanceOf[Reattach] || action.isInstanceOf[Reentrance])
+      kFeatures(sentence, state, action) ++ sigmaFeatures(sentence, state, action) ++ hmap
+    else
+    sigmaFeatures(sentence, state, action) ++ hmap
+  }
+  
+  def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
+    
+    
   }
 
 }
