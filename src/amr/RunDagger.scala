@@ -32,6 +32,7 @@ object RunDagger {
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
+    dagger.testPrint
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
     val devFile = options.getString("--validation.data", "")

@@ -1,6 +1,5 @@
 package amr
 import scala.collection.Map
-import coref.util._
 import ImportConcepts.{ concept }
 import java.io._
 import scala.util.Random
