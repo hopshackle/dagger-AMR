@@ -9,7 +9,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = true
+  val debug = false
   val random = new Random()
   val numeric = "[0-9,.]".r
 
@@ -100,6 +100,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     val betaInserted = state.currentGraph.insertedNodes contains beta
 
     add(hmap, "BIAS-BETA")
+    if (!betaInserted && !sigmaInserted) {
+      add(hmap, "SIGMA-BETA-PATH=" + state.startingDT.getPathBetween(sigma, beta))
+      add(hmap, "SIGMA-BETA-PATH=" + sigmaLemma + "-" + state.startingDT.getPathBetween(sigma, beta) + "-" + betaLemma)
+    }
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
     if (betaInserted) add(hmap, "BETA-INSERTED")
     if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
@@ -147,6 +151,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     val kappaNER = state.currentGraph.nodeNER.getOrElse(parameterNode, "")
     val kappaInserted = state.currentGraph.insertedNodes contains parameterNode
     val betaInserted = state.currentGraph.insertedNodes contains beta
+    if (!betaInserted && !kappaInserted) {
+      add(hmap, "KAPPA-BETA-PATH=" + state.startingDT.getPathBetween(parameterNode, beta))
+      add(hmap, "KAPPA-BETA-PATH=" + kappaLemma + "-" + state.startingDT.getPathBetween(parameterNode, beta) + "-" + betaLemma)
+    }
 
     if (kappaInserted) add(hmap, "KAPPA-INSERTED")
     if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")

@@ -114,9 +114,40 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val e = Math.max(if (s1 == 0) 999 else s1, if (s2 == 0) 999 else s2)
     (if (s == 999) 0 else s, if (e == 999) 0 else e)
   }
-  
+
+  def getNodesBetween(node1: Int, node2: Int): List[Int] = {
+    def findPathTo(currentPaths: List[List[Int]], target: Int): List[Int] = {
+      val o = for {
+        currentPath <- currentPaths
+        val successorNodes = parentsOf(currentPath.head) ++ childrenOf(currentPath.head)
+      } yield successorNodes map (_ :: currentPath)
+      val updatedPaths = o.flatten
+      if (updatedPaths exists (_.head == target)) {
+        updatedPaths.find { x => x.head == target }.get
+      } else {
+        findPathTo(updatedPaths, target)
+      }
+    }
+    val start = List(List(node1))
+    findPathTo(start, node2)
+  }
   def getPathBetween(node1: Int, node2: Int): String = {
-    ""
+    // starting with node1, we're just conducting a search until we hit node2
+    val path = getNodesBetween(node2, node1)
+    val slidingPath = path.sliding(2)
+    val pathString = nodePOS.getOrElse(path.head, "XX") + "-" +
+      (for {
+        a <- slidingPath
+        val b = a match {
+          case first :: second :: tail => {
+            val label = if (labelsBetween(first, second).isEmpty) labelsBetween(second, first).head else labelsBetween(first, second).head
+            val pos = nodePOS.getOrElse(second, "XX")
+            label + "-" + pos
+          }
+          case _ => "ERR"
+        }
+      } yield b).mkString("-")
+    pathString
   }
 
   override def toString: String = {
