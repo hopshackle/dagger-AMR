@@ -17,10 +17,10 @@ case class NextEdge(relIndex: Int) extends WangXueAction {
     // label current arc
     // pop current arc from arc stack
     val tree = conf.currentGraph.labelArc(conf.nodesToProcess.head, conf.childrenToProcess.head, relation(relIndex))
-    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
+    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
   }
   override def toString: String = "NextEdge: " + relIndex + " -> " + relation(relIndex)
-  override def name: String = "NextEdge"
+  override def name: String = "NextEdge" + relation(relIndex)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty
 }
 
@@ -42,10 +42,10 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
       case Nil => Nil
       case _ => tree.childrenOf(newNodesToProcess.head)
     }
-    conf.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewNode, currentGraph = tree)
+    conf.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewNode, currentGraph = tree, previousActions = this :: conf.previousActions)
   }
   override def toString: String = "NextNode: " + conceptIndex + " -> " + concept(conceptIndex)
-  override def name: String = "NextNode"
+  override def name: String = "NextNode" + concept(conceptIndex)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.isEmpty
 }
 
@@ -67,7 +67,7 @@ case object DeleteNode extends WangXueAction {
       case Nil => Nil
       case _ => tree.childrenOf(newNodesToProcess.head)
     }
-    state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewTopNode, currentGraph = tree)
+    state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewTopNode, currentGraph = tree, previousActions = this :: state.previousActions)
   }
   override def isPermissible(state: WangXueTransitionState): Boolean = {
     state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head)
@@ -85,11 +85,11 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
     // We try a few heuristics to match up AMR node to the newly inserted node
     val amrRef = if (otherRef == "") estimatedAMRRef(state) else otherRef
     val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex, amrRef)
-    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree)
+    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree, previousActions = this :: state.previousActions)
   }
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1
-  override def name: String = "Insert"
+  override def name: String = "Insert" + concept(conceptIndex)
   override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
 
   def estimatedAMRRef(state: WangXueTransitionState): String = {
@@ -156,7 +156,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
     val newEdgeKey = (newNode, conf.childrenToProcess.head)
     val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel))
-    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree)
+    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
   }
   override def name: String = "Reattach"
   def isPermissible(state: WangXueTransitionState): Boolean = {
@@ -172,7 +172,8 @@ case object Swap extends WangXueAction {
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val tree = state.currentGraph.swapArc(sigma, beta)
-    state.copy(nodesToProcess = sigma :: beta :: state.nodesToProcess.tail, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree)
+    state.copy(nodesToProcess = sigma :: beta :: state.nodesToProcess.tail, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree, 
+        previousActions = this :: state.previousActions)
   }
   override def name: String = "Swap"
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
@@ -187,7 +188,7 @@ case object ReplaceHead extends WangXueAction {
     // and move beta to top of stack, without otherwise changing the order
     val tree = state.currentGraph.mergeNodes(state.nodesToProcess.head, state.childrenToProcess.head)
     state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess.tail,
-      childrenToProcess = tree.childrenOf(state.childrenToProcess.head), currentGraph = tree)
+      childrenToProcess = tree.childrenOf(state.childrenToProcess.head), currentGraph = tree, previousActions = this :: state.previousActions)
   }
   override def name: String = "ReplaceHead"
   def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&

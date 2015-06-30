@@ -114,6 +114,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val e = Math.max(if (s1 == 0) 999 else s1, if (s2 == 0) 999 else s2)
     (if (s == 999) 0 else s, if (e == 999) 0 else e)
   }
+  
+  def getPathBetween(node1: Int, node2: Int): String = {
+    ""
+  }
 
   override def toString: String = {
     val nodeSort = nodes.foldLeft(SortedMap[Int, String]()) { case (start, (a, b)) => start + (a -> b) }

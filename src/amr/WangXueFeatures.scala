@@ -26,7 +26,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
 
     if (thisDebug) {
-      val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "_WXfeatures_debug.txt", true)
+      val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
       featuresDebug.write(state.toString)
       output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
       featuresDebug.close
@@ -47,6 +47,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     add(hmap, "ACTION-TYPE=" + action.name)
+    if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
+    if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
+    if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (state.currentGraph.nodePOS contains sigma) add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS(sigma))
     if (state.currentGraph.nodeLemmas contains sigma) add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas(sigma))

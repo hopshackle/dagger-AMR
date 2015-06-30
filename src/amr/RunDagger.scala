@@ -40,7 +40,8 @@ object RunDagger {
     def score = (i: Iterable[(Sentence, Sentence)]) => 1.0
     val featureIndex = new MapIndex
     def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options, featureIndex)).features(d, s, a)
-    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score)
+    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score, 
+        GraphViz.graphVizOutputFunction)
   }
 
   def main(args: Array[String]): Unit = {
