@@ -42,7 +42,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     val wordTokens: Double = sentence.dependencyTree.nodes.size
     val insertedNodes: Double = state.currentGraph.insertedNodes.size
     add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
-    val insertedConcepts = state.currentGraph.insertedNodes.values.toList
+    val insertedConcepts = state.currentGraph.insertedNodes.keys map (node => state.currentGraph.nodes.getOrElse(node, "DELETED"))
     val conceptSet = insertedConcepts.toSet
     conceptSet foreach (c => add(hmap, "INSERT-COUNT-"+ c, insertedConcepts.count { x => x == c }))
 
