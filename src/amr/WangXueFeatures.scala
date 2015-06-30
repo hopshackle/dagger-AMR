@@ -11,6 +11,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   val debug = true
   val random = new Random()
+  val numeric = "[0-9,.]".r
 
   def add(map: java.util.HashMap[Int, Double], feat: String, value: Double = 1.0) = {
     map.put(dict.index(feat), value)
@@ -35,16 +36,15 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
-    val numeric = "[0-9,.]".r
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes(sigma)
-    
+
     val wordTokens: Double = sentence.dependencyTree.nodes.size
     val insertedNodes: Double = state.currentGraph.insertedNodes.size
     add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
     val insertedConcepts = state.currentGraph.insertedNodes.keys map (node => state.currentGraph.nodes.getOrElse(node, "DELETED"))
     val conceptSet = insertedConcepts.toSet
-    conceptSet foreach (c => add(hmap, "INSERT-COUNT-"+ c, insertedConcepts.count { x => x == c }))
+    conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     add(hmap, "ACTION-TYPE=" + action.name)
     add(hmap, "SIGMA-WORD=" + sigmaWord)
@@ -101,6 +101,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     if (betaInserted) add(hmap, "BETA-INSERTED")
     if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
     add(hmap, "BETA-WORD=" + betaWord)
+    if (numeric.replaceAllIn(betaWord, "") == "") add(hmap, "BETA-NUMERIC")
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
     if (sigmaPOS != "" && betaPOS != "") add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
     if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
@@ -131,6 +132,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     val beta = state.childrenToProcess.head
     val betaWord = state.currentGraph.nodes(beta)
     val kappaWord = state.currentGraph.nodes(parameterNode)
+    if (numeric.replaceAllIn(kappaWord, "") == "") add(hmap, "KAPPA-NUMERIC")
     val (betaPosition, _) = state.currentGraph.nodeSpans.getOrElse(beta, (0, 0))
     val (kappaPosition, _) = state.currentGraph.nodeSpans.getOrElse(parameterNode, (0, 0))
     val distance = if (kappaPosition > 0 && betaPosition > 0) Math.abs(kappaPosition - betaPosition) else 0
