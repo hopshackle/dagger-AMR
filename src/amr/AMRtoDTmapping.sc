@@ -6,15 +6,15 @@ val dt = DependencyTree("The police want to arrest Michael Karras in Singapore."
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.3 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.0 sec].
+                                                  //| im.crf.ser.gz ... done [4.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.4 sec].
+                                                  //| im.crf.ser.gz ... done [3.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.8 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.3 sec].
                                                   //| dt  : amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> police, 3 -> want, 4 -> to, 5 -> a
                                                   //| rrest, 6 -> Michael, 7 -> Karras, 8 -> in, 9 -> Singapore)
@@ -22,6 +22,9 @@ val dt = DependencyTree("The police want to arrest Michael Karras in Singapore."
                                                   //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10))
                                                   //| Edges:	Map((0,3) -> root, (2,1) -> det, (3,2) -> nsubj, (3,5) -> xcomp,
                                                   //|  (5,4) -> aux, (5,7) -> dobj, (7,6) -> nn, (7,8) -> prep, (8,9) -> pobj)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
 
 dt.nodes foreach (_ match {case (node, word) => println(s"$node -> $word has parents ${dt.edgesToParents(node)}")})
                                                   //> 0 -> ROOT has parents List()
@@ -82,21 +85,27 @@ DependencyTree("Estonia (EE); Latvia (LV); Lithuania (LT); Germany (DE): Italy (
                                                   //| ,11) -> dep, (6,16) -> dep, (6,21) -> dep, (6,26) -> dep, (6,31) -> dep, (6,
                                                   //| 37) -> dep, (11,13) -> appos, (16,18) -> appos, (21,23) -> dep, (26,28) -> a
                                                   //| ppos, (31,33) -> appos, (37,36) -> nn, (37,39) -> appos)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
 val s1 = Sentence(testData(1)._1, testData(1)._2) //> s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
                                                   //| > Lithuania, 13 -> LT)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
                                                   //|  13 -> (6,7))
                                                   //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
-                                                  //| ,11) -> dep, (11,13) -> appos),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> na
-                                                  //| me, 0.1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.
-                                                  //| 0.0 -> "Latvia", 0 -> and, 0.2 -> country, ROOT -> ROOT, 0.2.0.0 -> "Lithuan
-                                                  //| ia"),Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0
-                                                  //|  -> (1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6))
-                                                  //| ,Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1
-                                                  //| .0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.
-                                                  //| 2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0, 1
-                                                  //|  -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
+                                                  //| ,11) -> dep, (11,13) -> appos)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 0
+                                                  //| .1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.0.0 -
+                                                  //| > "Latvia", 0 -> and, 0.2 -> country, ROOT -> ROOT, 0.2.0.0 -> "Lithuania"),
+                                                  //| Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0 -> (
+                                                  //| 1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6)),Map(
+                                                  //| (0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -
+                                                  //| > name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.2.0) 
+                                                  //| -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0, 1 -> 0
+                                                  //| .0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
 s1.positionToAMR                                  //> res1: Map[Int,String] = Map(11 -> 0.2.0.0, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> 
                                                   //| ROOT)
 val s2 = Sentence(testData(3)._1, testData(3)._2) //> WARNING: Found duplicate match for concept attack-01
@@ -119,17 +128,31 @@ val s2 = Sentence(testData(3)._1, testData(3)._2) //> WARNING: Found duplicate m
                                                   //| ,9) -> cc, (8,10) -> conj, (12,8) -> amod, (12,11) -> nn, (16,14) -> det, (1
                                                   //| 6,15) -> amod, (18,13) -> mark, (18,16) -> nsubjpass, (18,17) -> auxpass, (1
                                                   //| 8,19) -> prep, (19,21) -> pobj, (21,20) -> nn, (21,22) -> prep, (22,23) -> p
-                                                  //| obj),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name, 0.3.0.1.0.0 -> count
-                                                  //| ry, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0 -> civilian, 0.3.0.2.0
-                                                  //|  -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3.0.1.0 -> govern-01, 0.0
-                                                  //| .0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> attack, 0.3.0 -> strike-01,
-                                                  //|  0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 -> computer, 0 -> consider
-                                                  //| -02, 0.3.0.1 -> government-organization, 0.2 -> thing, 0.3.0.2 -> date-entit
-                                                  //| y, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0.2.0.0 -> and, 0.3.0.1.0.0.0
-                                                  //|  -> name, 0.3.0.0.0 -
+                                                  //| obj)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name,
+                                                  //|  0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0 -
+                                                  //| > civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3.0.
+                                                  //| 1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> attack
+                                                  //| , 0.3.0 -> strike-01, 0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 -> co
+                                                  //| mputer, 0 -> consider-02, 0.3.0.1 -> government-organization, 0.2 -> thing, 
+                                                  //| 0.3.0.2 -> date-entity, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0.2.0.0 
+                                                  //| -> and, 0.3.0.1.0.0.0 -> name, 0.3.0.0.0 -> cyber),Map(0.1 -> (4,5), 0.0.0 -
+                                                  //| > (1,2), 0.3.0.1.0.0 -> (15,16), 0.2.0.0.0 -> (12,13), 0.1.0 -> (3,4), 0.2.0
+                                                  //| .0.1.0 -> (10,11), 0.3.0.2.0 -> (23,24), 0.0 -> (8,9), 0.0.0.0 -> (1,2), 0.2
+                                                  //| .0 -> (6,7), 0.3.0.0 -> (21,22), 0.3.0 -> (18,19), 0.3 -> (13,14), 0.2.0.0.2
+                                                  //|  -> (11,12), 0 -> (2,3), 0.3.0.1 -> (16,17), 0.2 -> (6,7), 0.3.0.2 -> (23,24
+                                                  //| ), 0.3.0.1.0.0.0.0 -> (15,16), 0.2.0.0 -> (9,10), 0.3.0.1.0.0.0 ->
                                                   //| Output exceeds cutoff limit.
 s2.positionToAMR                                  //> res2: Map[Int,String] = Map(0 -> ROOT, 10 -> 0.2.0.0.1.0, 20 -> 0.3.0.0.0, 1
                                                   //|  -> 0.0.0.0, 6 -> 0.2.0, 21 -> 0.3.0.0, 9 -> 0.2.0.0, 13 -> 0.3, 2 -> 0, 12 
                                                   //| -> 0.2.0.0.0, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.2.0.0.2, 23 ->
                                                   //|  0.3.0.2.0, 8 -> 0.0, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0.0)
+ 
+                                                 
+val gv1 = new GraphViz("C://AMR//testGraphViz1.txt", s1.amr.get)
+                                                  //> gv1  : amr.GraphViz = amr.GraphViz@638ef7ed
+val gv2 = new GraphViz("C://AMR//testGraphViz2.txt", s2.amr.get)
+                                                  //> gv2  : amr.GraphViz = amr.GraphViz@4bff7da0
 }
