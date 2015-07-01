@@ -74,7 +74,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
       case Some(graph) => graph
     }
 
-    1.0 - Smatch.fScore(gold.amr.get, testAMR, 1)
+    Smatch.fScore(gold.amr.get, testAMR, 1)._4
   }
   def max(gold: Sentence): Double = 1.0
 

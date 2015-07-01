@@ -1,6 +1,7 @@
 package amr
 
 object generalPlay {
+
   val a = List[String]()                          //> a  : List[String] = List()
   val b = List("one", "two", "three")             //> b  : List[String] = List(one, two, three)
   a contains "6"                                  //> res0: Boolean = false
@@ -26,4 +27,9 @@ object generalPlay {
                                                   //> combo  : List[(String, Double)] = List((1-2,99.0), (1-3,6633.0), (1-40,1.287
                                                   //| ), (1-56,451.43999999999994), (2-3,67.0), (2-40,0.013), (2-56,4.56), (3-40,0
                                                   //| .871), (3-56,305.52), (40-56,0.05927999999999999))
+   val testTuple = Seq((1.0, 1.0, 1.0, 0.0), (1.0, 2.0, 0.0, 5.6))
+                                                  //> testTuple  : Seq[(Double, Double, Double, Double)] = List((1.0,1.0,1.0,0.0),
+                                                  //|  (1.0,2.0,0.0,5.6))
+testTuple.max                                     //> res8: (Double, Double, Double, Double) = (1.0,2.0,0.0,5.6)
+testTuple maxBy (_._1)                            //> res9: (Double, Double, Double, Double) = (1.0,1.0,1.0,0.0)
 }

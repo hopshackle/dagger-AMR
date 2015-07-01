@@ -37,11 +37,26 @@ object RunDagger {
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
-    def score = (i: Iterable[(Sentence, Sentence)]) => 1.0
+    def score = (i: Iterable[(Sentence, Sentence)]) => {
+      val amrToCompare = i map {
+        case (s1, s2) =>
+          val amr1 = s1.amr match {
+            case None => s1.dependencyTree.toAMR
+            case Some(graph) => graph
+          }
+          val amr2 = s2.amr match {
+            case None => s2.dependencyTree.toAMR
+            case Some(graph) => graph
+          }
+          (amr1, amr2)
+      }
+
+      (amrToCompare map {a: (AMRGraph, AMRGraph) => a match {case (x, y) => Smatch.fScore(x, y, 1)._1}}).sum / i.size
+    }
     val featureIndex = new MapIndex
     def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options, featureIndex)).features(d, s, a)
-    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score, 
-        GraphViz.graphVizOutputFunction)
+    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score,
+      GraphViz.graphVizOutputFunction)
   }
 
   def main(args: Array[String]): Unit = {

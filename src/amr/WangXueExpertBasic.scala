@@ -67,8 +67,8 @@ object WangXueExpertCheck {
       val (english, amr) = x
       val sentence = Sentence(english, amr)
       val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get)
-      allScores = fScore :: allScores
-      println(f"$fScore%.2f" + "\t" + sentence.rawText)
+      allScores = fScore._1 :: allScores
+      println(f"${fScore._1}%.2f" + "\t" + sentence.rawText)
     }
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size

@@ -3,20 +3,20 @@ import scala.util.Random
 
 object Smatch {
 
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4): Double = {
+  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4): (Double, Double, Double, Double) = {
     val smallGraph = if (AMR1.nodes.size < AMR2.nodes.size) AMR1 else AMR2
     val largeGraph = if (AMR1.nodes.size >= AMR2.nodes.size) AMR1 else AMR2
     val allScores = 1 to attempts map (_ => oneIteration(largeGraph, smallGraph))
-    allScores.max
+    allScores.maxBy(_._1)
   }
   
-  def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph): Double = {
+  def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph): (Double, Double, Double, Double) = {
       var currentBestMap = initialMap(AMR1, AMR2)
       var improvement = true
       do {
         var lastBestMap = currentBestMap
         currentBestMap = getBestMove(AMR1, AMR2, currentBestMap)
-        improvement = fScore(AMR1, AMR2, currentBestMap) > fScore(AMR1, AMR2, lastBestMap)
+        improvement = fScore(AMR1, AMR2, currentBestMap)._1 > fScore(AMR1, AMR2, lastBestMap)._1
         if (!improvement) currentBestMap = lastBestMap
       } while (improvement)
       fScore(AMR1, AMR2, currentBestMap)
@@ -64,7 +64,7 @@ object Smatch {
     }
   }
   
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]) : Double = {
+  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]) : (Double, Double, Double, Double) = {
     // nodeMap is keyed on AMR2 node names, and links them to node names in AMR1
     // i.e. AMR1 is our fixed reference point around which we permute AMR2
     // Rather than get fiddly - we convert each graph to a Seq of String representations of the triples
@@ -75,9 +75,11 @@ object Smatch {
     val matches: Double = (amr1 map (a => if (amr2 contains a) 1 else 0)).sum
     val precision = matches / amr2.size
     val recall = matches / amr1.size
-    if (precision + recall > 0.00)
+    val incorrect = amr2.size - matches + amr1.size - matches
+    val fScore = if (precision + recall > 0.00)
       (2 * precision * recall) / (precision + recall)
     else 0.00
+    (fScore, precision, recall, incorrect)
   }
     
   def stringSeq(AMR: AMRGraph): Seq[String] = {
