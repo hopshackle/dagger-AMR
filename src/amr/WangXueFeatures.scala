@@ -9,7 +9,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = false
+  val debug = true
   val random = new Random()
   val numeric = "[0-9,.]".r
 
@@ -31,14 +31,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
       featuresDebug.close
     }
-    output
+    quadraticCombination(output)
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes(sigma)
-
+    val sigmaInserted = state.currentGraph.insertedNodes contains sigma
     val wordTokens: Double = sentence.dependencyTree.nodes.size
     val insertedNodes: Double = state.currentGraph.insertedNodes.size
     add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
@@ -62,19 +62,21 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
         label <- state.currentGraph.labelsBetween(parent, sigma)
       } yield (parent, label)
       add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
+
       if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
       parentLabelCombos foreach {
         case (parent, label) =>
           val parentWord = state.currentGraph.nodes(parent)
           if (state.currentGraph.insertedNodes contains parent) {
             add(hmap, "PARENT-INSERTED=" + parentWord)
-            if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
+            //          if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
           }
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + parentWord)
-          add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+          if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
+        //        add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
       }
-
+      if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
     }
     hmap
   }
@@ -104,15 +106,16 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       add(hmap, "SIGMA-BETA-PATH=" + state.startingDT.getPathBetween(sigma, beta))
       add(hmap, "SIGMA-BETA-PATH=" + sigmaLemma + "-" + state.startingDT.getPathBetween(sigma, beta) + "-" + betaLemma)
     }
-    if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
+
     if (betaInserted) add(hmap, "BETA-INSERTED")
-    if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
+    //    if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
     add(hmap, "BETA-WORD=" + betaWord)
     if (numeric.replaceAllIn(betaWord, "") == "") add(hmap, "BETA-NUMERIC")
-    add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
-    if (sigmaPOS != "" && betaPOS != "") add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
-    if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
-    add(hmap, "SIGMA-BETA-DISTANCE", +distance)
+    //    add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
+    //    if (sigmaPOS != "" && betaPOS != "") add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
+    //    if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
+    add(hmap, "SIGMA-BETA-DISTANCE", distance)
+    add(hmap, "SIGMA-BETA-DISTANCE=" + distance) // distance indicator feature
     if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     add(hmap, "SIGMA-BETA-DEP-LABEL=" + dependencyLabel)
     if (betaPOS != "") add(hmap, "BETA-POS=" + betaPOS)
@@ -157,14 +160,26 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
 
     if (kappaInserted) add(hmap, "KAPPA-INSERTED")
-    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
+    //    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
     add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
-    if (kappaPOS != "" && betaPOS != "") add(hmap, "KAPPA-BETA-POS=" + kappaPOS + "-" + betaPOS)
-    if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
-    add(hmap, "KAPPA-BETA-DISTANCE", +distance)
+    //    if (kappaPOS != "" && betaPOS != "") add(hmap, "KAPPA-BETA-POS=" + kappaPOS + "-" + betaPOS)
+    //    if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
+    add(hmap, "KAPPA-BETA-DISTANCE", distance)
+    add(hmap, "KAPPA-BETA-DISTANCE=" + distance) // distance indicator feature
     if (kappaPosition == 0 || betaPosition == 0) add(hmap, "KAPPA-BETA-DISTANCE-UNKNOWN")
 
     hmap
+  }
+
+  def quadraticCombination(linearFeatures: Map[Int, Double]): Map[Int, Double] = {
+    // We wish to create a quadratic feature from every combination of the input
+    // 'linear' features. The value we calculate by multiplication.
+    val linearKeys = linearFeatures.keys.toList.sorted
+    val quadFeaturesByString = for {
+      f1 <- linearKeys
+      f2 <- linearKeys.dropWhile { _ <= f1 }
+    } yield (dict.elem(f1) + ":" + dict.elem(f2) -> linearFeatures(f1) * linearFeatures(f2))
+    (quadFeaturesByString map { case (s, v) => (dict.index(s) -> v) }).toMap
   }
 
 }
