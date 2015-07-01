@@ -9,7 +9,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = true
+  val debug = false
   val random = new Random()
   val numeric = "[0-9,.]".r
 
@@ -20,18 +20,18 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val thisDebug = if (debug && random.nextDouble < 0.01) true else false
 
-    val output = state.childrenToProcess match {
+    val linearOutput = state.childrenToProcess match {
       case Nil => sigmaFeatures(sentence, state, action)
       case head :: tail => sigmaBetaFeatures(sentence, state, action)
     }
-
+    val output = linearOutput ++ quadraticCombination(linearOutput)
     if (thisDebug) {
       val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
       featuresDebug.write(state.toString)
       output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
       featuresDebug.close
     }
-    quadraticCombination(output)
+    output
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
@@ -41,15 +41,17 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     val sigmaInserted = state.currentGraph.insertedNodes contains sigma
     val wordTokens: Double = sentence.dependencyTree.nodes.size
     val insertedNodes: Double = state.currentGraph.insertedNodes.size
-    add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
+    if (insertedNodes > 0) add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
     val insertedConcepts = state.currentGraph.insertedNodes.keys map (node => state.currentGraph.nodes.getOrElse(node, "DELETED"))
     val conceptSet = insertedConcepts.toSet
     conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
-    add(hmap, "ACTION-TYPE=" + action.name)
+    //   add(hmap, "ACTION-TYPE=" + action.name)
     if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
-    if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
-    if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+    if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
+    if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
+    //    if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
+    //    if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (state.currentGraph.nodePOS contains sigma) add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS(sigma))
     if (state.currentGraph.nodeLemmas contains sigma) add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas(sigma))
@@ -114,7 +116,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     //    add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
     //    if (sigmaPOS != "" && betaPOS != "") add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
     //    if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
-    add(hmap, "SIGMA-BETA-DISTANCE", distance)
+    if (distance > 0) add(hmap, "SIGMA-BETA-DISTANCE", distance)
     add(hmap, "SIGMA-BETA-DISTANCE=" + distance) // distance indicator feature
     if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     add(hmap, "SIGMA-BETA-DEP-LABEL=" + dependencyLabel)
@@ -160,11 +162,15 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
 
     if (kappaInserted) add(hmap, "KAPPA-INSERTED")
+    if (kappaNER != "") add(hmap, "KAPPA-NER=" + kappaNER)
+    if (kappaPOS != "") add(hmap, "KAPPA-POS=" + kappaPOS)
+    if (kappaLemma != "") add(hmap, "KAPPA-LEMMA=" + kappaLemma)
+    add(hmap, "KAPPA-WORD=" + kappaWord)
     //    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
-    add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
+    //    add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
     //    if (kappaPOS != "" && betaPOS != "") add(hmap, "KAPPA-BETA-POS=" + kappaPOS + "-" + betaPOS)
     //    if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
-    add(hmap, "KAPPA-BETA-DISTANCE", distance)
+    if (distance > 0) add(hmap, "KAPPA-BETA-DISTANCE", distance)
     add(hmap, "KAPPA-BETA-DISTANCE=" + distance) // distance indicator feature
     if (kappaPosition == 0 || betaPosition == 0) add(hmap, "KAPPA-BETA-DISTANCE-UNKNOWN")
 
@@ -174,7 +180,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   def quadraticCombination(linearFeatures: Map[Int, Double]): Map[Int, Double] = {
     // We wish to create a quadratic feature from every combination of the input
     // 'linear' features. The value we calculate by multiplication.
-    val linearKeys = linearFeatures.keys.toList.sorted
+    val linearKeys = linearFeatures.keys.toList.sorted filterNot (x => dict.elem(x) contains "PATH")
     val quadFeaturesByString = for {
       f1 <- linearKeys
       f2 <- linearKeys.dropWhile { _ <= f1 }
