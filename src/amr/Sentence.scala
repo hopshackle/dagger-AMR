@@ -26,6 +26,10 @@ abstract class Graph[K] {
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
   def getRoots: Set[K] = nodes.keySet filter isRoot
+  def subGraph(node: K): Set[K] = {
+    if (isLeafNode(node)) Set(node)
+    else (childrenOf(node) flatMap subGraph).toSet + node
+  }
 
 }
 

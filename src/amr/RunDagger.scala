@@ -25,8 +25,7 @@ object RunDagger {
       }
     }
     if (logFile != "") output.close
-    val trans = new WangXueTransitionSystem
-    trans.construct(nextState, data)
+    expertSystem.construct(nextState, data)
   }
 
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {

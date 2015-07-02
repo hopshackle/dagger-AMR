@@ -12,23 +12,23 @@ object problematicAMR {
                                                   //| :ARG2 (o / official)))) :op2 (g / gain-02 :ARG0 a3 :ARG1 (e2 / enter-01 :ARG
                                                   //| 1 (s / ship :name (n / name :op1 "Kuwolsan"))) :instrument (f / force)) :tim
                                                   //| e (d / date-entity :year 1999 :month 7 :day 1))))
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@5419f379
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@7d
-                                                  //| c7cbad
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@7c16905e
+  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@2a
+                                                  //| 2d45ba
   val s1 = Sentence(testData(0)._1, testData(0)._2)
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.3 sec].
+                                                  //| hPCFG.ser.gz ... done [1.0 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.7 sec].
+                                                  //| im.crf.ser.gz ... done [4.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.4 sec].
+                                                  //| im.crf.ser.gz ... done [2.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.8 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.0 sec].
                                                   //| WARNING: Found duplicate match for concept and
                                                   //| s1  : amr.Sentence = Sentence(On 1 July 1999 armed troops and a group of gov
                                                   //| ernment weapons experts aided customs officials and gained forcible entry on
@@ -99,7 +99,7 @@ object problematicAMR {
                                                   //| 4 -> 0.2.0
                                                   //| 15 -> 0.0.1.0.0
                                                   //| 
-  val action = new Array[WangXueAction](500)      //> action  : Array[amr.WangXueAction] = Array(null, null, null, null, null, nul
+  val action = new Array[WangXueAction](301)      //> action  : Array[amr.WangXueAction] = Array(null, null, null, null, null, nul
                                                   //| l, null, null, null, null, null, null, null, null, null, null, null, null, n
                                                   //| ull, null, null, null, null, null, null, null, null, null, null, null, null,
                                                   //|  null, null, null, null, null, null, null, null, null, null, null, null, nul
@@ -123,15 +123,8 @@ object problematicAMR {
                                                   //|  null, null, null, null, null, null, null, null, null, null, null, null, nul
                                                   //| l, null, null, null, null, null, null, null, null, null, null, null, null, n
                                                   //| ull, null, null, null, null, null, null, null, null, null, null, null, null,
-                                                  //|  null, null, null, null, null, null, null, null, null, null, null, null, nul
-                                                  //| l, null, null, null, null, null, null, null, null, null, null, null, null, n
-                                                  //| ull, null, null, null, null, null, null, null, null, null, null, null, null,
-                                                  //|  null, null, null, null, null, null, null, null, null, null, null, null, nul
-                                                  //| l, null, null, null, null, null, null, null, null, null, null, null, null, n
-                                                  //| ull, null, null, null, null, null, null, null, null, null, null, null, null,
-                                                  //|  null, null, null, null, null, null, null, null, null, null, null,
-                                                  //| Output exceeds cutoff limit.
-  val stateHistory = new Array[WangXueTransitionState](500)
+                                                  //|  null, null, null, null)
+  val stateHistory = new Array[WangXueTransitionState](301)
                                                   //> stateHistory  : Array[amr.WangXueTransitionState] = Array(null, null, null, 
                                                   //| null, null, null, null, null, null, null, null, null, null, null, null, null
                                                   //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
@@ -156,14 +149,7 @@ object problematicAMR {
                                                   //| ll, null, null, null, null, null, null, null, null, null, null, null, null, 
                                                   //| null, null, null, null, null, null, null, null, null, null, null, null, null
                                                   //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
-                                                  //| ll, null, null, null, null, null, null, null, null, null, null, null, null, 
-                                                  //| null, null, null, null, null, null, null, null, null, null, null, null, null
-                                                  //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
-                                                  //| ll, null, null, null, null, null, null, null, null, null, null, null, null, 
-                                                  //| null, null, null, null, null, null, null, null, null, null, null, null, null
-                                                  //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
-                                                  //| ll, null, null, null, null, null, null, null, null, null, null, nu
-                                                  //| Output exceeds cutoff limit.
+                                                  //| ll, null, null, null, null, null, null)
   s1.positionToAMR                                //> res0: Map[Int,String] = Map(0 -> ROOT, 5 -> 0.0.0.0.0, 14 -> 0.0, 6 -> 0.0.0
                                                   //| .0, 9 -> 0.0.0.1, 13 -> 0.0.0.1.0.0.1, 2 -> 0.2.2, 17 -> 0.0.0, 12 -> 0.0.0.
                                                   //| 1.0.0.1.0, 7 -> 0, 3 -> 0.2.1, 18 -> 0.1, 16 -> 0.0.1.0.1, 11 -> 0.0.0.1.0.0
@@ -181,37 +167,95 @@ object problematicAMR {
                                                   //| .2) -> day, (0.1,0.1.1) -> instrument)
   import java.io._
   val file = new FileWriter("C://AMR//problematic_output.txt")
-                                                  //> file  : java.io.FileWriter = java.io.FileWriter@6d4d66d2
-  for (i <- 0 to 450) {
-    stateHistory(i) = state
-    action(i) = expert.chooseTransition(s1, state)
-    file.write(action(i) + " : " + (state.nodesToProcess match {case Nil => ""; case _ => state.nodesToProcess.head}) + " -> " + (
-      state.childrenToProcess match { case Nil => ""; case _ => state.childrenToProcess.head }) + "\n")
-    file.flush
-    state = action(i)(state)
-  }                                               //> WARNING: Found duplicate match for concept attack-01
+                                                  //> file  : java.io.FileWriter = java.io.FileWriter@5b1669c0
+  for (i <- 0 to 300) {
+    if (!expertSystem.isTerminal(state)) {
+      stateHistory(i) = state
+      action(i) = expert.chooseTransition(s1, state)
+      file.write(state.toString + "\n")
+      file.write(action(i) + " : " + (state.nodesToProcess match { case Nil => ""; case _ => state.nodesToProcess.head }) + " -> " + (
+        state.childrenToProcess match { case Nil => ""; case _ => state.childrenToProcess.head }) + "\n")
+
+      file.flush
+      state = action(i)(state)
+    }                                             //> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
-                                                  //| java.util.NoSuchElementException: head of empty list
-                                                  //| 	at scala.collection.immutable.Nil$.head(List.scala:420)
-                                                  //| 	at scala.collection.immutable.Nil$.head(List.scala:417)
-                                                  //| 	at amr.WangXueExpert.chooseTransition(WangXueExpert.scala:26)
-                                                  //| 	at amr.problematicAMR$$anonfun$main$1$$anonfun$apply$mcV$sp$1.apply$mcVI
-                                                  //| $sp(amr.problematicAMR.scala:17)
-                                                  //| 	at scala.collection.immutable.Range.foreach$mVc$sp(Range.scala:166)
-                                                  //| 	at amr.problematicAMR$$anonfun$main$1.apply$mcV$sp(amr.problematicAMR.sc
-                                                  //| ala:15)
-                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$$anonfun$$exe
-                                                  //| cute$1.apply$mcV$sp(WorksheetSupport.scala:76)
-                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$.redirected(W
-                                                  //| orksheetSupport.scala:65)
-                                                  //| 	at org.scalaide.worksheet.runtime.library.WorksheetSupport$.$execute(Wor
-                                                  //| ksheetSupport.scala:75)
-                                                  //| 	at amr.problematicAMR$.main(amr.problematicAMR.scala:3)
-                                                  //| 	at amr.problematicAMR.main(amr.problematicAMR.scala)
+  }
   file.close
-
+  println("Here")                                 //> Here
   val outputAdv = RunDagger.sampleTrajectory(s1, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
-  outputAdv
+                                                  //> outputAdv  : amr.Sentence = Sentence(On 1 July 1999 armed troops and a grou
+                                                  //| p of government weapons experts aided customs officials and gained forcible
+                                                  //|  entry onto the kuwolsan.,
+                                                  //| NodeMap:	Map(0 -> ROOT, 2 -> 1, 3 -> July, 4 -> 1999, 5 -> armed, 6 -> tr
+                                                  //| oops, 7 -> and, 9 -> group, 11 -> government-organization, 12 -> weapons, 1
+                                                  //| 3 -> experts, 14 -> aided, 15 -> customs, 16 -> officials, 17 -> and, 18 ->
+                                                  //|  gained, 19 -> forcible, 24 -> UNKNOWN, 25 -> person, 26 -> date-entity, 27
+                                                  //|  -> UNKNOWN, 28 -> person)
+                                                  //| SpanMap:	Map(2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 6 -> (6,7), 
+                                                  //| 7 -> (7,8), 9 -> (9,10), 11 -> (11,12), 12 -> (12,13), 13 -> (10,13), 14 ->
+                                                  //|  (14,15), 15 -> (15,16), 16 -> (16,17), 17 -> (17,18), 18 -> (18,19), 19 ->
+                                                  //|  (19,20), 24 -> (11,12), 25 -> (11,12), 26 -> (1,2), 27 -> (15,16), 28 -> (
+                                                  //| 15,16))
+                                                  //| Edges:	Map((0,7) -> ROOT, (6,5) -> ARG1-of, (7,14) -> opN, (7,18) -> op
+                                                  //| N, (7,26) -> time, (9,13) -> UNKNOWN, (13,12) -> ARG2, (13,25) -> ARG1, (14
+                                                  //| ,17) -> ARG0, (14,28) -> ARG2, (17,6) -> opN, (17,9) -> opN, (18,19) -> UNK
+                                                  //| NOWN, (24,11) -> ARG1, (25,24) -> ARG0-of, (26,2) -> day, (26,3) -> month, 
+                                                  //| (26,4) -> year, (27,15) -> ARG1, (27,16) -> ARG2, (28,27) -> ARG0-of)
+                                                  //| InsertedNodes:	Map(24 -> 0.0.0.1.0.0, 25 -> 0.0.0.1.0, 28 -> 0.0.1, 27 
+                                                  //| -> 0.0.1.0, 26 -> 0.2)
+                                                  //| MergedNodes:	Map(13 -> List((10,of)), 19 -> List((20,entry)), 26 -> L
+                                                  //| ist((1,On)))
+                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(12 -> weapons, 19 -> forcible, 4
+                                                  //|  -> 1999, 15 -> customs, 11 -> government-organization, 9 -> group, 26 -> d
+                                                  //| ate-entity, 13 -> experts, 24 -> UNKNOWN, 16 -> officials, 5 -> armed, 6 ->
+                                                  //|  troops, 17 -> and, 25 -> person, 14 -> aided, 0 -> ROOT, 27 -> UNKNOWN, 2 
+                                                  //| -> 1, 18 -> gained, 7 -> and, 3 -> July, 28 -> person),Map(12 -> (12,13), 1
+                                                  //| 9 -> (19,20), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 26 -> 
+                                                  //| (1,2), 13 -> (10,13), 24 -> (11,12), 16 -> (16,17), 5 -> (5,6), 6 -> (6,7),
+                                                  //|  17 -> (17,18), 25 -> (11,12), 14 -> (14,15), 27 -> (15,16), 2 -> (2,3), 18
+                                                  //|  -> (18,19), 7 -> (7,8), 3 -> (3,4), 28 -> (15,16)),Map((26,4) -> year, (0,
+                                                  //| 7) -> ROOT, (7,26) -> time, (28,27) -> ARG0-of, (17,9) -> opN, (25,24) -> A
+                                                  //| RG0-of, (27,16) -> ARG2, (6,5) -> ARG1-of, (9,13) -> UNKNOWN, (14,28) -> AR
+                                                  //| G2, (26,2) -> day, (18,19) -> UNKNOWN, (24,11) -> ARG1, (7,14) -> opN, (17,
+                                                  //| 6) -> opN, (14,17) -> ARG0, (26,3) -> month, (13,12) 
+                                                  //| Output exceeds cutoff limit.
+  outputAdv                                       //> res2: amr.Sentence = Sentence(On 1 July 1999 armed troops and a group of go
+                                                  //| vernment weapons experts aided customs officials and gained forcible entry 
+                                                  //| onto the kuwolsan.,
+                                                  //| NodeMap:	Map(0 -> ROOT, 2 -> 1, 3 -> July, 4 -> 1999, 5 -> armed, 6 -> tr
+                                                  //| oops, 7 -> and, 9 -> group, 11 -> government-organization, 12 -> weapons, 1
+                                                  //| 3 -> experts, 14 -> aided, 15 -> customs, 16 -> officials, 17 -> and, 18 ->
+                                                  //|  gained, 19 -> forcible, 24 -> UNKNOWN, 25 -> person, 26 -> date-entity, 27
+                                                  //|  -> UNKNOWN, 28 -> person)
+                                                  //| SpanMap:	Map(2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 6 -> (6,7), 
+                                                  //| 7 -> (7,8), 9 -> (9,10), 11 -> (11,12), 12 -> (12,13), 13 -> (10,13), 14 ->
+                                                  //|  (14,15), 15 -> (15,16), 16 -> (16,17), 17 -> (17,18), 18 -> (18,19), 19 ->
+                                                  //|  (19,20), 24 -> (11,12), 25 -> (11,12), 26 -> (1,2), 27 -> (15,16), 28 -> (
+                                                  //| 15,16))
+                                                  //| Edges:	Map((0,7) -> ROOT, (6,5) -> ARG1-of, (7,14) -> opN, (7,18) -> op
+                                                  //| N, (7,26) -> time, (9,13) -> UNKNOWN, (13,12) -> ARG2, (13,25) -> ARG1, (14
+                                                  //| ,17) -> ARG0, (14,28) -> ARG2, (17,6) -> opN, (17,9) -> opN, (18,19) -> UNK
+                                                  //| NOWN, (24,11) -> ARG1, (25,24) -> ARG0-of, (26,2) -> day, (26,3) -> month, 
+                                                  //| (26,4) -> year, (27,15) -> ARG1, (27,16) -> ARG2, (28,27) -> ARG0-of)
+                                                  //| InsertedNodes:	Map(24 -> 0.0.0.1.0.0, 25 -> 0.0.0.1.0, 28 -> 0.0.1, 27 
+                                                  //| -> 0.0.1.0, 26 -> 0.2)
+                                                  //| MergedNodes:	Map(13 -> List((10,of)), 19 -> List((20,entry)), 26 -> L
+                                                  //| ist((1,On)))
+                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(12 -> weapons, 19 -> forcible, 4
+                                                  //|  -> 1999, 15 -> customs, 11 -> government-organization, 9 -> group, 26 -> d
+                                                  //| ate-entity, 13 -> experts, 24 -> UNKNOWN, 16 -> officials, 5 -> armed, 6 ->
+                                                  //|  troops, 17 -> and, 25 -> person, 14 -> aided, 0 -> ROOT, 27 -> UNKNOWN, 2 
+                                                  //| -> 1, 18 -> gained, 7 -> and, 3 -> July, 28 -> person),Map(12 -> (12,13), 1
+                                                  //| 9 -> (19,20), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,10), 26 -> 
+                                                  //| (1,2), 13 -> (10,13), 24 -> (11,12), 16 -> (16,17), 5 -> (5,6), 6 -> (6,7),
+                                                  //|  17 -> (17,18), 25 -> (11,12), 14 -> (14,15), 27 -> (15,16), 2 -> (2,3), 18
+                                                  //|  -> (18,19), 7 -> (7,8), 3 -> (3,4), 28 -> (15,16)),Map((26,4) -> year, (0,
+                                                  //| 7) -> ROOT, (7,26) -> time, (28,27) -> ARG0-of, (17,9) -> opN, (25,24) -> A
+                                                  //| RG0-of, (27,16) -> ARG2, (6,5) -> ARG1-of, (9,13) -> UNKNOWN, (14,28) -> AR
+                                                  //| G2, (26,2) -> day, (18,19) -> UNKNOWN, (24,11) -> ARG1, (7,14) -> opN, (17,
+                                                  //| 6) -> opN, (14,17) -> ARG0, (26,3) -> month, (13,12) -> ARG2
+                                                  //| Output exceeds cutoff limit.
 }
