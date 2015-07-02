@@ -47,7 +47,7 @@ object WXExpertTest {
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.3 sec].
+                                                  //| im.crf.ser.gz ... done [5.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
                                                   //| im.crf.ser.gz ... done [2.0 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
@@ -130,29 +130,31 @@ object WXExpertTest {
                                                   //| 16 -> 
                                                   //| NextNode: 0 -> UNKNOWN
                                                   //| 18 -> 16
+                                                  //| ParentFlip
+                                                  //| 18 -> 17
                                                   //| InsertNode: country (Ref: 0.3)
+                                                  //| 18 -> 17
+                                                  //| NextEdge: 9 -> opN
                                                   //| 18 -> 16
                                                   //| NextEdge: 9 -> opN
                                                   //| 18 -> 
                                                   //| NextNode: 3 -> name
+                                                  //| 17 -> 
+                                                  //| NextNode: 0 -> UNKNOWN
+                                                  //| 8 -> 
+                                                  //| DeleteNode
                                                   //| 19 -> 18
                                                   //| InsertNode: and (Ref: 0)
                                                   //| 19 -> 18
                                                   //| NextEdge: 1 -> name
                                                   //| 19 -> 
                                                   //| NextNode: 13 -> country
+                                                  //| 13 -> 
+                                                  //| DeleteNode
                                                   //| 20 -> 19
                                                   //| NextEdge: 9 -> opN
                                                   //| 20 -> 
                                                   //| NextNode: 33 -> and
-                                                  //| 8 -> 
-                                                  //| DeleteNode
-                                                  //| 17 -> 20
-                                                  //| Reattach(0)
-                                                  //| 17 -> 
-                                                  //| NextNode: 0 -> UNKNOWN
-                                                  //| 13 -> 
-                                                  //| DeleteNode
                                                   //| 6 -> 
                                                   //| InsertNode: name (Ref: 0.1.0)
                                                   //| 6 -> 
@@ -163,18 +165,16 @@ object WXExpertTest {
                                                   //| NextEdge: 9 -> opN
                                                   //| 21 -> 
                                                   //| NextNode: 3 -> name
-                                                  //| 11 -> 17
+                                                  //| 11 -> 20
                                                   //| InsertNode: name (Ref: 0.2.0)
-                                                  //| 11 -> 17
-                                                  //| NextEdge: 0 -> UNKNOWN
+                                                  //| 11 -> 20
+                                                  //| Reattach(0)
                                                   //| 11 -> 
                                                   //| NextNode: 18 -> "Lithuania"
                                                   //| 3 -> 
                                                   //| DeleteNode
                                                   //| 22 -> 21
                                                   //| NextEdge: 1 -> name
-                                                  //| 22 -> 
-                                                  //| NextNode: 13 -> country
 
   s1.positionToAMR                                //> res2: Map[Int,String] = Map(0 -> ROOT, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 17 -> 0.3
                                                   //| .0.1, 16 -> 0.3.0.0, 11 -> 0.2.0.0)
@@ -262,7 +262,7 @@ object WXExpertTest {
                                                   //| p((3,5) -> UNKNOWN, (1,3) -> UNKNOWN, (3,7) -> UNKNOWN, (0,1) -> UNKNOWN, (
                                                   //| 7,9) -> UNKNOWN))),Map(0 -> ROOT, 5 -> 5, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
                                                   //| 
-  val loss = new WangXueLossFunction              //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@537f60bf
+  val loss = new WangXueLossFunction              //> loss  : amr.WangXueLossFunction = amr.WangXueLossFunction@7b36aa0c
   loss(s2, s2, null)                              //> res5: Double = 0.0
   loss(s2, output, null)                          //> res6: Double = 0.5384615384615385
   println(output.amr.get)                         //> AMRGraph(Map(9 -> science, 5 -> telecommunication, 1 -> international, 0 ->
@@ -293,32 +293,32 @@ object WXExpertTest {
                                                   //|  5 -> telecommunication, 7 -> technology, 9 -> science, 10 -> and)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6), 
                                                   //| 10 -> (5,6))
-                                                  //| Edges:	Map((0,10) -> ROOT, (10,1) -> opN, (10,3) -> opN, (10,5) -> opN,
-                                                  //|  (10,7) -> opN, (10,9) -> opN)
+                                                  //| Edges:	Map((0,10) -> ROOT, (3,5) -> UNKNOWN, (10,1) -> opN, (10,3) -> o
+                                                  //| pN, (10,7) -> opN, (10,9) -> opN)
                                                   //| InsertedNodes:	Map(10 -> 0)
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set((7,10), (3,10), (1,10)),Some(AMRGraph(Map(9 -> scien
                                                   //| ce, 5 -> telecommunication, 10 -> and, 1 -> international, 0 -> ROOT, 7 -> 
                                                   //| technology, 3 -> government-organization),Map(9 -> (5,6), 5 -> (3,4), 10 ->
-                                                  //|  (5,6), 1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((10,9) -> opN, (10,5) -> op
-                                                  //| N, (10,7) -> opN, (10,3) -> opN, (10,1) -> opN, (0,10) -> ROOT))),Map(0 -> 
-                                                  //| ROOT, 5 -> 5, 10 -> 10, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
+                                                  //|  (5,6), 1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((3,5) -> UNKNOWN, (10,9) ->
+                                                  //|  opN, (10,7) -> opN, (10,3) -> opN, (10,1) -> opN, (0,10) -> ROOT))),Map(0 
+                                                  //| -> ROOT, 5 -> 5, 10 -> 10, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
   outputAdv2                                      //> res8: amr.Sentence = Sentence(International; Government; Telecom; technolog
                                                   //| y; science,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> international, 3 -> government-organization,
                                                   //|  5 -> telecommunication, 7 -> technology, 9 -> science, 10 -> and)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 5 -> (3,4), 7 -> (4,5), 9 -> (5,6), 
                                                   //| 10 -> (5,6))
-                                                  //| Edges:	Map((0,10) -> ROOT, (10,1) -> opN, (10,3) -> opN, (10,5) -> opN,
-                                                  //|  (10,7) -> opN, (10,9) -> opN)
+                                                  //| Edges:	Map((0,10) -> ROOT, (3,5) -> UNKNOWN, (10,1) -> opN, (10,3) -> o
+                                                  //| pN, (10,7) -> opN, (10,9) -> opN)
                                                   //| InsertedNodes:	Map(10 -> 0)
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set((7,10), (3,10), (1,10)),Some(AMRGraph(Map(9 -> scien
                                                   //| ce, 5 -> telecommunication, 10 -> and, 1 -> international, 0 -> ROOT, 7 -> 
                                                   //| technology, 3 -> government-organization),Map(9 -> (5,6), 5 -> (3,4), 10 ->
-                                                  //|  (5,6), 1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((10,9) -> opN, (10,5) -> op
-                                                  //| N, (10,7) -> opN, (10,3) -> opN, (10,1) -> opN, (0,10) -> ROOT))),Map(0 -> 
-                                                  //| ROOT, 5 -> 5, 10 -> 10, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
+                                                  //|  (5,6), 1 -> (1,2), 7 -> (4,5), 3 -> (2,3)),Map((3,5) -> UNKNOWN, (10,9) ->
+                                                  //|  opN, (10,7) -> opN, (10,3) -> opN, (10,1) -> opN, (0,10) -> ROOT))),Map(0 
+                                                  //| -> ROOT, 5 -> 5, 10 -> 10, 1 -> 1, 9 -> 9, 7 -> 7, 3 -> 3))
   val outputAdv1 = RunDagger.sampleTrajectory(s1, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
                                                   //> outputAdv1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania 
                                                   //| (LT); United States (US),
@@ -329,24 +329,24 @@ object WXExpertTest {
                                                   //| ), 18 -> (7,8), 19 -> (7,8), 20 -> (7,8), 21 -> (3,4), 22 -> (3,4), 23 -> (
                                                   //| 5,6), 24 -> (5,6), 25 -> (1,2), 26 -> (1,2))
                                                   //| Edges:	Map((0,20) -> ROOT, (0,26) -> UNKNOWN, (1,22) -> UNKNOWN, (1,24)
-                                                  //|  -> UNKNOWN, (11,17) -> UNKNOWN, (18,16) -> opN, (19,18) -> name, (20,19) -
-                                                  //| > opN, (21,6) -> opN, (22,21) -> name, (23,11) -> opN, (24,23) -> name, (25
-                                                  //| ,1) -> opN, (26,25) -> name)
+                                                  //|  -> UNKNOWN, (18,16) -> opN, (18,17) -> opN, (19,18) -> name, (20,19) -> op
+                                                  //| N, (21,6) -> opN, (22,21) -> name, (23,11) -> opN, (24,23) -> name, (25,1) 
+                                                  //| -> opN, (26,25) -> name)
                                                   //| InsertedNodes:	Map(24 -> 0.2, 25 -> 0.0.0, 20 -> 0, 21 -> 0.1.0, 22 -> 
                                                   //| 0.1, 18 -> 0.3.0, 26 -> 0.0, 23 -> 0.2.0, 19 -> 0.3)
                                                   //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(19 -> country, 23 -> name, 11 ->
-                                                  //|  "Lithuania", 22 -> country, 26 -> country, 24 -> country, 16 -> United, 21
-                                                  //|  -> name, 6 -> "Latvia", 1 -> "Estonia", 17 -> States, 25 -> name, 0 -> ROO
-                                                  //| T, 20 -> and, 18 -> name),Map(19 -> (7,8), 23 -> (5,6), 11 -> (5,6), 22 -> 
-                                                  //| (3,4), 26 -> (1,2), 24 -> (5,6), 16 -> (7,8), 21 -> (3,4), 6 -> (3,4), 1 ->
-                                                  //|  (1,2), 17 -> (8,9), 25 -> (1,2), 20 -> (7,8), 18 -> (7,8)),Map((18,16) -> 
-                                                  //| opN, (21,6) -> opN, (25,1) -> opN, (1,22) -> UNKNOWN, (24,23) -> name, (19,
-                                                  //| 18) -> name, (1,24) -> UNKNOWN, (0,20) -> ROOT, (20,19) -> opN, (26,25) -> 
-                                                  //| name, (23,11) -> opN, (22,21) -> name, (11,17) -> UNKNOWN, (0,26) -> UNKNOW
-                                                  //| N))),Map(0 -> ROOT, 24 -> 24, 25 -> 25, 20 -> 20, 1 -> 1, 6 -> 6, 21 -> 21,
-                                                  //|  17 -> 17, 22 -> 22, 18 -> 18, 16 -> 16, 11 -> 11, 26 -> 26, 23 -> 23, 19 -
-                                                  //| > 19))
+                                                  //| SwappedArcs:	Set((17,18)),Some(AMRGraph(Map(19 -> country, 23 -> name
+                                                  //| , 11 -> "Lithuania", 22 -> country, 26 -> country, 24 -> country, 16 -> Uni
+                                                  //| ted, 21 -> name, 6 -> "Latvia", 1 -> "Estonia", 17 -> States, 25 -> name, 0
+                                                  //|  -> ROOT, 20 -> and, 18 -> name),Map(19 -> (7,8), 23 -> (5,6), 11 -> (5,6),
+                                                  //|  22 -> (3,4), 26 -> (1,2), 24 -> (5,6), 16 -> (7,8), 21 -> (3,4), 6 -> (3,4
+                                                  //| ), 1 -> (1,2), 17 -> (8,9), 25 -> (1,2), 20 -> (7,8), 18 -> (7,8)),Map((18,
+                                                  //| 16) -> opN, (21,6) -> opN, (25,1) -> opN, (1,22) -> UNKNOWN, (24,23) -> nam
+                                                  //| e, (19,18) -> name, (18,17) -> opN, (1,24) -> UNKNOWN, (0,20) -> ROOT, (20,
+                                                  //| 19) -> opN, (26,25) -> name, (23,11) -> opN, (22,21) -> name, (0,26) -> UNK
+                                                  //| NOWN))),Map(0 -> ROOT, 24 -> 24, 25 -> 25, 20 -> 20, 1 -> 1, 6 -> 6, 21 -> 
+                                                  //| 21, 17 -> 17, 22 -> 22, 18 -> 18, 16 -> 16, 11 -> 11, 26 -> 26, 23 -> 23, 1
+                                                  //| 9 -> 19))
   outputAdv1                                      //> res9: amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT); Un
                                                   //| ited States (US),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> "Estonia", 6 -> "Latvia", 11 -> "Lithuania",
@@ -356,22 +356,22 @@ object WXExpertTest {
                                                   //| ), 18 -> (7,8), 19 -> (7,8), 20 -> (7,8), 21 -> (3,4), 22 -> (3,4), 23 -> (
                                                   //| 5,6), 24 -> (5,6), 25 -> (1,2), 26 -> (1,2))
                                                   //| Edges:	Map((0,20) -> ROOT, (0,26) -> UNKNOWN, (1,22) -> UNKNOWN, (1,24)
-                                                  //|  -> UNKNOWN, (11,17) -> UNKNOWN, (18,16) -> opN, (19,18) -> name, (20,19) -
-                                                  //| > opN, (21,6) -> opN, (22,21) -> name, (23,11) -> opN, (24,23) -> name, (25
-                                                  //| ,1) -> opN, (26,25) -> name)
+                                                  //|  -> UNKNOWN, (18,16) -> opN, (18,17) -> opN, (19,18) -> name, (20,19) -> op
+                                                  //| N, (21,6) -> opN, (22,21) -> name, (23,11) -> opN, (24,23) -> name, (25,1) 
+                                                  //| -> opN, (26,25) -> name)
                                                   //| InsertedNodes:	Map(24 -> 0.2, 25 -> 0.0.0, 20 -> 0, 21 -> 0.1.0, 22 -> 
                                                   //| 0.1, 18 -> 0.3.0, 26 -> 0.0, 23 -> 0.2.0, 19 -> 0.3)
                                                   //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(19 -> country, 23 -> name, 11 ->
-                                                  //|  "Lithuania", 22 -> country, 26 -> country, 24 -> country, 16 -> United, 21
-                                                  //|  -> name, 6 -> "Latvia", 1 -> "Estonia", 17 -> States, 25 -> name, 0 -> ROO
-                                                  //| T, 20 -> and, 18 -> name),Map(19 -> (7,8), 23 -> (5,6), 11 -> (5,6), 22 -> 
-                                                  //| (3,4), 26 -> (1,2), 24 -> (5,6), 16 -> (7,8), 21 -> (3,4), 6 -> (3,4), 1 ->
-                                                  //|  (1,2), 17 -> (8,9), 25 -> (1,2), 20 -> (7,8), 18 -> (7,8)),Map((18,16) -> 
-                                                  //| opN, (21,6) -> opN, (25,1) -> opN, (1,22) -> UNKNOWN, (24,23) -> name, (19,
-                                                  //| 18) -> name, (1,24) -> UNKNOWN, (0,20) -> ROOT, (20,19) -> opN, (26,25) -> 
-                                                  //| name, (23,11) -> opN, (22,21) -> name, (11,17) -> UNKNOWN, (0,26) -> UNKNOW
-                                                  //| N))),Map(0 -> ROOT, 24 -> 24, 25 -> 25, 20 -> 20, 1 -> 1, 6 -> 6, 21 -> 21,
-                                                  //|  17 -> 17, 22 -> 22, 18 -> 18, 16 -> 16, 11 -> 11, 26 -> 26, 23 -> 23, 19 -
-                                                  //| > 19))
+                                                  //| SwappedArcs:	Set((17,18)),Some(AMRGraph(Map(19 -> country, 23 -> name
+                                                  //| , 11 -> "Lithuania", 22 -> country, 26 -> country, 24 -> country, 16 -> Uni
+                                                  //| ted, 21 -> name, 6 -> "Latvia", 1 -> "Estonia", 17 -> States, 25 -> name, 0
+                                                  //|  -> ROOT, 20 -> and, 18 -> name),Map(19 -> (7,8), 23 -> (5,6), 11 -> (5,6),
+                                                  //|  22 -> (3,4), 26 -> (1,2), 24 -> (5,6), 16 -> (7,8), 21 -> (3,4), 6 -> (3,4
+                                                  //| ), 1 -> (1,2), 17 -> (8,9), 25 -> (1,2), 20 -> (7,8), 18 -> (7,8)),Map((18,
+                                                  //| 16) -> opN, (21,6) -> opN, (25,1) -> opN, (1,22) -> UNKNOWN, (24,23) -> nam
+                                                  //| e, (19,18) -> name, (18,17) -> opN, (1,24) -> UNKNOWN, (0,20) -> ROOT, (20,
+                                                  //| 19) -> opN, (26,25) -> name, (23,11) -> opN, (22,21) -> name, (0,26) -> UNK
+                                                  //| NOWN))),Map(0 -> ROOT, 24 -> 24, 25 -> 25, 20 -> 20, 1 -> 1, 6 -> 6, 21 -> 
+                                                  //| 21, 17 -> 17, 22 -> 22, 18 -> 18, 16 -> 16, 11 -> 11, 26 -> 26, 23 -> 23, 1
+                                                  //| 9 -> 19))
 }

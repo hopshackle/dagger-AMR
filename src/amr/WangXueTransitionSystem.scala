@@ -5,11 +5,12 @@ import dagger.core.TransitionSystem
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
   // We currently just use the whole flipping dictionary to define the full set of actions
-  lazy override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all ++ Array(ReplaceHead) ++ Array(Swap)
+  lazy override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all ++
+    Array(ReplaceHead) ++ Array(Swap) ++ Array(ParentFlip)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
-    val reattachActions = (state.nodesToProcess.tail map (i => Reattach(i))).toArray
+    val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
     actions ++ reattachActions
   }
 
@@ -28,13 +29,13 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
       val newChildren = ((parentList flatMap datum.dependencyTree.childrenOf).toSet diff parentList.toSet).toList
       // we don't care what order the new children are in
       if (newChildren.isEmpty)
-        parentList  // we're done
-      else 
+        parentList // we're done
+      else
         getAllChildren(newChildren) ++ parentList
     }
 
     val rootNode = datum.dependencyTree.getRoots.head
-    val allNodes = getAllChildren(List(rootNode))  // we start with the root node, which is usually 0
+    val allNodes = getAllChildren(List(rootNode)) // we start with the root node, which is usually 0
 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)

@@ -6,15 +6,15 @@ object AMRtoDTmapping {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.4 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.2 sec].
+                                                  //| im.crf.ser.gz ... done [4.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [4.0 sec].
+                                                  //| im.crf.ser.gz ... done [2.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.4 sec].
+                                                  //| tsim.crf.ser.gz ... done [3.9 sec].
                                                   //| dt  : amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> police, 3 -> want, 4 -> to, 5 -> a
                                                   //| rrest, 6 -> Michael, 7 -> Karras, 8 -> in, 9 -> Singapore)
