@@ -201,23 +201,6 @@ case object ReplaceHead extends WangXueAction {
     !(state.currentGraph.insertedNodes contains state.nodesToProcess.head)
 }
 
-case object ParentFlip extends WangXueAction {
-  def apply(state: WangXueTransitionState): WangXueTransitionState = {
-    // We swap the direction of the arc - and make beta the new currentNode (keeping sigma in the list)
-    // We also make Beta the head of the subgraph - i.e. arcs that link sigma to its parents are moved to beta, with a single arc from beta to sigma
-    val sigma = state.nodesToProcess.head
-    val parents = state.currentGraph.parentsOf(state.nodesToProcess.head)
-    val tree = state.currentGraph.swapArc(parents.head, sigma)
-    state.copy(nodesToProcess = sigma :: parents.head :: state.nodesToProcess.tail, childrenToProcess = parents.head :: state.childrenToProcess,
-      currentGraph = tree, previousActions = this :: state.previousActions)
-  }
-  override def name: String = "ParentFlip"
-  def isPermissible(state: WangXueTransitionState): Boolean = {
-    val parents = state.currentGraph.parentsOf(state.nodesToProcess.head)
-    parents.size == 1 && !(state.currentGraph.swappedArcs contains ((state.nodesToProcess.head, parents.head)))
-  }
-}
-
 case class Reentrance(newNode: Int) extends WangXueAction with hasNodeAsParameter {
   override val parameterNode = newNode
   def apply(conf: WangXueTransitionState): WangXueTransitionState = ???

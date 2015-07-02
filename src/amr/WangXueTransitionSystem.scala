@@ -6,7 +6,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all ++
-    Array(ReplaceHead) ++ Array(Swap) ++ Array(ParentFlip)
+    Array(ReplaceHead) ++ Array(Swap)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
