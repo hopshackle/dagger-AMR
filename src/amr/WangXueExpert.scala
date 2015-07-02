@@ -28,9 +28,10 @@ class WangXueExpert extends WangXueExpertBasic {
     val BETAAMR = if (BETA == -1) None else fullMapDTtoAMR.get(BETA)
 
     val sigmaAMRParents = getAMRParents(SIGMAAMR)
+    val sigmaAMRGrandParents = sigmaAMRParents flatMap ( s => getAMRParents(Some[String](s)))
     if (debug) println(sigmaAMRParents)
     val betaAMRParents = getAMRParents(BETAAMR)
-    val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
+    val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) // filter (_ != "")
 
     val unmatchedParents = sigmaAMRParents filter { x => !fullMapAMRtoDT.contains(x) }
     //    if (debug) println(unmatchedParents)
@@ -64,7 +65,8 @@ class WangXueExpert extends WangXueExpertBasic {
       case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead 
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
-        else if (sigmaAMRParents contains betaAMR) Swap
+        else if (sigmaAMRParents ++ sigmaAMRGrandParents contains betaAMR) Swap
+        // As well we should check if parent of current node is an AMR descendant (not necessarily just beta)
         else if (nodesToProcessAMR contains betaAMRParents.head) {
           val parentIndex = state.nodesToProcess(nodesToProcessAMR.indexOf(betaAMRParents.head))
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
