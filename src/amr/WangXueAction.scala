@@ -155,12 +155,18 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     val currentEdgeKey = (conf.nodesToProcess.head, conf.childrenToProcess.head)
     val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
     val newEdgeKey = (newNode, conf.childrenToProcess.head)
+    val reattachmentNodeHasBeenProcessed = !conf.nodesToProcess.contains(parameterNode)
     val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel))
-    conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
+    if (reattachmentNodeHasBeenProcessed) {
+      conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(parameterNode, tree, conf.nodesToProcess), 
+          childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
+    } else {
+      conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
+    }
   }
   override def name: String = "Reattach"
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.nonEmpty && (state.nodesToProcess contains newNode) && state.nodesToProcess.head != newNode
+    state.childrenToProcess.nonEmpty && state.nodesToProcess.head != newNode // && (state.nodesToProcess contains newNode) 
   }
 }
 
@@ -172,8 +178,8 @@ case object Swap extends WangXueAction {
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val tree = state.currentGraph.swapArc(sigma, beta)
-    state.copy(nodesToProcess = sigma :: beta :: state.nodesToProcess.tail, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree, 
-        previousActions = this :: state.previousActions)
+    state.copy(nodesToProcess = sigma :: beta :: state.nodesToProcess.tail, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree,
+      previousActions = this :: state.previousActions)
   }
   override def name: String = "Swap"
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&

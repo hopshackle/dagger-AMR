@@ -13,6 +13,10 @@ class WangXueExpert extends WangXueExpertBasic {
       case None => List[String]()
       case Some(amrKey) => data.amr.get.parentsOf(amrKey)
     }
+    def getAMRChildren(nodeAMR: Option[String]): List[String] = nodeAMR match {
+      case None => List[String]()
+      case Some(amrKey) => data.amr.get.childrenOf(amrKey)
+    }
 
     // nodes inserted without an AMR ref are ignored by the expert - if AMR exists, then we estimate
     // the AMR ref of a node Inserted by a non-expert policy at the time of insertion
@@ -20,7 +24,7 @@ class WangXueExpert extends WangXueExpertBasic {
     val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
 
     val sigma = state.nodesToProcess.head
-    val sigmaParents = if (sigma == 0) List() else state.currentGraph.parentsOf(sigma)
+    val sigmaParents = state.currentGraph.parentsOf(sigma)
     val BETA = if (state.childrenToProcess.isEmpty) -1 else state.childrenToProcess.head
     val SIGMAAMR = fullMapDTtoAMR.get(sigma)
     if (debug) println(s"SIGMAAMR = $SIGMAAMR")
@@ -28,9 +32,17 @@ class WangXueExpert extends WangXueExpertBasic {
     val BETAAMR = if (BETA == -1) None else fullMapDTtoAMR.get(BETA)
 
     val sigmaAMRParents = getAMRParents(SIGMAAMR)
+    //    val sigmaAMRGrandParents = sigmaAMRParents flatMap ( s => getAMRParents(Some[String](s)))
+    val sigmaAMRChildren = getAMRChildren(SIGMAAMR).toSet
+//    val sigmaAncestors = (state.currentGraph.getRoots flatMap (state.currentGraph.getNodesBetween(sigma, _))) - sigma
+//    val sigmaAncestorsAMR = sigmaAncestors map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
+    
+    val sigmaParentsAMR = sigmaParents map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
+
     if (debug) println(sigmaAMRParents)
     val betaAMRParents = getAMRParents(BETAAMR)
     val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
+    val allNodesAMR = fullMapDTtoAMR.values.toSet
 
     val unmatchedParents = sigmaAMRParents filter { x => !fullMapAMRtoDT.contains(x) }
     //    if (debug) println(unmatchedParents)
@@ -61,16 +73,18 @@ class WangXueExpert extends WangXueExpertBasic {
         }
         NextNode(conceptIndex(concept))
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
-      case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead 
+      case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
-        else if (sigmaAMRParents contains betaAMR) Swap
-        else if (nodesToProcessAMR contains betaAMRParents.head) {
-          val parentIndex = state.nodesToProcess(nodesToProcessAMR.indexOf(betaAMRParents.head))
+        else if ((sigmaAMRParents contains betaAMR)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
+        else if (allNodesAMR contains betaAMRParents.head) {
+          val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
         } else NextEdge(0)
-      case (_, _, beta, None, _) if beta > -1 =>
-        if (state.nodesToProcess.size > 2 && state.nodesToProcess.tail.head != beta) Reattach(state.nodesToProcess.tail.head) else NextEdge(0)
+ //     case (_, _, beta, None, _) if beta > -1 =>
+ //       if (state.nodesToProcess.size > 2 && state.nodesToProcess.tail.head != beta &&
+ //         Reattach(state.nodesToProcess.tail.head).isPermissible(state))
+ //         Reattach(state.nodesToProcess.tail.head) else NextEdge(0)
       case (_, _, beta, _, _) if beta > -1 => NextEdge(0)
       case (_, _, _, _, _) => NextNode(0)
 
