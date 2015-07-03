@@ -127,20 +127,25 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def getNodesBetween(node1: Int, node2: Int): List[Int] = {
-    def findPathTo(currentPaths: List[List[Int]], target: Int): List[Int] = {
-      val o = for {
-        currentPath <- currentPaths
-        val successorNodes = parentsOf(currentPath.head) ++ childrenOf(currentPath.head)
-      } yield successorNodes map (_ :: currentPath)
-      val updatedPaths = o.flatten
-      if (updatedPaths exists (_.head == target)) {
-        updatedPaths.find { x => x.head == target }.get
+    def findPathTo(currentPaths: List[List[Int]], target: Int, acc: Int): List[Int] = {
+      if (acc > 20) {
+        println("Path search has exceeded 20 nodes between " + node1 + " and " + node2 + ". Giving up.\n" + this.toString);
+        List()
       } else {
-        findPathTo(updatedPaths, target)
+        val o = for {
+          currentPath <- currentPaths
+          val successorNodes = (parentsOf(currentPath.head) ++ childrenOf(currentPath.head)) diff currentPath
+        } yield successorNodes map (_ :: currentPath)
+        val updatedPaths = o.flatten
+        if (updatedPaths exists (_.head == target)) {
+          updatedPaths.find { x => x.head == target }.get
+        } else {
+          findPathTo(updatedPaths, target, acc + 1)
+        }
       }
     }
     val start = List(List(node1))
-    findPathTo(start, node2)
+    findPathTo(start, node2, 0)
   }
   def getPathBetween(node1: Int, node2: Int): String = {
     // starting with node1, we're just conducting a search until we hit node2
