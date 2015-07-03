@@ -13,8 +13,10 @@ abstract class Graph[K] {
 
   def depth(node: K): Int = {
     def depthHelper(nodes: List[K], accum: Int): Int = {
-      val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
-      if (nextNodes exists isRoot) accum else depthHelper(nextNodes, accum + 1)
+      if (accum > 50) { println("Depth of tree exceeds 50: \n" + this.toString); accum } else {
+        val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
+        if (nextNodes exists isRoot) accum else depthHelper(nextNodes, accum + 1)
+      }
     }
     if (isRoot(node)) 0 else depthHelper(List(node), 1)
   }
@@ -26,9 +28,14 @@ abstract class Graph[K] {
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
   def getRoots: Set[K] = nodes.keySet filter isRoot
+  private def subGraph(node: K, acc: Int): Set[K] = {
+    if (acc > 50) { println("Depth of subgraph exceeds 50 from " + node + " : \n" + this.toString); Set(node) } else {
+      if (isLeafNode(node)) Set(node)
+      else (childrenOf(node) flatMap (subGraph(_, acc + 1))).toSet + node
+    }
+  }
   def subGraph(node: K): Set[K] = {
-    if (isLeafNode(node)) Set(node)
-    else (childrenOf(node) flatMap subGraph).toSet + node
+    subGraph(node, 0)
   }
 
 }
