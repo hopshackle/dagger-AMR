@@ -1,7 +1,7 @@
 package amr
 
 object generalPlay {
-
+val minPerDay: Double = 24.0 * 60.0 / 1000.0      //> minPerDay  : Double = 1.44
   val a = List[String]()                          //> a  : List[String] = List()
   val b = List("one", "two", "three")             //> b  : List[String] = List(one, two, three)
   a contains "6"                                  //> res0: Boolean = false

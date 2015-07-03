@@ -90,11 +90,11 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
   // We also apply a restriction that we can only insert a node if this is the first time we are visiting sigma
   override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1 &&
-  (state.previousActions.isEmpty || (state.previousActions.head match {
-    case NextNode(_) => true
-    case ReplaceHead => true
-    case Swap => true
-    case _ => false
+    (state.previousActions.isEmpty || (state.previousActions.head match {
+      case NextNode(_) => true
+      case ReplaceHead => true
+      case Swap => true
+      case _ => false
     }))
   override def name: String = "Insert" + concept(conceptIndex)
   override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
@@ -155,6 +155,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   //...may also make sense to have two Actions...ReattachUp and ReattachDown...? After all, if I Reattach an edge to a 
   // node that us yet to be processed, it makes sense to delay the naming of the relation too!
   override val parameterNode = newNode
+  override def getMasterLabel = Reattach(0)
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
     // check node is yet to be processed
     assert(isPermissible(conf))
@@ -165,15 +166,15 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     val reattachmentNodeHasBeenProcessed = !conf.nodesToProcess.contains(parameterNode)
     val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel))
     if (reattachmentNodeHasBeenProcessed) {
-      conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(parameterNode, tree, conf.nodesToProcess), 
-          childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
+      conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(parameterNode, tree, conf.nodesToProcess),
+        childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
     } else {
       conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
     }
   }
   override def name: String = "Reattach"
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head && !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) 
+    state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head && !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
   }
 }
