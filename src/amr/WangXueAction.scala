@@ -88,7 +88,14 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
     state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree, previousActions = this :: state.previousActions)
   }
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
-  override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1
+  // We also apply a restriction that we can only insert a node if this is the first time we are visiting sigma
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.size > 1 &&
+  (state.previousActions.isEmpty || (state.previousActions.head match {
+    case NextNode(_) => true
+    case ReplaceHead => true
+    case Swap => true
+    case _ => false
+    }))
   override def name: String = "Insert" + concept(conceptIndex)
   override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
 
