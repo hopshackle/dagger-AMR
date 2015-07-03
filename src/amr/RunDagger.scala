@@ -52,9 +52,14 @@ object RunDagger {
 
       (amrToCompare map {a: (AMRGraph, AMRGraph) => a match {case (x, y) => Smatch.fScore(x, y, 1)._1}}).sum / i.size
     }
+    val lossToUse = options.getString("--lossFunction", "")
+    val lossFunction = lossToUse match {
+      case "Abs" => new WangXueLossFunctionAbs
+      case _ => new WangXueLossFunction
+    }
     val featureIndex = new MapIndex
     def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options, featureIndex)).features(d, s, a)
-    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, new WangXueLossFunction, devData, score,
+    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, lossFunction, devData, score,
       GraphViz.graphVizOutputFunction)
   }
 

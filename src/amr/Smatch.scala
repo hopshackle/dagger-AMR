@@ -8,6 +8,7 @@ object Smatch {
     val largeGraph = if (AMR1.nodes.size >= AMR2.nodes.size) AMR1 else AMR2
     val allScores = 1 to attempts map (_ => oneIteration(largeGraph, smallGraph))
     allScores.maxBy(_._1)
+    // Returned tuple is (F-Score, Precision, Recall, Absolute Errors)
   }
   
   def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph): (Double, Double, Double, Double) = {
