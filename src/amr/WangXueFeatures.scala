@@ -56,6 +56,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     if (state.currentGraph.nodePOS contains sigma) add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS(sigma))
     if (state.currentGraph.nodeLemmas contains sigma) add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas(sigma))
     if (state.currentGraph.nodeNER contains sigma) add(hmap, "SIGMA-NER=" + state.currentGraph.nodeNER(sigma))
+    if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
+    if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
 
     val sigmaParents = state.currentGraph.parentsOf(sigma)
     if (sigmaParents.nonEmpty) {
@@ -65,7 +67,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       } yield (parent, label)
       add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
 
-      if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
       parentLabelCombos foreach {
         case (parent, label) =>
           val parentWord = state.currentGraph.nodes(parent)
@@ -78,7 +79,27 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
           if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
         //        add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
       }
-      if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
+
+      val sigmaChildren = state.currentGraph.childrenOf(sigma)
+      if (sigmaChildren.nonEmpty) {
+        add(hmap, "CHILDREN-SIGMA-NO", sigmaParents.size)
+        val childrenLabelCombos = for {
+          child <- sigmaChildren
+          label <- state.currentGraph.labelsBetween(sigma, child)
+        } yield (child, label)
+
+        childrenLabelCombos foreach {
+          case (child, label) =>
+            val childWord = state.currentGraph.nodes(child)
+            if (state.currentGraph.insertedNodes contains child) {
+              add(hmap, "CHILD-INSERTED=" + childWord)
+              //          if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
+            }
+            add(hmap, "CHILD-SIGMA-DEP-LABEL=" + label)
+            add(hmap, "CHILD-WORD=" + childWord)
+          //        add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+        }
+      }
     }
     hmap
   }
