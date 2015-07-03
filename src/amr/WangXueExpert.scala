@@ -64,7 +64,7 @@ class WangXueExpert extends WangXueExpertBasic {
       //      happen if Classifier policy has been making some decisions, even if it would never happen with only this expert policy.
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
-      case (Some(sigmaAMR), false, _, _, _) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
+      case (Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
       case (Some(sigmaAMR), _, -1, _, _) =>
         val concept = data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN")
         if (concept == "UNKNOWN") {
