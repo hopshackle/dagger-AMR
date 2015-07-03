@@ -80,7 +80,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
         //        add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
       }
 
-      val sigmaChildren = state.currentGraph.childrenOf(sigma)
+      val sigmaChildren = state.currentGraph.childrenOf(sigma) diff    // we exclude beta from children - as that is covered elsewhere
+        (state.childrenToProcess match {
+          case Nil => List()
+          case head :: tail => List(head)
+        })
       if (sigmaChildren.nonEmpty) {
         add(hmap, "CHILDREN-SIGMA-NO", sigmaParents.size)
         val childrenLabelCombos = for {
