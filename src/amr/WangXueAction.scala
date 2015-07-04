@@ -162,7 +162,8 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
     val newEdgeKey = (newNode, conf.childrenToProcess.head)
     val reattachmentNodeHasBeenProcessed = !conf.nodesToProcess.contains(parameterNode)
-    val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel))
+    val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs - currentEdgeKey + (newEdgeKey -> edgeLabel),
+      reattachedNodes = conf.childrenToProcess.head :: conf.currentGraph.reattachedNodes)
     if (reattachmentNodeHasBeenProcessed) {
       conf.copy(nodesToProcess = Insert.insertNodeIntoProcessList(parameterNode, tree, conf.nodesToProcess),
         childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions)
@@ -172,7 +173,9 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   }
   override def name: String = "Reattach"
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head && !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode)
+    state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
+      !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
+      !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
   }
 }

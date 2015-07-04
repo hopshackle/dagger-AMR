@@ -1,7 +1,9 @@
 package amr
 import dagger.core._
 
-case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree, previousActions: List[WangXueAction], originalInput: Option[Sentence], startingDT: DependencyTree) extends TransitionState {
+case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree, 
+    previousActions: List[WangXueAction], originalInput: Option[Sentence], 
+    startingDT: DependencyTree) extends TransitionState {
 
   // At each state in the search trajectory we have a currentGraph, which is initialised from the DependencyTree obtained
   // from our parser du jour. 

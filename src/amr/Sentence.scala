@@ -49,8 +49,9 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
   }
 }
 
-case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String],
-  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)]) extends Graph[Int] {
+case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], 
+    nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
+    insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -310,7 +311,7 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, Map(), Map(), Set())
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set())
   }
 }
 
