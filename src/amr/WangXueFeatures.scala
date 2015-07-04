@@ -37,13 +37,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
     val sigma = state.nodesToProcess.head
-    val sigmaWord = state.currentGraph.nodes(sigma)
+    val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
+    assert(sigmaWord != "!!??", "Sigma not found: " + state)
     val sigmaInserted = state.currentGraph.insertedNodes contains sigma
     val wordTokens: Double = sentence.dependencyTree.nodes.size
     val insertedNodes: Double = state.currentGraph.insertedNodes.size
     if (insertedNodes > 0) add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
     val insertedConcepts = state.currentGraph.insertedNodes.keys map (node => state.currentGraph.nodes.getOrElse(node, "DELETED"))
-    val conceptSet = insertedConcepts.toSet
+    val conceptSet = insertedConcepts
     conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     //   add(hmap, "ACTION-TYPE=" + action.name)
@@ -119,7 +120,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       case Nil => ""
       case head :: tail => state.currentGraph.arcs((head, sigma))
     }
-    val sigmaWord = state.currentGraph.nodes(sigma)
+    val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
+    assert(sigmaWord != "!!??", "Sigma not found: " + state)
     val betaWord = state.currentGraph.nodes(beta)
     val (sigmaPosition, _) = state.currentGraph.nodeSpans.getOrElse(sigma, (0, 0))
     val (betaPosition, _) = state.currentGraph.nodeSpans.getOrElse(beta, (0, 0))
@@ -218,7 +220,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     if (kappaPosition == 0 || betaPosition == 0) add(hmap, "KAPPA-BETA-DISTANCE-UNKNOWN")
 
     val dependencyLabelBeta = state.currentGraph.arcs((sigma, beta))
-    val dependencyLabelKappa = state.currentGraph.arcs((beta, parameterNode))
+    val kappaParents = state.currentGraph.parentsOf(parameterNode)
+    val dependencyLabelKappa = kappaParents match {
+      case Nil => ""
+      case head :: tail => state.currentGraph.arcs((head, parameterNode))
+    }
 
     // WangXue features
     if (betaLemma != "" && dependencyLabelKappa != "") add(hmap, "BETA-LEMMA-KAPPA-DL=" + betaLemma + "-" + dependencyLabelKappa)
