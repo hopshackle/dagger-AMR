@@ -146,18 +146,12 @@ object Insert {
 }
 
 case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter {
-  // For the moment we just change the edge - but do NOT label it
-  // TODO: Update Reattach to include the label as a parameter - as per Wang Xue algo
-
   // We need to pop beta from edge stack, and add a new edge to the partial graph. 
   // We have two scenarios:
   // i) The node we connect to has not yet been processed (no issues - we'll deal with this when we get to it)
   // ii) The node has already been processed. This is a problem in that we would need to revisit it.  Easiest
   // way to do this is to add it back into the list of nodesToProcess...although this will also re-visit all the
-  // other edges...hence I assume why it makes sense to label the relation at the same time, to avoid this.
-  // In which case, I will exclude this possibility until Phase II - when I include label as a parameter to the action
-  //...may also make sense to have two Actions...ReattachUp and ReattachDown...? After all, if I Reattach an edge to a 
-  // node that us yet to be processed, it makes sense to delay the naming of the relation too!
+  // other edges...
   override val parameterNode = newNode
   override def getMasterLabel = Reattach(0)
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
@@ -191,7 +185,12 @@ case object Swap extends WangXueAction {
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val tree = state.currentGraph.swapArc(sigma, beta)
-    state.copy(nodesToProcess = sigma :: beta :: state.nodesToProcess.tail, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree,
+    val newNodesToProcess = if (state.nodesToProcess.tail contains beta) {
+      state.nodesToProcess
+    } else {
+      sigma :: beta :: state.nodesToProcess.tail
+    }
+    state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree,
       previousActions = this :: state.previousActions)
   }
   override def name: String = "Swap"
@@ -206,7 +205,7 @@ case object ReplaceHead extends WangXueAction {
     // We delete sigma, and move all arcs in/out of sigma to be in/out of beta
     // and move beta to top of stack, without otherwise changing the order
     val tree = state.currentGraph.mergeNodes(state.nodesToProcess.head, state.childrenToProcess.head)
-    state.copy(nodesToProcess = state.childrenToProcess.head :: state.nodesToProcess.tail,
+    state.copy(nodesToProcess = state.childrenToProcess.head :: (state.nodesToProcess.tail diff List(state.childrenToProcess.head)),
       childrenToProcess = tree.childrenOf(state.childrenToProcess.head), currentGraph = tree, previousActions = this :: state.previousActions)
   }
   override def name: String = "ReplaceHead"
