@@ -92,8 +92,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
-    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeSpans = this.nodeSpans + (newNode -> childSpan),
-      arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, insertedNodes = newInsertedNodes))
+    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)), 
+        nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, 
+        insertedNodes = newInsertedNodes))
   }
 
   def mergeNodes(nodeToRemove: Int, nodeToKeep: Int): DependencyTree = {

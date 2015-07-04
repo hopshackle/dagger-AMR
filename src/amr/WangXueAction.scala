@@ -128,6 +128,7 @@ object Insert {
       case NextNode(_) => true
       case ReplaceHead => true
       case Swap => true
+      case DeleteNode => true
       case _ => false
     }))
 
