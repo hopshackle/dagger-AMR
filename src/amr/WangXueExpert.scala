@@ -32,10 +32,7 @@ class WangXueExpert extends WangXueExpertBasic {
     val BETAAMR = if (BETA == -1) None else fullMapDTtoAMR.get(BETA)
 
     val sigmaAMRParents = getAMRParents(SIGMAAMR)
-    //    val sigmaAMRGrandParents = sigmaAMRParents flatMap ( s => getAMRParents(Some[String](s)))
     val sigmaAMRChildren = getAMRChildren(SIGMAAMR).toSet
-//    val sigmaAncestors = (state.currentGraph.getRoots flatMap (state.currentGraph.getNodesBetween(sigma, _))) - sigma
-//    val sigmaAncestorsAMR = sigmaAncestors map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
     
     val sigmaParentsAMR = sigmaParents map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
 

@@ -32,4 +32,7 @@ val minPerDay: Double = 24.0 * 60.0 / 1000.0      //> minPerDay  : Double = 1.44
                                                   //|  (1.0,2.0,0.0,5.6))
 testTuple.max                                     //> res8: (Double, Double, Double, Double) = (1.0,2.0,0.0,5.6)
 testTuple maxBy (_._1)                            //> res9: (Double, Double, Double, Double) = (1.0,1.0,1.0,0.0)
+Math.abs(2.34)                                    //> res10: Double = 2.34
+Math.abs(-2.33)                                   //> res11: Double = 2.33
+Math.max(3, 78)                                   //> res12: Int = 78
 }

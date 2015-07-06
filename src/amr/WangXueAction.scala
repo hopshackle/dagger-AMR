@@ -1,5 +1,6 @@
 package amr
 import dagger.core._
+
 import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, relationIndex, conceptIndex, insertableConcepts }
 
 abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
@@ -70,7 +71,8 @@ case object DeleteNode extends WangXueAction {
     state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewTopNode, currentGraph = tree, previousActions = this :: state.previousActions)
   }
   override def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head)
+    state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head) &&
+    !state.currentGraph.insertedNodes.contains(state.nodesToProcess.head)
   }
   override def name: String = "DeleteNode"
 }
@@ -152,6 +154,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   // ii) The node has already been processed. This is a problem in that we would need to revisit it.  Easiest
   // way to do this is to add it back into the list of nodesToProcess...although this will also re-visit all the
   // other edges...
+  val disableReattach = true;
   override val parameterNode = newNode
   override def getMasterLabel = Reattach(0)
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
@@ -172,7 +175,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     }
   }
   override def name: String = "Reattach"
-  def isPermissible(state: WangXueTransitionState): Boolean = {
+  def isPermissible(state: WangXueTransitionState): Boolean = {!disableReattach && 
     state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
       !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
       !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head)

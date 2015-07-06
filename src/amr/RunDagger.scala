@@ -50,7 +50,7 @@ object RunDagger {
           (amr1, amr2)
       }
 
-      (amrToCompare map {a: (AMRGraph, AMRGraph) => a match {case (x, y) => Smatch.fScore(x, y, 1)._1}}).sum / i.size
+      (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
     }
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunction = lossToUse match {
@@ -58,9 +58,31 @@ object RunDagger {
       case _ => new WangXueLossFunction
     }
     val featureIndex = new MapIndex
-    def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (new WangXueFeatures(options, featureIndex)).features(d, s, a)
-    dagger.train(trainData, new WangXueExpert, featFn, new WangXueTransitionSystem, lossFunction, devData, score,
+    val WXFeatures = new WangXueFeatures(options, featureIndex)
+    val WXTransitionSystem = new WangXueTransitionSystem
+    def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (WXFeatures).features(d, s, a)
+    val classifier = dagger.train(trainData, new WangXueExpert, featFn, WXTransitionSystem, lossFunction, devData, score,
       GraphViz.graphVizOutputFunction)
+    if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
+    if (options.DEBUG) {
+      val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
+      for (j <- WXTransitionSystem.actions) {
+        outputFile.write(j + "\n")
+        var relevantFeatures = List[(Int, Double)]()
+        for (i <- 1 to featureIndex.size) {
+          val weight = classifier.weightOf(j, i)
+          if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
+        }
+        val sortedFeatures = relevantFeatures.sortWith((a, b) => Math.abs(a._2) > Math.abs(b._2))
+        for (i <- 0 to Math.min(sortedFeatures.size - 1, 50)) {
+          val (feat, weight) = sortedFeatures(i)
+          outputFile.write(feat + ", " + featureIndex.elem(feat) + ", " + f"$weight%.3f" + "\n")
+        }
+        outputFile.write("\n")
+      }
+      outputFile.close()
+    }
+    classifier
   }
 
   def main(args: Array[String]): Unit = {
@@ -73,7 +95,7 @@ object RunDagger {
     //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
 
     val options = new DAGGEROptions(args)
-    testDAGGERrun(options)
+    val classifier = testDAGGERrun(options)
   }
 
 }
