@@ -66,8 +66,9 @@ object RunDagger {
       GraphViz.graphVizOutputFunction)
  //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
     if (options.DEBUG) {
+      
       val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
-      for (j <- WXTransitionSystem.actions) {
+      for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
         outputFile.write(j + "\n")
         var relevantFeatures = List[(Int, Double)]()
         for (i <- 1 to featureIndex.size) {
