@@ -9,7 +9,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = false
+  val debug = true
   val random = new Random()
   val numeric = "[0-9,.]".r
 
@@ -20,11 +20,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val thisDebug = if (debug && random.nextDouble < 0.01) true else false
 
+    val quadraticTurbo = options.contains("--quadratic")
+
     val linearOutput = state.childrenToProcess match {
       case Nil => sigmaFeatures(sentence, state, action)
       case head :: tail => sigmaBetaFeatures(sentence, state, action)
     }
-    val output = linearOutput //  ++ quadraticCombination(linearOutput)
+    val output = linearOutput ++ (if (quadraticTurbo) quadraticCombination(linearOutput) else Map())
     if (thisDebug) {
       val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
       featuresDebug.write(state.toString)
@@ -35,6 +37,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
+    val quadraticTurbo = options.contains("--quadratic")
     val hmap = new java.util.HashMap[Int, Double]
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
@@ -51,8 +54,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
     if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
     if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
-    if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
-    if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+    if (!quadraticTurbo) {
+      if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
+      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+    }
     add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (state.currentGraph.nodePOS contains sigma) add(hmap, "SIGMA-POS=" + state.currentGraph.nodePOS(sigma))
     if (state.currentGraph.nodeLemmas contains sigma) add(hmap, "SIGMA-LEMMA=" + state.currentGraph.nodeLemmas(sigma))
@@ -78,7 +83,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
           add(hmap, "PARENT-SIGMA-DEP-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + parentWord)
           if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
-          add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+          if (!quadraticTurbo) add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
       }
 
       val sigmaChildren = state.currentGraph.childrenOf(sigma) diff // we exclude beta from children - as that is covered elsewhere
@@ -98,11 +103,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
             val childWord = state.currentGraph.nodes(child)
             if (state.currentGraph.insertedNodes contains child) {
               add(hmap, "CHILD-INSERTED=" + childWord)
-              if (state.currentGraph.insertedNodes contains child) add(hmap, "PARENT-CHILD-BOTH-INSERTED")
+              if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
             }
             add(hmap, "CHILD-SIGMA-DEP-LABEL=" + label)
             add(hmap, "CHILD-WORD=" + childWord)
-            add(hmap, "PARENT-CHILD-WORDS=" + child + "-" + sigmaWord)
+            if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
         }
       }
     }
@@ -111,7 +116,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   def sigmaBetaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
-
+    val quadraticTurbo = options.contains("--quadratic")
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val dependencyLabel = state.currentGraph.arcs((sigma, beta))
@@ -144,18 +149,20 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
 
     if (betaInserted) add(hmap, "BETA-INSERTED")
-    if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
+    if (!quadraticTurbo) if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
     add(hmap, "BETA-WORD=" + betaWord)
     if (numeric.replaceAllIn(betaWord, "") == "") add(hmap, "BETA-NUMERIC")
     add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
     //    if (sigmaPOS != "" && betaPOS != "") add(hmap, "SIGMA-BETA-POS=" + sigmaPOS + "-" + betaPOS)
 
     // WangXue features
-    if (sigmaLemma != "" && betaPOS != "") add(hmap, "SIGMA-LEMMA-BETA-POS=" + sigmaLemma + "-" + betaPOS)
-    if (sigmaLemma != "" && dependencyLabel != "") add(hmap, "SIGMA-LEMMA-BETA-DL=" + sigmaLemma + "-" + dependencyLabel)
-    if (sigmaPOS != "" && betaLemma != "") add(hmap, "SIGMA-POS-BETA-LEMMA=" + sigmaPOS + "-" + betaLemma)
-    if (betaLemma != "" && dependencyLabelSigma != "") add(hmap, "BETA-LEMMA-BETA-DL=" + betaLemma + "-" + dependencyLabelSigma)
-    if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
+    if (!quadraticTurbo) {
+      if (sigmaLemma != "" && betaPOS != "") add(hmap, "SIGMA-LEMMA-BETA-POS=" + sigmaLemma + "-" + betaPOS)
+      if (sigmaLemma != "" && dependencyLabel != "") add(hmap, "SIGMA-LEMMA-BETA-DL=" + sigmaLemma + "-" + dependencyLabel)
+      if (sigmaPOS != "" && betaLemma != "") add(hmap, "SIGMA-POS-BETA-LEMMA=" + sigmaPOS + "-" + betaLemma)
+      if (betaLemma != "" && dependencyLabelSigma != "") add(hmap, "BETA-LEMMA-BETA-DL=" + betaLemma + "-" + dependencyLabelSigma)
+      if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
+    }
     // end WangXue binaries
 
     if (distance > 0) add(hmap, "SIGMA-BETA-DISTANCE", distance)
@@ -182,7 +189,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Double] = {
     val hmap = new java.util.HashMap[Int, Double]
-
+    val quadraticTurbo = options.contains("--quadratic")
     val beta = state.childrenToProcess.head
     val sigma = state.nodesToProcess.head
     val betaWord = state.currentGraph.nodes(beta)
@@ -227,10 +234,12 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
     }
 
     // WangXue features
-    if (betaLemma != "" && dependencyLabelKappa != "") add(hmap, "BETA-LEMMA-KAPPA-DL=" + betaLemma + "-" + dependencyLabelKappa)
-    if (kappaPOS != "" && betaLemma != "") add(hmap, "KAPPA-POS-BETA-LEMMA=" + kappaPOS + "-" + betaLemma)
-    if (kappaLemma != "" && dependencyLabelBeta != "") add(hmap, "KAPPA-LEMMA-BETA-DL=" + kappaLemma + "-" + dependencyLabelBeta)
-    if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
+    if (!quadraticTurbo) {
+      if (betaLemma != "" && dependencyLabelKappa != "") add(hmap, "BETA-LEMMA-KAPPA-DL=" + betaLemma + "-" + dependencyLabelKappa)
+      if (kappaPOS != "" && betaLemma != "") add(hmap, "KAPPA-POS-BETA-LEMMA=" + kappaPOS + "-" + betaLemma)
+      if (kappaLemma != "" && dependencyLabelBeta != "") add(hmap, "KAPPA-LEMMA-BETA-DL=" + kappaLemma + "-" + dependencyLabelBeta)
+      if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
+    }
     // end WangXue binaries
 
     hmap
