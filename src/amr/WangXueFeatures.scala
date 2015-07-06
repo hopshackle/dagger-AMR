@@ -9,7 +9,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = true
+  val debug = false
   val random = new Random()
   val numeric = "[0-9,.]".r
 
