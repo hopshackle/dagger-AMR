@@ -124,7 +124,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
               add(hmap, "CHILD-INSERTED=" + childWord)
               if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
             }
-            add(hmap, "CHILD-SIGMA-DEP-LABEL=" + label)
+            add(hmap, "CHILD-SIGMA-LABEL=" + label)
             add(hmap, "CHILD-WORD=" + childWord)
             if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
         }
@@ -177,6 +177,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       if (sigmaPOS != "" && betaLemma != "") add(hmap, "SIGMA-POS-BETA-LEMMA=" + sigmaPOS + "-" + betaLemma)
       if (sigmaDL.nonEmpty && betaLemma != "") for (sdl <- sigmaDL) add(hmap, "SIGMA-DL-BETA-LEMMA=" + sdl + "-" + betaLemma)
       if (sigmaLemma != "" && betaDL.nonEmpty) for (bdl <- betaDL) add(hmap, "BETA-DL-SIGMA-LEMMA=" + bdl + "-" + betaLemma)
+      if (sigmaLemma != "" && label != "") add(hmap, "SIGMA-LEMMA-LABEL=" + sigmaLemma + "-" + label)
+      if (betaLemma != "" && label != "") add (hmap, "LABEL-BETA-LEMMA=" + label + "-" + betaLemma)
       if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
     }
     // end WangXue binaries
