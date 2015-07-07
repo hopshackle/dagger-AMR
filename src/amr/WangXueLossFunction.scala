@@ -2,6 +2,13 @@ package amr
 import dagger.core._
 import amr.ImportConcepts.{ concept, relation }
 
+class WangXueLossFunctionFactory(lossToUse: String) extends LossFunctionFactory[Sentence, WangXueAction, WangXueTransitionState] {
+  override def newLossFunction = lossToUse match {
+    case "Penalty" => new WangXueLossFunctionActionPenalty
+    case "Abs" => new WangXueLossFunctionAbs
+    case _ => new WangXueLossFunction
+  }
+}
 class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueTransitionState] {
 
   private var nodeDefault: Array[Double] = Array(1)
@@ -66,9 +73,6 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
   }
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
-    // TODO: Clarify what the testActions are for...at the moment we just calculate the loss
-    // based on the gold and test inputs
-
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
@@ -76,7 +80,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
 
     1.0 - Smatch.fScore(gold.amr.get, testAMR, 1)._1
   }
-  
+
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence
   def max(gold: Sentence): Double = 1.0
 

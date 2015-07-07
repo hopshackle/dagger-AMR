@@ -53,16 +53,12 @@ object RunDagger {
       (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
     }
     val lossToUse = options.getString("--lossFunction", "")
-    val lossFunction = lossToUse match {
-      case "Abs" => new WangXueLossFunctionAbs
-      case "Penalty" => new WangXueLossFunctionActionPenalty
-      case _ => new WangXueLossFunction
-    }
+    val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex
     val WXFeatures = new WangXueFeatures(options, featureIndex)
     val WXTransitionSystem = new WangXueTransitionSystem
     def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (WXFeatures).features(d, s, a)
-    val classifier = dagger.train(trainData, new WangXueExpert, featFn, WXTransitionSystem, lossFunction, devData, score,
+    val classifier = dagger.train(trainData, new WangXueExpert, featFn, WXTransitionSystem, lossFunctionFactory, devData, score,
       GraphViz.graphVizOutputFunction)
  //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
     if (options.DEBUG) {
