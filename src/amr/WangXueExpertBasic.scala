@@ -1,5 +1,6 @@
 package amr
 import dagger.core._
+import dagger.util.Timer
 import amr.ImportConcepts.{ concept, relation, conceptIndex, relationIndex }
 
 class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXueTransitionState] {
@@ -58,20 +59,22 @@ object WangXueExpertCheck {
 
   def main(args: Array[String]): Unit = {
 
+    val iterations = 4
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
     val rawData = AMRGraph.importFile(fileName)
+    val sentences = rawData map (d => Sentence(d._1, d._2))
+    val timer = new Timer()
+    timer.start
     var allScores = List[Double]()
-    rawData foreach { x =>
-      val (english, amr) = x
-      val sentence = Sentence(english, amr)
-      val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get)
+    sentences foreach { sentence =>
+      val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get, iterations)
       allScores = fScore._1 :: allScores
       println(f"${fScore._1}%.2f" + "\t" + sentence.rawText)
     }
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size
-    println(f"Average f-Score of $meanScore%.2f")
+    println(f"Average f-Score of $meanScore%.2f in $timer")
   }
 }
