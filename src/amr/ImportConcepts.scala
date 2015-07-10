@@ -14,13 +14,13 @@ object ImportConcepts {
   val quote = """"""".r
   val numbers = "[0-9.,]".r
 
-  lazy val relationStrings = loadRelations(amrFile)
+  lazy val relationStrings = loadRelations(amrFile) + "polarity"
   lazy val relationMaster = (for {
     (relation, index) <- relationStrings zipWithIndex
   } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
   lazy val relationStringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
 
-  lazy val conceptStrings = loadConcepts(amrFile)
+  lazy val conceptStrings = loadConcepts(amrFile) + "-"
   lazy val conceptMaster = (for {
     (concept, index) <- conceptStrings zipWithIndex
   } yield ((index + 1) -> concept)).toMap + (0 -> "UNKNOWN")

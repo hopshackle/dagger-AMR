@@ -49,9 +49,9 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
   }
 }
 
-case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String], 
-    nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
-    insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)]) extends Graph[Int] {
+case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
+  nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
+  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -93,9 +93,18 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
-    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)), 
-        nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode, 
-        insertedNodes = newInsertedNodes))
+    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
+      nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
+      insertedNodes = newInsertedNodes))
+  }
+  def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
+    val newNode = nodes.keys.max + 1
+    val parentSpan = nodeSpans.getOrElse(node, (0, 0))
+    val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
+    val newEdgeToNode = ((node, newNode), concept(conceptIndex) + "#") // label made up for use as feature
+    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
+      nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs -- edgesToParents(node) + newEdgeToNode,
+      insertedNodes = newInsertedNodes))
   }
 
   def mergeNodes(nodeToRemove: Int, nodeToKeep: Int): DependencyTree = {

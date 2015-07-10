@@ -1,7 +1,7 @@
 package amr
 
 object problematicAMR {
- // val testData = AMRGraph.importFile("C:\\AMR\\problematicAMR.txt") - Kuwolsan that created loop
+ // val testData = AMRGraph.importFile("C:\\AMR\\problemticAMR.txt") - Kuwolsan that created loop
  
  val testData = AMRGraph.importFile("C:\\AMR\\AMRInstance4.txt") // Nato Considers....
                                                   //> testData  : IndexedSeq[(String, String)] = Vector((NATO CONSIDERS cyber atta
@@ -14,23 +14,23 @@ object problematicAMR {
                                                   //| d (c6 / cyber)) :ARG1 (g / government-organization :ARG0-of (g2 / govern-01 
                                                   //| :ARG1 (c5 / country :name (n3 / name :op1 "Estonia")))) :time (d / date-enti
                                                   //| ty :year 2007))))))
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@5419f379
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@7d
-                                                  //| c7cbad
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@d2cc05a
+  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@4f
+                                                  //| 933fd1
   val s1 = Sentence(testData(0)._1, testData(0)._2)
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [3.0 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.3 sec].
+                                                  //| im.crf.ser.gz ... done [3.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [4.2 sec].
+                                                  //| im.crf.ser.gz ... done [3.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [6.6 sec].
+                                                  //| tsim.crf.ser.gz ... done [2.6 sec].
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| s1  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to milit
@@ -178,7 +178,7 @@ object problematicAMR {
                                                   //| 0.2.0.0) -> ARG2, (0.3.0.2,0.3.0.2.0) -> year, (0.2.0.0,0.2.0.0.2) -> mod)
   import java.io._
   val file = new FileWriter("C://AMR//i4_output.txt")
-                                                  //> file  : java.io.FileWriter = java.io.FileWriter@449a4f23
+                                                  //> file  : java.io.FileWriter = java.io.FileWriter@2eae8e6e
   for (i <- 0 to 300) {
     if (!expertSystem.isTerminal(state)) {
       stateHistory(i) = state

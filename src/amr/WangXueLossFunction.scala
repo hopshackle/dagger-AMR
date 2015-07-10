@@ -13,19 +13,22 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
 
   private var nodeDefault: Array[Double] = Array(1)
   private var edgeDefault: Array[Double] = Array(1)
-  private var node, edge: Boolean = false
+  private var insertDefault: Array[Double] = Array(1)
+  private var node, edge, insert: Boolean = false
   private var sampleSize: Int = 1
   private var count: Int = 0
 
   override def clearCache: Unit = {
     node = false
     edge = false
+    insert = false
     count = 0
   }
   override def setSamples(s: Int): Unit = {
     sampleSize = s
     nodeDefault = new Array[Double](s)
     edgeDefault = new Array[Double](s)
+    insertDefault = new Array[Double](s)
   }
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction], trialAction: WangXueAction): Double = {
@@ -66,6 +69,15 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
           edgeDefault(count - 1) = apply(gold, test, testActions)
           if (count == sampleSize) edge = true
           edgeDefault(count - 1)
+        }
+      } else apply(gold, test, testActions)
+      case Insert(nodeConcept, otherRef) => if (conceptNotInAMR(nodeConcept)) {
+        if (insert)
+          insertDefault(count - 1)
+        else {
+          insertDefault(count - 1) = apply(gold, test, testActions)
+          if (count == sampleSize) insert = true
+          insertDefault(count - 1)
         }
       } else apply(gold, test, testActions)
       case _ => apply(gold, test, testActions)

@@ -33,7 +33,7 @@ class WangXueExpert extends WangXueExpertBasic {
 
     val sigmaAMRParents = getAMRParents(SIGMAAMR)
     val sigmaAMRChildren = getAMRChildren(SIGMAAMR).toSet
-    
+
     val sigmaParentsAMR = sigmaParents map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
 
     if (debug) println(sigmaAMRParents)
@@ -42,9 +42,12 @@ class WangXueExpert extends WangXueExpertBasic {
     val allNodesAMR = fullMapDTtoAMR.values.toSet
 
     val unmatchedParents = sigmaAMRParents filter { x => !fullMapAMRtoDT.contains(x) }
+    val unmatchedChildren = sigmaAMRChildren filter { x => !fullMapAMRtoDT.contains(x) }
     //    if (debug) println(unmatchedParents)
     val unmatchedParentLabels = unmatchedParents map (data.amr.get.nodes(_))
     //    if (debug) println(unmatchedParentLabels)
+    val unmatchedChildrenLabels = unmatchedChildren map (data.amr.get.nodes(_))
+    val unmatchedPolarityChild = unmatchedChildrenLabels contains "-"
 
     val chosenAction = (SIGMAAMR, unmatchedParentLabels.isEmpty, BETA, BETAAMR, betaAMRParents.isEmpty) match {
       // cases to cover: no beta - Delete, Insert or NextNode
@@ -62,6 +65,7 @@ class WangXueExpert extends WangXueExpertBasic {
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
       case (Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
+      case (Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
       case (Some(sigmaAMR), _, -1, _, _) =>
         val concept = data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN")
         if (concept == "UNKNOWN") {
@@ -78,10 +82,10 @@ class WangXueExpert extends WangXueExpertBasic {
           val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
         } else NextEdge(0)
- //     case (_, _, beta, None, _) if beta > -1 =>
- //       if (state.nodesToProcess.size > 2 && state.nodesToProcess.tail.head != beta &&
- //         Reattach(state.nodesToProcess.tail.head).isPermissible(state))
- //         Reattach(state.nodesToProcess.tail.head) else NextEdge(0)
+      //     case (_, _, beta, None, _) if beta > -1 =>
+      //       if (state.nodesToProcess.size > 2 && state.nodesToProcess.tail.head != beta &&
+      //         Reattach(state.nodesToProcess.tail.head).isPermissible(state))
+      //         Reattach(state.nodesToProcess.tail.head) else NextEdge(0)
       case (_, _, beta, _, _) if beta > -1 => NextEdge(0)
       case (_, _, _, _, _) => NextNode(0)
 
