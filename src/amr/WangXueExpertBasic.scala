@@ -60,6 +60,7 @@ object WangXueExpertCheck {
   def main(args: Array[String]): Unit = {
 
     val iterations = 4
+    val movesToConsider = 10000
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
@@ -69,7 +70,7 @@ object WangXueExpertCheck {
     timer.start
     var allScores = List[Double]()
     sentences foreach { sentence =>
-      val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get, iterations)
+      val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get, iterations, movesToConsider)
       allScores = fScore._1 :: allScores
       println(f"${fScore._1}%.2f" + "\t" + sentence.rawText)
     }

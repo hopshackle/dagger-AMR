@@ -5,21 +5,21 @@ object Smatch {
 
   val debug = false
 
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4): (Double, Double, Double, Double) = {
+  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double) = {
     val smallGraph = if (AMR1.nodes.size < AMR2.nodes.size) AMR1 else AMR2
     val largeGraph = if (AMR1.nodes.size >= AMR2.nodes.size) AMR1 else AMR2
-    val allScores = 1 to attempts map (_ => oneIteration(largeGraph, smallGraph))
+    val allScores = 1 to attempts map (_ => oneIteration(largeGraph, smallGraph, movesToConsider))
     allScores.maxBy(_._1)
     // Returned tuple is (F-Score, Precision, Recall, Absolute Errors)
   }
 
-  def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph): (Double, Double, Double, Double) = {
+  def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double) = {
     var currentBestMap = initialMap(AMR1, AMR2)
     var improvement = true
     var lastBestScore = (0.0, 0.0, 0.0, 0.0)
     do {
       var lastBestMap = currentBestMap
-      currentBestMap = getBestMove(AMR1, AMR2, currentBestMap)
+      currentBestMap = getBestMove(AMR1, AMR2, currentBestMap, movesToConsider)
       var newScore = fScore(AMR1, AMR2, currentBestMap)
       improvement = newScore._1 > lastBestScore._1
       if (improvement) lastBestScore = newScore
@@ -73,7 +73,7 @@ object Smatch {
     coincidentMappings ++ remainder
   }
 
-  def getBestMove(AMR1: AMRGraph, AMR2: AMRGraph, currentMap: Map[String, String]): Map[String, String] = {
+  def getBestMove(AMR1: AMRGraph, AMR2: AMRGraph, currentMap: Map[String, String], movesToConsider: Int): Map[String, String] = {
     // We know that AMR1 is the larger of the two graphs (defined by number of nodes)
     val allVacantMoves = for {
       (i, name) <- AMR2.nodes
@@ -86,7 +86,7 @@ object Smatch {
       if i != j
     } yield currentMap + (i -> jPointer) + (j -> iPointer)
 
-    val allMoves = allVacantMoves ++ allSwapMoves
+    val allMoves = Random.shuffle(allVacantMoves ++ allSwapMoves).take(movesToConsider)
 
     val allScores = allMoves map (m => fScore(AMR1, AMR2, m))
     val maxScore = if (allScores.isEmpty) 0 else allScores.max

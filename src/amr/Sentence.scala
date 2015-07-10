@@ -156,7 +156,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       }
     }
     val start = List(List(node1))
-    findPathTo(start, node2, 0)
+    if (node1 == node2) {
+      List(node1)
+    } else
+      findPathTo(start, node2, 0)
   }
   def getPathBetween(node1: Int, node2: Int): String = {
     // starting with node1, we're just conducting a search until we hit node2
