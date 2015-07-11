@@ -17,7 +17,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
   private var node, edge, insert: Boolean = false
   private var sampleSize: Int = 1
   private var count: Int = 0
-
+  
   override def clearCache: Unit = {
     node = false
     edge = false

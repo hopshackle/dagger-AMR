@@ -5,35 +5,54 @@ import java.io._
 import scala.util.Random
 import dagger.core._
 
-class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
+class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
+  override def newFeatureFunction: FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] = {
+    new WangXueFeatures(options, dict)
+  }
+}
+
+class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
   val debug = false
   val random = new Random()
   val numeric = "[0-9,.]".r
+  var cachedFeatures = Map[Int, Double]()
+  var cachedState: WangXueTransitionState = null
 
   def add(map: java.util.HashMap[Int, Double], feat: String, value: Double = 1.0) = {
     map.put(dict.index(feat), value)
   }
 
-  def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
-    val thisDebug = if (debug && random.nextDouble < 0.01) true else false
+  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
+    // if we have cached Features for this state, and the action does not have a node parameter,
+    // then we can save ourselves the effort (and memory) of re-calculating everything
+    val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]
+    if (cachedState != null && cachedState.eq(state) && !parameterisedAction) {
+      cachedFeatures
+    } else {
 
-    val quadraticTurbo = options.contains("--quadratic")
+      val thisDebug = if (debug && random.nextDouble < 0.01) true else false
+      val quadraticTurbo = options.contains("--quadratic")
 
-    val linearOutput = state.childrenToProcess match {
-      case Nil => sigmaFeatures(sentence, state, action)
-      case head :: tail => sigmaBetaFeatures(sentence, state, action)
+      val linearOutput = state.childrenToProcess match {
+        case Nil => sigmaFeatures(sentence, state, action)
+        case head :: tail => sigmaBetaFeatures(sentence, state, action)
+      }
+      val output = linearOutput ++ (if (quadraticTurbo) quadraticCombination(linearOutput) else Map())
+      if (thisDebug) {
+        val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
+        featuresDebug.write(state.toString)
+        output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
+        featuresDebug.close
+      }
+      if (!parameterisedAction) {
+        cachedFeatures = output
+        cachedState = state
+      }
+      output
     }
-    val output = linearOutput ++ (if (quadraticTurbo) quadraticCombination(linearOutput) else Map())
-    if (thisDebug) {
-      val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
-      featuresDebug.write(state.toString)
-      output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
-      featuresDebug.close
-    }
-    output
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
@@ -178,7 +197,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
       if (sigmaDL.nonEmpty && betaLemma != "") for (sdl <- sigmaDL) add(hmap, "SIGMA-DL-BETA-LEMMA=" + sdl + "-" + betaLemma)
       if (sigmaLemma != "" && betaDL.nonEmpty) for (bdl <- betaDL) add(hmap, "BETA-DL-SIGMA-LEMMA=" + bdl + "-" + betaLemma)
       if (sigmaLemma != "" && label != "") add(hmap, "SIGMA-LEMMA-LABEL=" + sigmaLemma + "-" + label)
-      if (betaLemma != "" && label != "") add (hmap, "LABEL-BETA-LEMMA=" + label + "-" + betaLemma)
+      if (betaLemma != "" && label != "") add(hmap, "LABEL-BETA-LEMMA=" + label + "-" + betaLemma)
       if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
     }
     // end WangXue binaries

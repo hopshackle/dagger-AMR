@@ -55,10 +55,9 @@ object RunDagger {
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex
-    val WXFeatures = new WangXueFeatures(options, featureIndex)
+    val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
     val WXTransitionSystem = new WangXueTransitionSystem
-    def featFn = (d: Sentence, s: WangXueTransitionState, a: WangXueAction) => (WXFeatures).features(d, s, a)
-    val classifier = dagger.train(trainData, new WangXueExpert, featFn, WXTransitionSystem, lossFunctionFactory, devData, score,
+    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WXTransitionSystem, lossFunctionFactory, devData, score,
       GraphViz.graphVizOutputFunction)
  //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
     if (options.DEBUG) {
