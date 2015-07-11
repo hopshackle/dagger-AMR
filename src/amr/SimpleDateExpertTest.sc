@@ -32,62 +32,71 @@ val testTuple = Seq((1.0, 1.0, 1.0, 0.0), (1.0, 2.0, 0.0, 5.6))
                                                   //| reement to fund a research center to bolster defenses against cyber attacks.
                                                   //| ,"(s / sign-01 :ARG0 (p / person :ARG0-of (a / ally-01) :mod (m / military :
                                                   //| name (n / name :op1 "NATO"))) :ARG1 (a2 / agree-01 :ARG0 p :ARG1 (f / fund-0
-                                                  //| 1 :ARG0 p :ARG1 (c / center :mod (r / research-01)) 
+                                                  //| 1 :ARG0 p :ARG1 (c / center :mod (r / research-01)) :purpose (b / bolster-01
+                                                  //|  :ARG0 p :ARG1 (d / defend-01 :prep-against (a3 / attack :mod (c2 / cyber)))
+                                                  //| )))) "), (On 14 May 2008 7 NATO allies signed an agreement to fund a researc
+                                                  //| h center.,"(s / sign-01 :ARG0 (p / person :quant 7 :ARG0-of (a / ally-01) :m
+                                                  //| od (m / military :name (n / name :op1 "NATO"))) :ARG1 (a2 / agree-01 :ARG1 (
+                                                  //| f / fund-01 :ARG0 p :ARG1 (c / center :mod (r / research-01)))) :time (d / d
+                                                  //| ate-entity :month 5 :day 14 :year 2008)) "), (The center will bols
                                                   //| Output exceeds cutoff limit.
   val s0 = Sentence(testData(0)._1, testData(0)._2)
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.0 sec].
+                                                  //| hPCFG.ser.gz ... done [1.1 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.2 sec].
+                                                  //| im.crf.ser.gz ... done [4.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.1 sec].
+                                                  //| im.crf.ser.gz ... done [2.0 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [3.6 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.1 sec].
                                                   //| s0  : amr.Sentence = Sentence(2008-05-14,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14)
-                                                  //| SpanMap:	Map(1 -> (1,2))
-                                                  //| Edges:	Map((0,1) -> root)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4))
+                                                  //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,2) -> num)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> 14, 0.0 -> 5, 0 -> date-e
-                                                  //| ntity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,2), 0.2 -> (1,2)),Map((0,0.0) 
-                                                  //| -> month, (0,0.1) -> day, (0,0.2) -> year, (ROOT,0) -> ROOT))),Map(1 -> 0.2,
-                                                  //|  0 -> ROOT))
+                                                  //| ntity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,4), 0.0 -> (1,4), 0.1 -> (1,4)
+                                                  //| , 0.2 -> (1,4)),Map((0,0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (ROOT
+                                                  //| ,0) -> ROOT))),Map(3 -> 0.1, 2 -> 0.0, 1 -> 0.2, 0 -> ROOT))
   val s0_copy = Sentence(testData(0)._1, testData(0)._2)
                                                   //> s0_copy  : amr.Sentence = Sentence(2008-05-14,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14)
-                                                  //| SpanMap:	Map(1 -> (1,2))
-                                                  //| Edges:	Map((0,1) -> root)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4))
+                                                  //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,2) -> num)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> 14, 0.0 -> 5, 0 -> date-e
-                                                  //| ntity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,2), 0.2 -> (1,2)),Map((0,0.0) 
-                                                  //| -> month, (0,0.1) -> day, (0,0.2) -> year, (ROOT,0) -> ROOT))),Map(1 -> 0.2,
-                                                  //|  0 -> ROOT))
- // We then want to apply the Exprt to one, and a non-exprt action to the other
+                                                  //| ntity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,4), 0.0 -> (1,4), 0.1 -> (1,4)
+                                                  //| , 0.2 -> (1,4)),Map((0,0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (ROOT
+                                                  //| ,0) -> ROOT))),Map(3 -> 0.1, 2 -> 0.0, 1 -> 0.2, 0 -> ROOT))
+ // We then want to apply the Exprt to one, and a non-exprt actionto the other
  
 s0.amr                                            //> res0: Option[amr.AMRGraph] = Some(AMRGraph(Map(0.1 -> 14, 0.0 -> 5, 0 -> dat
-                                                  //| e-entity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,2), 0.2 -> (1,2)),Map((0,0.
-                                                  //| 0) -> month, (0,0.1) -> day, (0,0.2) -> year, (ROOT,0) -> ROOT)))
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@1eb5174b
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@67
-                                                  //| 080771
+                                                  //| e-entity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,4), 0.0 -> (1,4), 0.1 -> (1
+                                                  //| ,4), 0.2 -> (1,4)),Map((0,0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (R
+                                                  //| OOT,0) -> ROOT)))
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@2b48a640
+  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@1e
+                                                  //| 683a3e
   val startState = expertSystem.init(s0)          //> startState  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(1, 0)
+                                                  //| NodesToGo:	List(2, 3, 1, 0)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14)
-                                                  //| SpanMap:	Map(1 -> (1,2))
-                                                  //| Edges:	Map((0,1) -> root)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4))
+                                                  //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,2) -> num)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| Mappings:	1 -> 0.2
+                                                  //| Mappings:	3 -> 0.1
+                                                  //| 2 -> 0.0
+                                                  //| 1 -> 0.2
                                                   //| 0 -> ROOT
                                                   //| 
   val permissibleActions = expertSystem.permissibleActions(startState)
@@ -96,56 +105,122 @@ s0.amr                                            //> res0: Option[amr.AMRGraph]
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| permissibleActions  : Array[amr.WangXueAction] = Array(NextNode: 14 -> compu
-                                                  //| ter, NextNode: 10 -> "Estonia", NextNode: 17 -> civilian, NextNode: 0 -> UNK
-                                                  //| NOWN, NextNode: 4 -> fund-01, NextNode: 24 -> cyber, NextNode: 35 -> govern-
-                                                  //| 01, NextNode: 6 -> threaten-01, NextNode: 20 -> sign-01, NextNode: 32 -> mil
-                                                  //| itary, NextNode: 7 -> center, NextNode: 1 -> defend-01, NextNode: 27 -> atta
-                                                  //| ck, NextNode: 13 -> country, NextNode: 11 -> strike-01, NextNode: 12 -> agre
-                                                  //| e-01, NextNode: 3 -> name, NextNode: 5 -> date-entity, NextNode: 33 -> and, 
-                                                  //| NextNode: 19 -> research-01, NextNode: 23 -> consider-02, NextNode: 15 -> sc
-                                                  //| ience, NextNode: 8 -> bolster-01, NextNode: 9 -> thing, NextNode: 21 -> afte
-                                                  //| r, NextNode: 36 -> government-organization, NextNode: 28 -> "NATO", NextNode
-                                                  //| : 16 -> technology, NextNode: 18 -> "Lithuania", NextNode: 26 -> person, Nex
-                                                  //| tNode: 31 -> ROOT, NextNode: 2 -> network, NextNode: 34 -> telecommunication
-                                                  //| , NextNode: 29 -> ally-01, NextNode: 25 -> attack-01, NextNode: 22 -> intern
-                                                  //| ational, NextNode: 30 -> "Latvia", DeleteNode, InsertNode: date-entity (Ref:
-                                                  //|  ), InsertNode: thing (Ref: ), InsertNode: person (Ref: ), InsertNode: milit
-                                                  //| ary (Ref: ), InsertNode: country (Ref: ), InsertNode: govern-01 (Ref: ), Ins
-                                                  //| ertNode: network (Ref: ), InsertNode: name (Ref: ), InsertNode: and (Ref: ))
-                                                  //| 
+                                                  //| ter, NextNode: 10 -> "Estonia", NextNode: 17 -> technology, NextNode: 0 -> U
+                                                  //| NKNOWN, NextNode: 4 -> fund-01, NextNode: 24 -> consider-02, NextNode: 35 ->
+                                                  //|  telecommunication, NextNode: 6 -> threaten-01, NextNode: 20 -> research-01,
+                                                  //|  NextNode: 32 -> ROOT, NextNode: 7 -> center, NextNode: 1 -> defend-01, Next
+                                                  //| Node: 27 -> person, NextNode: 13 -> country, NextNode: 11 -> strike-01, Next
+                                                  //| Node: 12 -> agree-01, NextNode: 3 -> name, NextNode: 5 -> date-entity, NextN
+                                                  //| ode: 33 -> military, NextNode: 19 -> "Lithuania", NextNode: 23 -> internatio
+                                                  //| nal, NextNode: 15 -> science, NextNode: 8 -> bolster-01, NextNode: 9 -> thin
+                                                  //| g, NextNode: 21 -> sign-01, NextNode: 37 -> government-organization, NextNod
+                                                  //| e: 36 -> govern-01, NextNode: 28 -> attack, NextNode: 16 -> -, NextNode: 18 
+                                                  //| -> civilian, NextNode: 26 -> attack-01, NextNode: 31 -> "Latvia", NextNode: 
+                                                  //| 2 -> network, NextNode: 34 -> and, NextNode: 29 -> "NATO", NextNode: 25 -> c
+                                                  //| yber, NextNode: 22 -> after, NextNode: 30 -> ally-01, DeleteNode, InsertNode
+                                                  //| : date-entity (Ref: ), InsertNode: and (Ref: ), InsertNode: person (Ref: ), 
+                                                  //| InsertNode: thing (Ref: ), InsertNode: country (Ref: ), InsertNode: network 
+                                                  //| (Ref: ), InsertNode: name (Ref: ), InsertNode: military (Ref: ), InsertNode:
+                                                  //|  govern-01 (Ref: ))
   var expertNextAction = expert.chooseTransition(s0, startState)
                                                   //> expertNextAction  : amr.WangXueAction = InsertNode: date-entity (Ref: 0)
   var expertNextState = expertNextAction(startState)
                                                   //> expertNextState  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(1, 2, 0)
+                                                  //| NodesToGo:	List(2, 4, 3, 1, 0)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14, 2 -> date-entity)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (1,2))
-                                                  //| Edges:	Map((0,2) -> root, (2,1) -> date-entity#)
-                                                  //| InsertedNodes:	Map(2 -> 0)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14, 4 -> date-entity)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (2,3))
+                                                  //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,4) -> num, (4,2) -> date-ent
+                                                  //| ity#)
+                                                  //| InsertedNodes:	Map(4 -> 0)
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| Mappings:	1 -> 0.2
-                                                  //| 0 -> ROOT
-                                                  //| 2 -> 0
+                                                  //| Mappings:	0 -> ROOT
+                                                  //| 1 -> 0.2
+                                                  //| 2 -> 0.0
+                                                  //| 3 -> 0.1
+                                                  //| 4 -> 0
                                                   //| 
   // This should correctly add mapping 2 -> 0 even though specific AMR node ref was not supplied
   val nonExpertNextAction = Insert(conceptIndex("date-entity"))
                                                   //> nonExpertNextAction  : amr.Insert = InsertNode: date-entity (Ref: )
   val nonExpertNextState = nonExpertNextAction(startState)
                                                   //> nonExpertNextState  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(1, 2, 0)
+                                                  //| NodesToGo:	List(2, 4, 3, 1, 0)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008-05-14, 2 -> date-entity)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (1,2))
-                                                  //| Edges:	Map((0,2) -> root, (2,1) -> date-entity#)
-                                                  //| InsertedNodes:	Map(2 -> 0)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14, 4 -> date-entity)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (2,3))
+                                                  //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,4) -> num, (4,2) -> date-ent
+                                                  //| ity#)
+                                                  //| InsertedNodes:	Map(4 -> 0)
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| Mappings:	1 -> 0.2
-                                                  //| 0 -> ROOT
-                                                  //| 2 -> 0
+                                                  //| Mappings:	0 -> ROOT
+                                                  //| 1 -> 0.2
+                                                  //| 2 -> 0.0
+                                                  //| 3 -> 0.1
+                                                  //| 4 -> 0
+                                                  //| 
+  val s6 = Sentence(testData(5)._1, testData(5)._2)
+                                                  //> s6  : amr.Sentence = Sentence(On 14 May 2008 7 NATO allies signed an agreem
+                                                  //| ent to fund a research center.,
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> On, 2 -> 14, 3 -> 5, 4 -> 2008, 5 -> 7, 6 ->
+                                                  //|  NATO, 7 -> allies, 8 -> signed, 9 -> an, 10 -> agreement, 11 -> to, 12 -> 
+                                                  //| fund, 13 -> a, 14 -> research, 15 -> center)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,1
+                                                  //| 2), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16))
+                                                  //| Edges:	Map((0,8) -> root, (1,2) -> pobj, (2,3) -> tmod, (3,4) -> num, (
+                                                  //| 7,5) -> num, (7,6) -> nn, (8,1) -> prep, (8,7) -> nsubj, (8,10) -> dobj, (1
+                                                  //| 0,9) -> det, (10,12) -> vmod, (12,11) -> aux, (12,15) -> dobj, (15,13) -> d
+                                                  //| et, (15,14) -> nn)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> agree-01, 0.0.0 -> 7, 0.0
+                                                  //| .2.0.0 -> "NATO", 0.1.0 -> fund-01, 0.2.1 -> 14, 0.1.0.0.0 -> research-01, 
+                                                  //| 0.0 -> person, 0.0.2 -> military, 0.2.0 -> 5, 0.0.1 -> ally-01, 0.1.0.0 -> 
+                                                  //| center, 0 -> sign-01, 0.2 -> date-entity, 0.2.2 -> 2008, ROOT -> ROOT, 0.0.
+                                                  //| 2.0 -> name),Map(0.1 -> (10,11), 0.0.0 -> (5,8), 0.0.2.0.0 -> (6,7), 0.1.0 
+                                                  //| -> (12,13), 0.2.1 -> (2,5), 0.1.0.0.0 -> (14,15), 0.0 -> (5,8), 0.2.0 -> (2
+                                                  //| ,5), 0.0.1 -> (5,8), 0.1.0.0 -> (15,16), 0 -> (8,9), 0.2 -> (2,5), 0.2.2 ->
+                                                  //|  (2,5), 0.0.2.0 -> (6,7)),Map((0.0,0.0.0) -> quant, (ROOT,0) -> ROOT, (0.1,
+                                                  //| 0.1.0) -> ARG1, (0.1.0,0.1.0.0) -> ARG1, (0.0.2,0.0.2.0) -> name, (0,0.2) -
+                                                  //| > time, (0,0.1) -> ARG1, (0.0.2.0,0.0.2.0.0) -> opN, (0.2,0.2.0) -> month, 
+                                                  //| (0.0,0.0.2) -> mod, (0.1.0.0,0.1.0.0.0) -> mod, (0.2,0.2.1) -> day, (0,0.0)
+                                                  //|  -> ARG0, (0.1.0,0.0) -> ARG0, (0.0,0.0.1) -> ARG0-of, (0.2,0.2.2) -> year)
+                                                  //| )),Map(0 -> ROOT, 5 -> 0.0.0, 10 -> 0.1, 14 -> 0.1.0.0.0, 6 -> 0.0, 2 -> 0.
+                                                  //| 2.1, 12 -> 0.1.0, 7 -> 0.0.1, 3 -> 0.2.0, 8 -> 0, 4 -> 0.2.2, 15 -> 0.1.0.0
+                                                  //| ))
+  expertSystem.init(s6)                           //> res1: amr.WangXueTransitionState = 
+                                                  //| NodesToGo:	List(4, 14, 13, 3, 15, 11, 5, 6, 9, 2, 12, 10, 1, 7, 8, 0)
+                                                  //| Children:	List()
+                                                  //| PartialGraph:	
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> On, 2 -> 14, 3 -> 5, 4 -> 2008, 5 -> 7, 6 ->
+                                                  //|  NATO, 7 -> allies, 8 -> signed, 9 -> an, 10 -> agreement, 11 -> to, 12 -> 
+                                                  //| fund, 13 -> a, 14 -> research, 15 -> center)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,1
+                                                  //| 2), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16))
+                                                  //| Edges:	Map((0,8) -> root, (1,2) -> pobj, (2,3) -> tmod, (3,4) -> num, (
+                                                  //| 7,5) -> num, (7,6) -> nn, (8,1) -> prep, (8,7) -> nsubj, (8,10) -> dobj, (1
+                                                  //| 0,9) -> det, (10,12) -> vmod, (12,11) -> aux, (12,15) -> dobj, (15,13) -> d
+                                                  //| et, (15,14) -> nn)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| Mappings:	0 -> ROOT
+                                                  //| 5 -> 0.0.0
+                                                  //| 10 -> 0.1
+                                                  //| 14 -> 0.1.0.0.0
+                                                  //| 6 -> 0.0
+                                                  //| 2 -> 0.2.1
+                                                  //| 12 -> 0.1.0
+                                                  //| 7 -> 0.0.1
+                                                  //| 3 -> 0.2.0
+                                                  //| 8 -> 0
+                                                  //| 4 -> 0.2.2
+                                                  //| 15 -> 0.1.0.0
                                                   //| 
 }

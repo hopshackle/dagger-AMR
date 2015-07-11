@@ -161,7 +161,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   // ii) The node has already been processed. This is a problem in that we would need to revisit it.  Easiest
   // way to do this is to add it back into the list of nodesToProcess...although this will also re-visit all the
   // other edges...
-  val disableReattach = false;
+  val disableReattach = true;
   override val parameterNode = newNode
   override def getMasterLabel = Reattach(0)
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {

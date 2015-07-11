@@ -1,7 +1,7 @@
 package amr
 
 object generalPlay {
-val minPerDay: Double = 24.0 * 60.0 / 1000.0      //> minPerDay  : Double = 1.44
+  val minPerDay: Double = 24.0 * 60.0 / 1000.0    //> minPerDay  : Double = 1.44
   val a = List[String]()                          //> a  : List[String] = List()
   val b = List("one", "two", "three")             //> b  : List[String] = List(one, two, three)
   a contains "6"                                  //> res0: Boolean = false
@@ -19,8 +19,9 @@ val minPerDay: Double = 24.0 * 60.0 / 1000.0      //> minPerDay  : Double = 1.44
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
-                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
+                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
+                                                  //| , 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -29,12 +30,30 @@ val minPerDay: Double = 24.0 * 60.0 / 1000.0      //> minPerDay  : Double = 1.44
                                                   //> combo  : List[(String, Double)] = List((1-2,99.0), (1-3,6633.0), (1-40,1.287
                                                   //| ), (1-56,451.43999999999994), (2-3,67.0), (2-40,0.013), (2-56,4.56), (3-40,0
                                                   //| .871), (3-56,305.52), (40-56,0.05927999999999999))
-   val testTuple = Seq((1.0, 1.0, 1.0, 0.0), (1.0, 2.0, 0.0, 5.6))
+  val testTuple = Seq((1.0, 1.0, 1.0, 0.0), (1.0, 2.0, 0.0, 5.6))
                                                   //> testTuple  : Seq[(Double, Double, Double, Double)] = List((1.0,1.0,1.0,0.0),
                                                   //|  (1.0,2.0,0.0,5.6))
-testTuple.max                                     //> res9: (Double, Double, Double, Double) = (1.0,2.0,0.0,5.6)
-testTuple maxBy (_._1)                            //> res10: (Double, Double, Double, Double) = (1.0,1.0,1.0,0.0)
-Math.abs(2.34)                                    //> res11: Double = 2.34
-Math.abs(-2.33)                                   //> res12: Double = 2.33
-Math.max(3, 78)                                   //> res13: Int = 78
+  testTuple.max                                   //> res9: (Double, Double, Double, Double) = (1.0,2.0,0.0,5.6)
+  testTuple maxBy (_._1)                          //> res10: (Double, Double, Double, Double) = (1.0,1.0,1.0,0.0)
+  Math.abs(2.34)                                  //> res11: Double = 2.34
+  Math.abs(-2.33)                                 //> res12: Double = 2.33
+  Math.max(3, 78)                                 //> res13: Int = 78
+
+  val date1 = """((19|20)\d\d)[- /.]((0[1-9]|1[012]))[- /.]((0[1-9]|[12][0-9]|3[01]))""".r
+                                                  //> date1  : scala.util.matching.Regex = ((19|20)\d\d)[- /.]((0[1-9]|1[012]))[- 
+                                                  //| /.]((0[1-9]|[12][0-9]|3[01]))
+  val redDate = """(\d\d\d\d)-(\d\d)-(\d\d)""".r  //> redDate  : scala.util.matching.Regex = (\d\d\d\d)-(\d\d)-(\d\d)
+  val redDate2 = """(\d\d\d\d)(\d\d)(\d\d)""".r   //> redDate2  : scala.util.matching.Regex = (\d\d\d\d)(\d\d)(\d\d)
+  val testDate = "The Date was 2001-12-01."       //> testDate  : String = The Date was 2001-12-01.
+  val (year, month, day) = testDate match {
+    case redDate.unanchored(year, month, day) => (year, month, day)
+  }                                               //> year  : String = 2001
+                                                  //| month  : String = 12
+                                                  //| day  : String = 01
+  redDate replaceAllIn (testDate, m => (m group 1) + " " + (m group 2) + " " + (m group 3))
+                                                  //> res14: String = The Date was 2001 12 01.
+  redDate.replaceAllIn("20011201", m => (m group 1) + " " + (m group 2) + " " + (m group 3))
+                                                  //> res15: String = 20011201
+  redDate2.replaceAllIn("20011201", m => (m group 1) + " " + (m group 2) + " " + (m group 3))
+                                                  //> res16: String = 2001 12 01
 }

@@ -90,9 +90,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index = new MapIndex) {
           }
           add(hmap, "PARENT-SIGMA-LABEL=" + label)
           add(hmap, "PARENT-WORD=" + parentWord)
-          add(hmap, "PARENT-LEMMA=" + parentLemma)
-          add(hmap, "PARENT-POS=" + parentPOS)
-          add(hmap, "PARENT-NER=" + parentNER)
+          if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)
+          if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
+          if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
           for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
           if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
           if (!quadraticTurbo) {

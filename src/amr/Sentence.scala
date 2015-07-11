@@ -295,16 +295,21 @@ object DependencyTree {
 
   def apply(sentence: String): DependencyTree = {
 
-    val parseTree = (processor.parse(sentence).head) filter (x => x.deprel.getOrElse("") != "punct") zipWithIndex
+    val parsedForDates = extractDates(sentence)
+    val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
+    val monthFiddledTree = stanfordTree map {
+      case full @ ConllToken(_, form, _, _, _, _, _, _, _, ner) if (ner.getOrElse("") == "DATE") => {full.copy(form = convertMonth(form))}
+      case full => full
+    }
+
+    val parseTree = monthFiddledTree zipWithIndex
 
     val nodes = (for {
       (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
-      if deprel != "punct"
     } yield (index -> form)).toMap + (0 -> "ROOT")
 
     val arcs = (for {
       (ConllToken(Some(index), _, lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
-      if deprel.getOrElse("") != "punct"
     } yield ((parentIndex, index) -> deprel.getOrElse("UNK"))).toMap
 
     val nodeSpans = (for {
@@ -325,12 +330,44 @@ object DependencyTree {
 
     DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set())
   }
+
+  def convertMonth(input: Option[String]): Option[String] = {
+    input match {
+      case Some(string) => Some(string match {
+        case "January" | "Jan" => "1"
+        case "February" | "Feb" => "2"
+        case "March" | "Mar" => "3"
+        case "April" | "Apr" => "4"
+        case "May" => {"5"}
+        case "June" | "Jun" => "6"
+        case "July" | "Jul" => "7"
+        case "August" | "Aug" => "8"
+        case "September" | "Sep" => "9"
+        case "October" | "Oct" => "10"
+        case "November" | "Nov" => "11"
+        case "December" | "Dec" => "12"
+        case other => other
+      })
+      case None => None
+    }
+  }
+
+  def extractDates(input: String): String = {
+    val redDate = """(\d\d\d\d)-(\d\d)-(\d\d)""".r
+    val redDate2 = """(\d\d\d\d)(\d\d)(\d\d)""".r
+    val redDate3 = """(\d\d)(\d\d)(\d\d)""".r
+
+    var output = redDate replaceAllIn (input, m => (m group 1).toInt + " " + (m group 2).toInt + " " + (m group 3).toInt)
+    output = redDate2 replaceAllIn (output, m => (m group 1).toInt + " " + (m group 2).toInt + " " + (m group 3).toInt)
+    redDate3 replaceAllIn (output, m => (m group 1).toInt + (if ((m group 1).toInt > 50) 1900 else 2000) + " " + (m group 2).toInt + " " + (m group 3).toInt)
+  }
 }
 
 object AMRGraph {
   // We then use the JAMR functionality here
   // 
-  def apply(rawAMR: String, sentence: String): AMRGraph = {
+  def apply(rawAMR: String, rawSentence: String): AMRGraph = {
+    val sentence = DependencyTree.extractDates(rawSentence)
     val amr = Graph.parse(rawAMR)
     val tokenized = sentence.split(" ")
     val wordAlignments = AlignWords.alignWords(tokenized, amr)

@@ -60,7 +60,7 @@ object WangXueExpertCheck {
   def main(args: Array[String]): Unit = {
 
     val iterations = 4
-    val movesToConsider = 10000
+    val movesToConsider = 500
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
@@ -76,6 +76,6 @@ object WangXueExpertCheck {
     }
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size
-    println(f"Average f-Score of $meanScore%.2f in $timer")
+    println(f"Average f-Score of $meanScore%.3f in $timer")
   }
 }

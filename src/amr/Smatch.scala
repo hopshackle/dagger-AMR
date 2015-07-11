@@ -1,5 +1,6 @@
 package amr
 import scala.util.Random
+import scala.util.control._
 
 object Smatch {
 
@@ -87,13 +88,20 @@ object Smatch {
     } yield currentMap + (i -> jPointer) + (j -> iPointer)
 
     val allMoves = Random.shuffle(allVacantMoves ++ allSwapMoves).take(movesToConsider)
+    val startScore = fScore(AMR1, AMR2, currentMap)
+    var satisficingMove = currentMap
 
-    val allScores = allMoves map (m => fScore(AMR1, AMR2, m))
-    val maxScore = if (allScores.isEmpty) 0 else allScores.max
-    (allScores zip allMoves) find (_._1 == maxScore) match {
-      case None => Map.empty
-      case Some((score, move)) => move
+    val loop = new Breaks;
+    loop.breakable {
+      for (move <- allMoves) {
+        val score = fScore(AMR1, AMR2, move)
+        if (score._1 > startScore._1) {
+          satisficingMove = move
+          loop.break
+        }
+      }
     }
+    satisficingMove
   }
 
   def fScore(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double) = {
@@ -104,7 +112,7 @@ object Smatch {
     val amr1 = stringSeq(AMR1)
     val amr2 = stringSeq(AMR2, nodeMap)
 
-    val matches: Double = if (amr1.size > amr2.size) (amr2 map (a => if (amr1 contains a) 1 else 0)).sum else (amr1 map (a => if (amr2 contains a) 1 else 0)).sum 
+    val matches: Double = if (amr1.size > amr2.size) (amr2 map (a => if (amr1 contains a) 1 else 0)).sum else (amr1 map (a => if (amr2 contains a) 1 else 0)).sum
     val precision = matches / amr2.size
     val recall = matches / amr1.size
     val incorrect = amr2.size - matches + amr1.size - matches
