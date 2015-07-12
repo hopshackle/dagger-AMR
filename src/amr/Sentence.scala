@@ -293,12 +293,20 @@ object DependencyTree {
 
   val processor = new StanfordProcessor
 
+  def preProcess(sentence: String): List[String] = {
+    val parsedForDates = extractDates(sentence)
+    val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
+    stanfordTree map {
+      case ConllToken(_, form, _, _, _, _, _, _, _, _) => form.getOrElse("")
+    }
+  }
+
   def apply(sentence: String): DependencyTree = {
 
     val parsedForDates = extractDates(sentence)
     val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
     val monthFiddledTree = stanfordTree map {
-      case full @ ConllToken(_, form, _, _, _, _, _, _, _, ner) if (ner.getOrElse("") == "DATE") => {full.copy(form = convertMonth(form))}
+      case full @ ConllToken(_, form, _, _, _, _, _, _, _, ner) if (ner.getOrElse("") == "DATE") => { full.copy(form = convertMonth(form)) }
       case full => full
     }
 
@@ -338,7 +346,7 @@ object DependencyTree {
         case "February" | "Feb" => "2"
         case "March" | "Mar" => "3"
         case "April" | "Apr" => "4"
-        case "May" => {"5"}
+        case "May" => { "5" }
         case "June" | "Jun" => "6"
         case "July" | "Jul" => "7"
         case "August" | "Aug" => "8"
@@ -367,12 +375,12 @@ object AMRGraph {
   // We then use the JAMR functionality here
   // 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
-    val sentence = DependencyTree.extractDates(rawSentence)
+    val tokenisedSentence = DependencyTree.preProcess(rawSentence)
     val amr = Graph.parse(rawAMR)
-    val tokenized = sentence.split(" ")
-    val wordAlignments = AlignWords.alignWords(tokenized, amr)
-    val spanAlignments = AlignSpans.alignSpans(tokenized, amr, wordAlignments)
-
+    val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
+//    wordAlignments foreach println
+    val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
+//    spanAlignments foreach println
     val nodes = amr.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
 
     val nodeSpans = (for {

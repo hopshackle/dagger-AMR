@@ -60,7 +60,7 @@ object WangXueExpertCheck {
   def main(args: Array[String]): Unit = {
 
     val iterations = 4
-    val movesToConsider = 500
+    val movesToConsider = 1000
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)

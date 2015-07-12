@@ -49,11 +49,17 @@ val testTuple = Seq((1.0, 1.0, 1.0, 0.0), (1.0, 2.0, 0.0, 5.6))
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.4 sec].
+                                                  //| im.crf.ser.gz ... done [4.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.0 sec].
+                                                  //| im.crf.ser.gz ... done [2.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.1 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.0 sec].
+                                                  //| Some(2008)
+                                                  //| Some(5)
+                                                  //| Some(14)
+                                                  //| Some(0)
+                                                  //| Some(0)
+                                                  //| Some(0)
                                                   //| s0  : amr.Sentence = Sentence(2008-05-14,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4))
@@ -65,7 +71,13 @@ val testTuple = Seq((1.0, 1.0, 1.0, 0.0), (1.0, 2.0, 0.0, 5.6))
                                                   //| , 0.2 -> (1,4)),Map((0,0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (ROOT
                                                   //| ,0) -> ROOT))),Map(3 -> 0.1, 2 -> 0.0, 1 -> 0.2, 0 -> ROOT))
   val s0_copy = Sentence(testData(0)._1, testData(0)._2)
-                                                  //> s0_copy  : amr.Sentence = Sentence(2008-05-14,
+                                                  //> Some(2008)
+                                                  //| Some(5)
+                                                  //| Some(14)
+                                                  //| Some(0)
+                                                  //| Some(0)
+                                                  //| Some(0)
+                                                  //| s0_copy  : amr.Sentence = Sentence(2008-05-14,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> 2008, 2 -> 5, 3 -> 14)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4))
                                                   //| Edges:	Map((0,1) -> root, (1,3) -> dep, (3,2) -> num)
@@ -81,9 +93,9 @@ s0.amr                                            //> res0: Option[amr.AMRGraph]
                                                   //| e-entity, 0.2 -> 2008, ROOT -> ROOT),Map(0 -> (1,4), 0.0 -> (1,4), 0.1 -> (1
                                                   //| ,4), 0.2 -> (1,4)),Map((0,0.0) -> month, (0,0.1) -> day, (0,0.2) -> year, (R
                                                   //| OOT,0) -> ROOT)))
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@2b48a640
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@1e
-                                                  //| 683a3e
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@7205765b
+  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@47
+                                                  //| 987356
   val startState = expertSystem.init(s0)          //> startState  : amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(2, 3, 1, 0)
                                                   //| Children:	List()
@@ -100,28 +112,100 @@ s0.amr                                            //> res0: Option[amr.AMRGraph]
                                                   //| 0 -> ROOT
                                                   //| 
   val permissibleActions = expertSystem.permissibleActions(startState)
-                                                  //> WARNING: Found duplicate match for concept attack-01
-                                                  //| WARNING: Found duplicate match for concept cyber
+                                                  //> Some(2008)
+                                                  //| Some(5)
+                                                  //| Some(14)
+                                                  //| Some(0)
+                                                  //| Some(0)
+                                                  //| Some(0)
+                                                  //| Some("Estonia")
+                                                  //| None
+                                                  //| Some("Latvia")
+                                                  //| None
+                                                  //| Some("Lithuania")
+                                                  //| None
+                                                  //| Some(0)
+                                                  //| None
+                                                  //| Some(1)
+                                                  //| None
+                                                  //| Some(2)
+                                                  //| None
+                                                  //| Some(international)
+                                                  //| Some((government-organization :ARG0-of govern-01))
+                                                  //| Some(telecommunication)
+                                                  //| Some(technology)
+                                                  //| Some(science)
+                                                  //| Some(0)
+                                                  //| Some(1)
+                                                  //| Some(2)
+                                                  //| Some(3)
+                                                  //| Some(4)
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
-                                                  //| permissibleActions  : Array[amr.WangXueAction] = Array(NextNode: 14 -> compu
-                                                  //| ter, NextNode: 10 -> "Estonia", NextNode: 17 -> technology, NextNode: 0 -> U
-                                                  //| NKNOWN, NextNode: 4 -> fund-01, NextNode: 24 -> consider-02, NextNode: 35 ->
-                                                  //|  telecommunication, NextNode: 6 -> threaten-01, NextNode: 20 -> research-01,
-                                                  //|  NextNode: 32 -> ROOT, NextNode: 7 -> center, NextNode: 1 -> defend-01, Next
-                                                  //| Node: 27 -> person, NextNode: 13 -> country, NextNode: 11 -> strike-01, Next
-                                                  //| Node: 12 -> agree-01, NextNode: 3 -> name, NextNode: 5 -> date-entity, NextN
-                                                  //| ode: 33 -> military, NextNode: 19 -> "Lithuania", NextNode: 23 -> internatio
-                                                  //| nal, NextNode: 15 -> science, NextNode: 8 -> bolster-01, NextNode: 9 -> thin
-                                                  //| g, NextNode: 21 -> sign-01, NextNode: 37 -> government-organization, NextNod
-                                                  //| e: 36 -> govern-01, NextNode: 28 -> attack, NextNode: 16 -> -, NextNode: 18 
-                                                  //| -> civilian, NextNode: 26 -> attack-01, NextNode: 31 -> "Latvia", NextNode: 
-                                                  //| 2 -> network, NextNode: 34 -> and, NextNode: 29 -> "NATO", NextNode: 25 -> c
-                                                  //| yber, NextNode: 22 -> after, NextNode: 30 -> ally-01, DeleteNode, InsertNode
-                                                  //| : date-entity (Ref: ), InsertNode: and (Ref: ), InsertNode: person (Ref: ), 
-                                                  //| InsertNode: thing (Ref: ), InsertNode: country (Ref: ), InsertNode: network 
-                                                  //| (Ref: ), InsertNode: name (Ref: ), InsertNode: military (Ref: ), InsertNode:
-                                                  //|  govern-01 (Ref: ))
+                                                  //| Some("NATO")
+                                                  //| Some((consider-02 :ARG0 (military :name (name :op1 "NATO")) :ARG1 (attack-01
+                                                  //|  :mod cyber) :ARG2 (thing :ARG1-of (threaten-01 :ARG2 (and :op1 (network :mo
+                                                  //| d military) :op2 (network :mod civilian) :mod computer))) :time (after :op1 
+                                                  //| (strike-01 :ARG0 (attack :mod cyber) :ARG1 (government-organization :ARG0-of
+                                                  //|  (govern-01 :ARG1 (country :name (name :op1 "Estonia")))) :time (date-entity
+                                                  //|  :year 2007)))))
+                                                  //| Some(cyber)
+                                                  //| Some((attack-01 :mod cyber))
+                                                  //| None
+                                                  //| Some((threaten-01 :ARG2 (and :op1 (network :mod military) :op2 (network :mod
+                                                  //|  civilian) :mod computer)))
+                                                  //| None
+                                                  //| Some((military :name (name :op1 "NATO")))
+                                                  //| Some((and :op1 (network :mod military) :op2 (network :mod civilian) :mod com
+                                                  //| puter))
+                                                  //| Some(civilian)
+                                                  //| Some(computer)
+                                                  //| Some((network :mod military))
+                                                  //| Some((after :op1 (strike-01 :ARG0 (attack :mod cyber) :ARG1 (government-orga
+                                                  //| nization :ARG0-of (govern-01 :ARG1 (country :name (name :op1 "Estonia")))) :
+                                                  //| time (date-entity :year 2007))))
+                                                  //| None
+                                                  //| Some("Estonia")
+                                                  //| Some((government-organization :ARG0-of (govern-01 :ARG1 (country :name (name
+                                                  //|  :op1 "Estonia")))))
+                                                  //| None
+                                                  //| Some((strike-01 :ARG0 (attack :mod cyber) :ARG1 (government-organization :AR
+                                                  //| G0-of (govern-01 :ARG1 (country :name (name :op1 "Estonia")))) :time (date-e
+                                                  //| ntity :year 2007)))
+                                                  //| None
+                                                  //| Some(cyber)
+                                                  //| Some((attack :mod cyber))
+                                                  //| None
+                                                  //| Some(2007)
+                                                  //| Some(2)
+                                                  //| Some(0)
+                                                  //| Some(4)
+                                                  //| Some(3)
+                                                  //| None
+                                                  //| Some(5)
+                                                  //| None
+                                                  //| Some(1)
+                                                  //| Some(6)
+                                                  //| Some(8)
+                                                  //| Some(9)
+                                                  //| Some(7)
+                                                  //| Some(10)
+                                                  //| None
+                                                  //| Some(15)
+                                                  //| Some(14)
+                                                  //| None
+                                                  //| Some(11)
+                                                  //| None
+                                                  //| Some(13)
+                                                  //| Some(12)
+                                                  //| None
+                                                  //| Some(16)
+                                                  //| Some("NATO")
+                                                  //| Some(ally-01)
+                                                  //| None
+                                                  //| Some((sign-01 :ARG0 (person :ARG0-of ally-01 :mod (military :name (name :op1
+                                                  //|  "NATO"))) :ARG1 (agree-01 :ARG1 (fund-01 
+                                                  //| Output exceeds cutoff limit.
   var expertNextAction = expert.chooseTransition(s0, startState)
                                                   //> expertNextAction  : amr.WangXueAction = InsertNode: date-entity (Ref: 0)
   var expertNextState = expertNextAction(startState)
@@ -164,7 +248,40 @@ s0.amr                                            //> res0: Option[amr.AMRGraph]
                                                   //| 4 -> 0
                                                   //| 
   val s6 = Sentence(testData(5)._1, testData(5)._2)
-                                                  //> s6  : amr.Sentence = Sentence(On 14 May 2008 7 NATO allies signed an agreem
+                                                  //> None
+                                                  //| Some(14)
+                                                  //| Some(5)
+                                                  //| Some(2008)
+                                                  //| Some(7)
+                                                  //| Some("NATO")
+                                                  //| Some(ally-01)
+                                                  //| Some((sign-01 :ARG0 (person :quant 7 :ARG0-of ally-01 :mod (military :name 
+                                                  //| (name :op1 "NATO"))) :ARG1 (agree-01 :ARG1 (fund-01 :ARG1 (center :mod rese
+                                                  //| arch-01) :ARG0 person)) :time (date-entity :month 5 :day 14 :year 2008)))
+                                                  //| None
+                                                  //| Some((agree-01 :ARG1 (fund-01 :ARG1 (center :mod research-01) :ARG0 person)
+                                                  //| ))
+                                                  //| None
+                                                  //| Some((fund-01 :ARG1 (center :mod research-01) :ARG0 person))
+                                                  //| None
+                                                  //| Some(research-01)
+                                                  //| Some((center :mod research-01))
+                                                  //| None
+                                                  //| Some(7)
+                                                  //| Some(7)
+                                                  //| Some(7)
+                                                  //| Some(1)
+                                                  //| Some(2)
+                                                  //| Some(1)
+                                                  //| Some(0)
+                                                  //| None
+                                                  //| Some(3)
+                                                  //| None
+                                                  //| Some(4)
+                                                  //| None
+                                                  //| Some(6)
+                                                  //| Some(5)
+                                                  //| s6  : amr.Sentence = Sentence(On 14 May 2008 7 NATO allies signed an agreem
                                                   //| ent to fund a research center.,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> On, 2 -> 14, 3 -> 5, 4 -> 2008, 5 -> 7, 6 ->
                                                   //|  NATO, 7 -> allies, 8 -> signed, 9 -> an, 10 -> agreement, 11 -> to, 12 -> 
@@ -188,11 +305,8 @@ s0.amr                                            //> res0: Option[amr.AMRGraph]
                                                   //|  (2,5), 0.0.2.0 -> (6,7)),Map((0.0,0.0.0) -> quant, (ROOT,0) -> ROOT, (0.1,
                                                   //| 0.1.0) -> ARG1, (0.1.0,0.1.0.0) -> ARG1, (0.0.2,0.0.2.0) -> name, (0,0.2) -
                                                   //| > time, (0,0.1) -> ARG1, (0.0.2.0,0.0.2.0.0) -> opN, (0.2,0.2.0) -> month, 
-                                                  //| (0.0,0.0.2) -> mod, (0.1.0.0,0.1.0.0.0) -> mod, (0.2,0.2.1) -> day, (0,0.0)
-                                                  //|  -> ARG0, (0.1.0,0.0) -> ARG0, (0.0,0.0.1) -> ARG0-of, (0.2,0.2.2) -> year)
-                                                  //| )),Map(0 -> ROOT, 5 -> 0.0.0, 10 -> 0.1, 14 -> 0.1.0.0.0, 6 -> 0.0, 2 -> 0.
-                                                  //| 2.1, 12 -> 0.1.0, 7 -> 0.0.1, 3 -> 0.2.0, 8 -> 0, 4 -> 0.2.2, 15 -> 0.1.0.0
-                                                  //| ))
+                                                  //| (0.0,0.0.2) -> mod,
+                                                  //| Output exceeds cutoff limit.
   expertSystem.init(s6)                           //> res1: amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(4, 14, 13, 3, 15, 11, 5, 6, 9, 2, 12, 10, 1, 7, 8, 0)
                                                   //| Children:	List()
