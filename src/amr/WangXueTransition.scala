@@ -1,19 +1,23 @@
 package amr
 import dagger.core._
 
-case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree, 
-    previousActions: List[WangXueAction], originalInput: Option[Sentence], 
-    startingDT: DependencyTree) extends TransitionState {
+case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree,
+  previousActions: List[WangXueAction], originalInput: Option[Sentence],
+  startingDT: DependencyTree) extends TransitionState {
 
   // At each state in the search trajectory we have a currentGraph, which is initialised from the DependencyTree obtained
   // from our parser du jour. 
   override def toString: String = {
     "\nNodesToGo:\t" + nodesToProcess.toString +
       "\nChildren:\t" + childrenToProcess.toString +
-      "\nPartialGraph:\t" + currentGraph.toString + 
-      (if (originalInput.isEmpty) "" else 
-        "\nMappings:\t" + ((originalInput.get.positionToAMR ++ currentGraph.insertedNodes) map (x => x._1 + " -> " + x._2 + "\n")).mkString
-        ) +
-        previousActions.head + "\n" + previousActions.tail.head + "\n" + previousActions.tail.tail.head
+      "\nPartialGraph:\t" + currentGraph.toString +
+      (if (originalInput.isEmpty) "" else
+        "\nMappings:\t" + ((originalInput.get.positionToAMR ++ currentGraph.insertedNodes) map (x => x._1 + " -> " + x._2 + "\n")).mkString) +
+      (previousActions match {
+        case first :: second :: third :: tail => first + "\n" + second + "\n" + third + "\n"
+        case first :: second :: tail => first + "\n" + second + "\n"
+        case first :: tail => first + "\n"
+        case Nil => ""
+      })
   }
 }

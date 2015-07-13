@@ -6,6 +6,7 @@ class WangXueLossFunctionFactory(lossToUse: String) extends LossFunctionFactory[
   override def newLossFunction = lossToUse match {
     case "Penalty" => new WangXueLossFunctionActionPenalty
     case "Abs" => new WangXueLossFunctionAbs
+    case "Hamming" => new WXHammingLoss
     case _ => new WangXueLossFunction
   }
 }
