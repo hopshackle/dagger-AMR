@@ -93,6 +93,15 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
   override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state)
   override def name: String = "Insert" + concept(conceptIndex)
   override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
+  override def equals(other: Any): Boolean = {
+    other match {
+      case Insert(i, ref) => i == conceptIndex // as ref is just used for expert tracking
+      case _ => false
+    }
+  }
+  override def hashCode: Int = {
+    conceptIndex
+  }
 
 }
 
@@ -232,8 +241,8 @@ case object ReversePolarity extends WangXueAction {
     // We simply insert a new child polarity node
     val amrRef = Insert.estimatedAMRRef(state, conceptIndex("-"))
     val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), amrRef)
-    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), 
-        childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions)
+    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess),
+      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions)
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean =

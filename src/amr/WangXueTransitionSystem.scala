@@ -4,9 +4,11 @@ import dagger.core.TransitionSystem
 
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
+  val expert = new WangXueExpert
+  
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = NextEdge.all ++ NextNode.all ++ Array(DeleteNode) ++ Insert.all ++
-    Array(ReplaceHead) ++ Array(Swap)
+    Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
@@ -15,7 +17,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
-  def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = ???
+  def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = expert.chooseTransition(datum, state)
 
   def construct(state: WangXueTransitionState, datum: Sentence): Sentence = {
     Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.toAMR))

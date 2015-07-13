@@ -376,6 +376,7 @@ object AMRGraph {
   // 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
+//    val tokenisedSentence = rawSentence.split(" ")
     val amr = Graph.parse(rawAMR)
     val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
 //    wordAlignments foreach println

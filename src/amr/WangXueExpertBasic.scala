@@ -67,10 +67,11 @@ object WangXueExpertCheck {
     val rawData = AMRGraph.importFile(fileName)
     val sentences = rawData map (d => Sentence(d._1, d._2))
     val timer = new Timer()
-    timer.start
+    var timerStarted = false
     var allScores = List[Double]()
     sentences foreach { sentence =>
       val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get, iterations, movesToConsider)
+      if (!timerStarted) { timerStarted = true; timer.start; println("Starting Timer: " + timer) }
       allScores = fScore._1 :: allScores
       println(f"${fScore._1}%.2f" + "\t" + sentence.rawText)
     }

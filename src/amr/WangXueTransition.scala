@@ -13,6 +13,7 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
       "\nPartialGraph:\t" + currentGraph.toString + 
       (if (originalInput.isEmpty) "" else 
         "\nMappings:\t" + ((originalInput.get.positionToAMR ++ currentGraph.insertedNodes) map (x => x._1 + " -> " + x._2 + "\n")).mkString
-        )
+        ) +
+        previousActions.head + "\n" + previousActions.tail.head + "\n" + previousActions.tail.tail.head
   }
 }
