@@ -17,7 +17,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
   private var node, edge, insert: Boolean = false
   private var sampleSize: Int = 1
   private var count: Int = 0
-  
+
   override def clearCache: Unit = {
     node = false
     edge = false
@@ -31,7 +31,9 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
     insertDefault = new Array[Double](s)
   }
 
-  override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction], trialAction: WangXueAction): Double = {
+  override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction], expertActions: Array[WangXueAction],
+    trialAction: WangXueAction, lastExpertAction: WangXueAction): Double = {
+    
     def conceptNotInAMR(c: Int): Boolean = {
       if (c == 0) false else {
         gold.amr match {
