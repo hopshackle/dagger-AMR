@@ -103,7 +103,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeToNode = ((node, newNode), concept(conceptIndex) + "#") // label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
-      nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs -- edgesToParents(node) + newEdgeToNode,
+      nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs + newEdgeToNode,
       insertedNodes = newInsertedNodes))
   }
 
@@ -179,6 +179,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       } yield b).mkString("-")
     pathString
   }
+  def getDistanceBetween(node1: Int, node2: Int): Int = {
+    val path = getNodesBetween(node2, node1)
+    Math.max(path.size - 1, 0)
+  }
 
   override def toString: String = {
     val nodeSort = nodes.foldLeft(SortedMap[Int, String]()) { case (start, (a, b)) => start + (a -> b) }
@@ -229,6 +233,9 @@ object Sentence {
   }
   def apply(sentence: String, rawAMR: String): Sentence = {
     Sentence(sentence, DependencyTree(sentence), Some(AMRGraph(rawAMR, sentence)))
+  }
+  def apply(sentence: String, amr: Option[AMRGraph]): Sentence = {
+    Sentence(sentence, DependencyTree(sentence), amr)
   }
   def apply(sentence: String, dt: DependencyTree, amr: Option[AMRGraph]): Sentence = {
     Sentence(sentence, dt, amr, positionToAMR(amr, dt))
@@ -376,12 +383,12 @@ object AMRGraph {
   // 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-//    val tokenisedSentence = rawSentence.split(" ")
+    //    val tokenisedSentence = rawSentence.split(" ")
     val amr = Graph.parse(rawAMR)
     val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-//    wordAlignments foreach println
+    //    wordAlignments foreach println
     val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
-//    spanAlignments foreach println
+    //    spanAlignments foreach println
     val nodes = amr.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
 
     val nodeSpans = (for {

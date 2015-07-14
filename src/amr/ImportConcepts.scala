@@ -14,19 +14,26 @@ object ImportConcepts {
   val quote = """"""".r
   val numbers = "[0-9.,]".r
 
-  lazy val relationStrings = loadRelations(amrFile) + "polarity"
+  lazy val relationStrings = loadRelations + "polarity"
   lazy val relationMaster = (for {
     (relation, index) <- relationStrings zipWithIndex
   } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
   lazy val relationStringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
 
-  lazy val conceptStrings = loadConcepts(amrFile) + "-"
+  lazy val allSentencesAndAMR =  importFile(amrFile)
+  lazy val allAMR = allSentencesAndAMR map {case (sentence, amr) => AMRGraph(amr, sentence)}
+  lazy val conceptStrings = loadConcepts + "-"
   lazy val conceptMaster = (for {
     (concept, index) <- conceptStrings zipWithIndex
   } yield ((index + 1) -> concept)).toMap + (0 -> "UNKNOWN")
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
-  lazy val insertableConcepts = loadInsertableConcepts(amrFile)
+  lazy val conceptsPerLemma = loadConceptsPerLemma
+  lazy val universalConcepts = Set("and", "date-entity") map conceptIndex
+  lazy val universalRelations = Set("year", "month", "day") map relationIndex
+  lazy val edgesPerLemma = loadEdgesPerLemma
+
+  lazy val insertableConcepts = loadInsertableConcepts
 
   def initialise(fileName: String): Unit = {
     amrFile = fileName
@@ -37,27 +44,25 @@ object ImportConcepts {
   def conceptIndex(value: String) = conceptStringToIndex.getOrElse(value, 0)
   def relationIndex(value: String) = relationStringToIndex.getOrElse(value, 0)
 
-  private def loadConcepts(amrFile: String): Set[String] = {
-    val allAMR = importFile(amrFile)
+  private def loadConcepts: Set[String] = {
     (for {
-      (sentence, amrString) <- allAMR
-      concept <- AMRGraph(amrString, sentence).nodes.values
+      graph <- allAMR
+      concept <- graph.nodes.values
       //      if (quote findFirstIn concept) == None  // ignore anything with quotes
       if numbers.replaceAllIn(concept, "") != "" // and anything that is purely numeric
     } yield concept).toSet
 
   }
 
-  private def loadRelations(amrFile: String): Set[String] = {
-    val allAMR = importFile(amrFile)
+  private def loadRelations: Set[String] = {
     (for {
-      (sentence, amrString) <- allAMR
-      relation <- AMRGraph(amrString, sentence).arcs.values
+      graph <- allAMR
+      relation <- graph.arcs.values
     } yield relation).toSet
 
   }
 
-  private def loadInsertableConcepts(amrFile: String): Set[String] = {
+  private def loadInsertableConcepts: Set[String] = {
     val conceptFileExists = {
       try {
         val fr = new FileReader(amrFile + "_ic")
@@ -69,10 +74,9 @@ object ImportConcepts {
 
     if (!conceptFileExists) {
       val expert = new WangXueExpert
-      val allAMR = importFile(amrFile)
       val insertableConcepts = (for {
-        (sentence, amrString) <- allAMR
-        val s = Sentence(sentence, amrString)
+       ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
+        val s = Sentence(sentence, Some(amr))
         val processedSentence = RunDagger.sampleTrajectory(s, "", expert)
         (dt, amr) <- processedSentence.dependencyTree.insertedNodes
         val name = s.amr.get.nodes(amr)
@@ -84,5 +88,20 @@ object ImportConcepts {
     } else {
       Source.fromFile(amrFile + "_ic").getLines().toSet
     }
+  }
+
+  private def loadConceptsPerLemma: Map[String, Set[Int]] = {
+    (for {
+      (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
+      concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
+      lemma <- DependencyTree(sentence).nodeLemmas.values filter (numbers.replaceAllIn(_, "") != "")
+    } yield (lemma -> concepts)).toMap
+  }
+    private def loadEdgesPerLemma: Map[String, Set[Int]] = {
+    (for {
+      (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
+      relations = graph.arcs.values.toSet filter (numbers.replaceAllIn(_, "") != "") map relationIndex
+      lemma <- DependencyTree(sentence).nodeLemmas.values filter (numbers.replaceAllIn(_, "") != "")
+    } yield (lemma -> relations)).toMap
   }
 }

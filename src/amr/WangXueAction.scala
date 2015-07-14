@@ -1,7 +1,7 @@
 package amr
 import dagger.core._
 
-import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, relationIndex, conceptIndex, insertableConcepts }
+import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, relationIndex, conceptIndex, insertableConcepts, conceptsPerLemma, edgesPerLemma }
 
 abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
   def isPermissible(state: WangXueTransitionState): Boolean
@@ -51,7 +51,6 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
 }
 
 object NextNode {
-
   def all(): Array[WangXueAction] = {
     (conceptMaster.keys map (i => NextNode(i))).toArray
   }
@@ -195,8 +194,10 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     !disableReattach &&
       state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
       !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
-      !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head)
+      !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
+      (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) < 7)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
+    // And also only consider attachment points within a distance of 4 in the current graph
   }
 }
 
