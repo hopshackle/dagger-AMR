@@ -197,7 +197,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
       (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) < 7)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
-    // And also only consider attachment points within a distance of 4 in the current graph
+    // And also only consider attachment points range in the current graph
   }
 }
 
