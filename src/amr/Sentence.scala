@@ -51,7 +51,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
   nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
-  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)]) extends Graph[Int] {
+  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: List[Int]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -81,7 +81,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
     val edgesToRemove = edgesToParents(node)
-    this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove)
+    this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove, deletedNodes = node :: this.deletedNodes)
   }
 
   def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
@@ -103,7 +103,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeToNode = ((node, newNode), concept(conceptIndex) + "#") // label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
-      nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs -- edgesToParents(node) + newEdgeToNode,
+      nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs + newEdgeToNode,
       insertedNodes = newInsertedNodes))
   }
 
@@ -179,6 +179,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       } yield b).mkString("-")
     pathString
   }
+  def getDistanceBetween(node1: Int, node2: Int): Int = {
+    val path = getNodesBetween(node2, node1)
+    Math.max(path.size - 1, 0)
+  }
 
   override def toString: String = {
     val nodeSort = nodes.foldLeft(SortedMap[Int, String]()) { case (start, (a, b)) => start + (a -> b) }
@@ -189,7 +193,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       "\nEdges:\t" + edgeSort.toString +
       "\nInsertedNodes:\t" + insertedNodes.toString +
       "\nMergedNodes:\t" + mergedNodes.toString +
-      "\nSwappedArcs:\t" + swappedArcs.toString
+      "\nSwappedArcs:\t" + swappedArcs.toString +
+      "\nDeletedNodes:\t" + deletedNodes.toString
   }
 
   def toAMR: AMRGraph = {
@@ -336,7 +341,7 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set())
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set(), List())
   }
 
   def convertMonth(input: Option[String]): Option[String] = {
@@ -376,12 +381,12 @@ object AMRGraph {
   // 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-//    val tokenisedSentence = rawSentence.split(" ")
+    //    val tokenisedSentence = rawSentence.split(" ")
     val amr = Graph.parse(rawAMR)
     val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-//    wordAlignments foreach println
+    //    wordAlignments foreach println
     val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
-//    spanAlignments foreach println
+    //    spanAlignments foreach println
     val nodes = amr.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
 
     val nodeSpans = (for {

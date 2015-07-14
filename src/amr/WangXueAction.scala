@@ -194,8 +194,10 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   def isPermissible(state: WangXueTransitionState): Boolean = {
     !disableReattach &&
       state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
+      state.currentGraph.nodes.contains(newNode) && 
       !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
-      !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head)
+      !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
+      (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) < 7)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
   }
 }
