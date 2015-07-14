@@ -16,7 +16,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
     val permissibleConcepts = universalConcepts ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => conceptsPerLemma.getOrElse(lemma, Set()) }).toSet
     val nextNodeActions = permissibleConcepts map (NextNode(_))
-    val permissibleEdges = (state.startingDT.nodeLemmas flatMap { case (node, lemma) => edgesPerLemma.getOrElse(lemma, Set()) }).toSet
+    val permissibleEdges = universalRelations ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => edgesPerLemma.getOrElse(lemma, Set()) }).toSet
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
     val insertActions = Insert.all filter {case Insert(nodeIndex, ref) => permissibleConcepts contains nodeIndex}
     actions ++ reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions
