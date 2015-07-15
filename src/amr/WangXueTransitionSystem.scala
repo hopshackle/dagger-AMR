@@ -13,12 +13,19 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
-    val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
+    //   val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
+
+    val reattachActions = (if (state.childrenToProcess.isEmpty) {
+      Set[Reattach]()
+    } else {
+      val possibleNodes = state.currentGraph.nodes.keySet - state.nodesToProcess.head -- state.currentGraph.subGraph(state.childrenToProcess.head)
+      possibleNodes filter (state.currentGraph.getDistanceBetween(_, state.childrenToProcess.head) < 7) map (i => Reattach(i))
+    }).toArray
     val permissibleConcepts = universalConcepts ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => conceptsPerLemma.getOrElse(lemma, Set()) }).toSet
     val nextNodeActions = permissibleConcepts map (NextNode(_))
     val permissibleEdges = universalRelations ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => edgesPerLemma.getOrElse(lemma, Set()) }).toSet
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
-    val insertActions = Insert.all filter {case Insert(nodeIndex, ref) => permissibleConcepts contains nodeIndex}
+    val insertActions = Insert.all filter { case Insert(nodeIndex, ref) => permissibleConcepts contains nodeIndex }
     actions ++ reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions
   }
 

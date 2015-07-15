@@ -181,7 +181,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
   def getDistanceBetween(node1: Int, node2: Int): Int = {
     val path = getNodesBetween(node2, node1)
-    Math.max(path.size - 1, 0)
+    if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
   }
 
   override def toString: String = {
@@ -321,19 +321,19 @@ object DependencyTree {
     val parseTree = monthFiddledTree zipWithIndex
 
     val nodes = (for {
-      (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), Some(form), _, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
     } yield (index -> form)).toMap + (0 -> "ROOT")
 
     val arcs = (for {
-      (ConllToken(Some(index), _, lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), _, _, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
     } yield ((parentIndex, index) -> deprel.getOrElse("UNK"))).toMap
 
     val nodeSpans = (for {
-      (ConllToken(Some(index), _, lemma, pos, cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
     } yield (index -> (wordCount + 1, wordCount + 2))).toMap
 
     val nodeLemmas = (for {
-      (ConllToken(Some(index), Some(form), Some(lemma), pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), _, _, _, _, Some(lemma), _, _, _, _), wordCount) <- parseTree
     } yield (index -> lemma)).toMap
 
     val nodePOS = (for {
