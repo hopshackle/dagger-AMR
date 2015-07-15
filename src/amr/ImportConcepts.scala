@@ -31,7 +31,7 @@ object ImportConcepts {
 
   lazy val conceptsPerLemma = loadConceptsPerLemma
   lazy val universalConcepts = Set("and", "date-entity", "UNKNOWN", "ROOT", "name") map conceptIndex
-  lazy val universalRelations = Set("year", "month", "day", "UNKNOWN", "ROOT") map relationIndex
+  lazy val universalRelations = Set("year", "month", "day", "UNKNOWN", "ROOT", "quant", "poss") map relationIndex
   lazy val edgesPerLemma = loadEdgesPerLemma
 
   lazy val insertableConcepts = loadInsertableConcepts

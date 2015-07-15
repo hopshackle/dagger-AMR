@@ -9,7 +9,8 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   val expert = new WangXueExpert
 
   // We currently just use the whole flipping dictionary to define the full set of actions
-  lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
+  lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++
+    Insert.all ++ NextNode.all ++ NextEdge.all
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
@@ -26,7 +27,8 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     val permissibleEdges = universalRelations ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => edgesPerLemma.getOrElse(lemma, Set()) }).toSet
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
     val insertActions = Insert.all filter { case Insert(nodeIndex, ref) => permissibleConcepts contains nodeIndex }
-    actions ++ reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++
+      Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
