@@ -3,7 +3,7 @@ package amr
 
 import edu.cmu.lti.nlp.amr._
 import scala.collection.SortedMap
-import amr.ImportConcepts.{ concept, relation }
+import amr.ImportConcepts.{ concept, relation, conceptIndex }
 
 abstract class Graph[K] {
   def nodes: Map[K, String]
@@ -67,11 +67,12 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 
   def labelNode(node: Int, label: String): DependencyTree = {
     // We account for the fact that if we have no idea of the concept, then using the actual word might just work
+    val parentNodeIsName = parentsOf(node) contains conceptIndex("name")
+    val quote = """""""
     val oldValue = nodes.getOrElse(node, "UNKNOWN")
     val newLabel = if (label == "UNKNOWN") {
-      //      if (numbers.replaceAllIn(oldValue, "") == "") oldValue // purely numeric
-      //     else """"""" + oldValue + """"""" // add quotes as we assume this is a name
-      oldValue
+      // Add quotes if the parent node is "name"
+      if (parentNodeIsName) quote + oldValue + quote else oldValue
     } else label
     val newNodes = nodes + (node -> newLabel)
     this.copy(nodes = newNodes)

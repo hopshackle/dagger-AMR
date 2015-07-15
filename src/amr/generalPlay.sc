@@ -56,9 +56,11 @@ object generalPlay {
   redDate2.replaceAllIn("20011201", m => (m group 1) + " " + (m group 2) + " " + (m group 3))
                                                   //> res16: String = 2001 12 01
 
-"""\.""".r.replaceAllIn("Hello.0.0", "-")         //> res17: String = Hello-0-0
+"""[.-]""".r.replaceAllIn("He-llo.0.0", "0")      //> res17: String = He0llo0000
 "Hell'o".toLowerCase.replaceAll("""[^0-9a-zA-Z\- ]""", "")
                                                   //> res18: String = hello
   val b1 = List((1, "one"), (2, "two"), (3, "three"), (1,"oneA"))
                                                   //> b1  : List[(Int, String)] = List((1,one), (2,two), (3,three), (1,oneA))
+ val tallinn = """"Tallinn""""                    //> tallinn  : String = "Tallinn"
+ val test = " [label = " +  tallinn + "]"         //> test  : String = " [label = "Tallinn"]"
 }

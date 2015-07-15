@@ -5,12 +5,14 @@ import dagger.core._
 
 case class GraphViz(outputFile: String, graph: AMRGraph) {
   val quote = """""""
+  val bigQ = """"""
+  def clean = """[.-]""".r
   val file = new FileWriter(outputFile, false)
   val string = new StringBuffer("digraph G {\n")
   // We replace . with - due to a graphviz issue that incorrectly parses labels with more than one .
-  string.append((graph.nodes map { case (ref, concept) => """\.""".r.replaceAllIn(ref, "-") + "[label = " + concept + "]" }).mkString("\n"))
+  string.append((graph.nodes map { case (ref, concept) => clean.replaceAllIn(ref, "") + " [label = " +  clean.replaceAllIn(concept, "") + "]" }).mkString("\n"))
   string.append("\n")
-  string.append((graph.arcs map { case ((from, to), label) => """\.""".r.replaceAllIn(from, "-") +  " -> " + """\.""".r.replaceAllIn(to, "-") + " [label = " + label + "]" }).mkString("\n"))
+  string.append((graph.arcs map { case ((from, to), label) => clean.replaceAllIn(from, "") +  " -> " + clean.replaceAllIn(to, "") + " [label = " + clean.replaceAllIn(label, "") + "]" }).mkString("\n"))
   string.append("\n}\n")
   file.write(string.toString)
   file.close()
