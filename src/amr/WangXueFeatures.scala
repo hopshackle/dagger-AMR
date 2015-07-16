@@ -1,9 +1,9 @@
 package amr
-import scala.collection.Map
 import ImportConcepts.{ concept }
 import java.io._
 import scala.util.Random
 import dagger.core._
+
 
 class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
   override def newFeatureFunction: FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] = {
@@ -13,8 +13,6 @@ class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) 
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
-  import scala.collection.JavaConversions.mapAsScalaMap
-
   val debug = false
   val includeChildren = false
   val random = new Random()
@@ -22,7 +20,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   var cachedFeatures = Map[Int, Double]()
   var cachedState: WangXueTransitionState = null
 
-  def add(map: java.util.HashMap[Int, Double], feat: String, value: Double = 1.0) = {
+  def add(map: scala.collection.mutable.Map[Int, Double], feat: String, value: Double = 1.0) = {
     map.put(dict.index(feat), value)
   }
 
@@ -58,7 +56,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
     val quadraticTurbo = options.contains("--quadratic")
-    val hmap = new java.util.HashMap[Int, Double]
+    val hmap = scala.collection.mutable.Map[Int, Double]()
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
     assert(sigmaWord != "!!??", "Sigma not found: " + state)
@@ -154,11 +152,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         }
       }
     }
-    hmap
+    hmap.toMap
   }
 
   def sigmaBetaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
-    val hmap = new java.util.HashMap[Int, Double]
+    val hmap = scala.collection.mutable.Map[Int, Double]()
     val quadraticTurbo = options.contains("--quadratic")
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
@@ -231,7 +229,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   }
 
   def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Double] = {
-    val hmap = new java.util.HashMap[Int, Double]
+    val hmap = scala.collection.mutable.Map[Int, Double]()
     val quadraticTurbo = options.contains("--quadratic")
     val beta = state.childrenToProcess.head
     val sigma = state.nodesToProcess.head
@@ -286,7 +284,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     }
     // end WangXue binaries
 
-    hmap
+    hmap.toMap
   }
 
   def quadraticCombination(linearFeatures: Map[Int, Double]): Map[Int, Double] = {

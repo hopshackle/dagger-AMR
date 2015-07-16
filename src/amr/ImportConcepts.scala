@@ -60,7 +60,6 @@ object ImportConcepts {
       graph <- allAMR
       relation <- graph.arcs.values
     } yield relation).toSet
-
   }
 
   private def loadInsertableConcepts: Set[String] = {

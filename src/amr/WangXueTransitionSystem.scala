@@ -22,11 +22,12 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
       val possibleNodes = state.currentGraph.nodes.keySet - state.nodesToProcess.head -- state.currentGraph.subGraph(state.childrenToProcess.head)
       possibleNodes filter (state.currentGraph.getDistanceBetween(_, state.childrenToProcess.head) < 7) map (i => Reattach(i))
     }).toArray
-    val permissibleConcepts = universalConcepts ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => conceptsPerLemma.getOrElse(lemma, Set()) }).toSet
+    val permissibleConceptsInSentence = universalConcepts ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => conceptsPerLemma.getOrElse(lemma, Set()) }).toSet
+    val permissibleConcepts = universalConcepts ++ conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(state.nodesToProcess.head, "UNKNOWN"), Set())
     val nextNodeActions = permissibleConcepts map (NextNode(_))
     val permissibleEdges = universalRelations ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => edgesPerLemma.getOrElse(lemma, Set()) }).toSet
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
-    val insertActions = Insert.all filter { case Insert(nodeIndex, ref) => permissibleConcepts contains nodeIndex }
+    val insertActions = Insert.all filter { case Insert(nodeIndex, ref) => permissibleConceptsInSentence contains nodeIndex }
     reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++
       Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
   }
