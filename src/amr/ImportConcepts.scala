@@ -13,6 +13,7 @@ object ImportConcepts {
   var amrFile: String = "C:\\AMR\\AMR2.txt"
   val quote = """"""".r
   val numbers = "[0-9.,]".r
+  val commonLemmas = List("the", "be", "and", "of", "to", "a", "in", "that", "'s", "have", "for", "on", "by", "with", "from", "it")
 
   lazy val relationStrings = loadRelations + "polarity"
   lazy val relationMaster = (for {
@@ -20,8 +21,8 @@ object ImportConcepts {
   } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
   lazy val relationStringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
 
-  lazy val allSentencesAndAMR =  importFile(amrFile)
-  lazy val allAMR = allSentencesAndAMR map {case (sentence, amr) => AMRGraph(amr, sentence)}
+  lazy val allSentencesAndAMR = importFile(amrFile)
+  lazy val allAMR = allSentencesAndAMR map { case (sentence, amr) => AMRGraph(amr, sentence) }
   lazy val conceptStrings = loadConcepts + "-"
   lazy val conceptMaster = (for {
     (concept, index) <- conceptStrings zipWithIndex
@@ -29,8 +30,8 @@ object ImportConcepts {
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   lazy val conceptsPerLemma = loadConceptsPerLemma
-  lazy val universalConcepts = Set("and", "date-entity", "UNKNOWN") map conceptIndex
-  lazy val universalRelations = Set("year", "month", "day", "UNKNOWN") map relationIndex
+  lazy val universalConcepts = Set("and", "date-entity", "UNKNOWN", "ROOT", "name") map conceptIndex
+  lazy val universalRelations = Set("year", "month", "day", "UNKNOWN", "ROOT", "quant", "poss") map relationIndex
   lazy val edgesPerLemma = loadEdgesPerLemma
 
   lazy val insertableConcepts = loadInsertableConcepts
@@ -75,7 +76,7 @@ object ImportConcepts {
     if (!conceptFileExists) {
       val expert = new WangXueExpert
       val insertableConcepts = (for {
-       ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
+        ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
         val s = Sentence(sentence, Some(amr))
         val processedSentence = RunDagger.sampleTrajectory(s, "", expert)
         (dt, amr) <- processedSentence.dependencyTree.insertedNodes
@@ -91,17 +92,27 @@ object ImportConcepts {
   }
 
   private def loadConceptsPerLemma: Map[String, Set[Int]] = {
-    (for {
+    val initial = (for {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
       lemma <- DependencyTree(sentence).nodeLemmas.values filter (numbers.replaceAllIn(_, "") != "")
-    } yield (lemma -> concepts)).toMap
+      if !(commonLemmas contains lemma)
+    } yield (lemma, concepts)).toList
+
+    val grouped = initial.groupBy(_._1)
+    val cleaned = grouped.mapValues(_.map(_._2))
+    cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.toSet) }
   }
-    private def loadEdgesPerLemma: Map[String, Set[Int]] = {
-    (for {
+
+  private def loadEdgesPerLemma: Map[String, Set[Int]] = {
+    val initial = (for {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       relations = graph.arcs.values.toSet filter (numbers.replaceAllIn(_, "") != "") map relationIndex
       lemma <- DependencyTree(sentence).nodeLemmas.values filter (numbers.replaceAllIn(_, "") != "")
-    } yield (lemma -> relations)).toMap
+      if !(commonLemmas contains lemma)
+    } yield (lemma -> relations)).toList
+    val grouped = initial.groupBy(_._1)
+    val cleaned = grouped.mapValues(_.map(_._2))
+    cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.toSet) }
   }
 }

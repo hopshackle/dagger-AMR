@@ -3,7 +3,7 @@ package amr
 
 import edu.cmu.lti.nlp.amr._
 import scala.collection.SortedMap
-import amr.ImportConcepts.{ concept, relation }
+import amr.ImportConcepts.{ concept, relation, conceptIndex }
 
 abstract class Graph[K] {
   def nodes: Map[K, String]
@@ -67,11 +67,12 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 
   def labelNode(node: Int, label: String): DependencyTree = {
     // We account for the fact that if we have no idea of the concept, then using the actual word might just work
+    val parentNodeIsName = parentsOf(node) contains conceptIndex("name")
+    val quote = """""""
     val oldValue = nodes.getOrElse(node, "UNKNOWN")
     val newLabel = if (label == "UNKNOWN") {
-      //      if (numbers.replaceAllIn(oldValue, "") == "") oldValue // purely numeric
-      //     else """"""" + oldValue + """"""" // add quotes as we assume this is a name
-      oldValue
+      // Add quotes if the parent node is "name"
+      if (parentNodeIsName) quote + oldValue + quote else oldValue
     } else label
     val newNodes = nodes + (node -> newLabel)
     this.copy(nodes = newNodes)
@@ -181,7 +182,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
   def getDistanceBetween(node1: Int, node2: Int): Int = {
     val path = getNodesBetween(node2, node1)
-    Math.max(path.size - 1, 0)
+    if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
   }
 
   override def toString: String = {
@@ -321,19 +322,19 @@ object DependencyTree {
     val parseTree = monthFiddledTree zipWithIndex
 
     val nodes = (for {
-      (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), Some(form), _, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
     } yield (index -> form)).toMap + (0 -> "ROOT")
 
     val arcs = (for {
-      (ConllToken(Some(index), _, lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), _, _, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
     } yield ((parentIndex, index) -> deprel.getOrElse("UNK"))).toMap
 
     val nodeSpans = (for {
-      (ConllToken(Some(index), _, lemma, pos, cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
     } yield (index -> (wordCount + 1, wordCount + 2))).toMap
 
     val nodeLemmas = (for {
-      (ConllToken(Some(index), Some(form), Some(lemma), pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), _, _, _, _, Some(lemma), _, _, _, _), wordCount) <- parseTree
     } yield (index -> lemma)).toMap
 
     val nodePOS = (for {

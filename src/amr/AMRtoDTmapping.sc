@@ -6,15 +6,15 @@ object AMRtoDTmapping {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [2.3 sec].
+                                                  //| hPCFG.ser.gz ... done [1.7 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [6.3 sec].
+                                                  //| im.crf.ser.gz ... done [4.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [4.8 sec].
+                                                  //| im.crf.ser.gz ... done [2.0 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [6.3 sec].
+                                                  //| tsim.crf.ser.gz ... done [3.9 sec].
                                                   //| dt  : amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> police, 3 -> want, 4 -> to, 5 -> a
                                                   //| rrest, 6 -> Michael, 7 -> Karras, 8 -> in, 9 -> Singapore)
@@ -25,7 +25,13 @@ object AMRtoDTmapping {
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-
+                                                  //| DeletedNodes:	List()
+  dt.nodeLemmas                                   //> res0: Map[Int,String] = Map(5 -> arrest, 1 -> the, 6 -> Michael, 9 -> Singap
+                                                  //| ore, 2 -> police, 7 -> Karras, 3 -> want, 8 -> in, 4 -> to)
+dt.nodePOS                                        //> res1: Map[Int,String] = Map(5 -> VB, 1 -> DT, 6 -> NNP, 9 -> NNP, 2 -> NN, 7
+                                                  //|  -> NNP, 3 -> VBP, 8 -> IN, 4 -> TO)
+dt.nodeNER                                        //> res2: Map[Int,String] = Map(5 -> O, 1 -> O, 6 -> PERSON, 9 -> LOCATION, 2 ->
+                                                  //|  O, 7 -> PERSON, 3 -> O, 8 -> O, 4 -> O)
   dt.nodes foreach (_ match { case (node, word) => println(s"$node -> $word has parents ${dt.edgesToParents(node)}") })
                                                   //> 0 -> ROOT has parents List()
                                                   //| 5 -> arrest has parents List((3,5))
@@ -48,26 +54,26 @@ object AMRtoDTmapping {
                                                   //| 3 -> want has depth 1
                                                   //| 8 -> in has depth 4
                                                   //| 4 -> to has depth 3
-  dt.getNodesBetween(4, 9)                        //> res0: List[Int] = List(9, 8, 7, 5, 4)
-  dt.getPathBetween(4, 9)                         //> res1: String = TO-aux-VB-dobj-NNP-prep-IN-pobj-NNP
-  dt.getNodesBetween(9, 4)                        //> res2: List[Int] = List(4, 5, 7, 8, 9)
-  dt.getPathBetween(9, 4)                         //> res3: String = NNP-pobj-IN-prep-NNP-dobj-VB-aux-TO
-  dt.getNodesBetween(0, 3)                        //> res4: List[Int] = List(3, 0)
-  dt.getPathBetween(0, 3)                         //> res5: String = XX-root-VBP
-  dt.getNodesBetween(2, 8)                        //> res6: List[Int] = List(8, 7, 5, 3, 2)
-  dt.getPathBetween(2, 8)                         //> res7: String = NN-nsubj-VBP-xcomp-VB-dobj-NNP-prep-IN
-  dt.getPathBetween(4, 4)                         //> res8: String = TO-ERR
+  dt.getNodesBetween(4, 9)                        //> res3: List[Int] = List(9, 8, 7, 5, 4)
+  dt.getPathBetween(4, 9)                         //> res4: String = TO-aux-VB-dobj-NNP-prep-IN-pobj-NNP
+  dt.getNodesBetween(9, 4)                        //> res5: List[Int] = List(4, 5, 7, 8, 9)
+  dt.getPathBetween(9, 4)                         //> res6: String = NNP-pobj-IN-prep-NNP-dobj-VB-aux-TO
+  dt.getNodesBetween(0, 3)                        //> res7: List[Int] = List(3, 0)
+  dt.getPathBetween(0, 3)                         //> res8: String = XX-root-VBP
+  dt.getNodesBetween(2, 8)                        //> res9: List[Int] = List(8, 7, 5, 3, 2)
+  dt.getPathBetween(2, 8)                         //> res10: String = NN-nsubj-VBP-xcomp-VB-dobj-NNP-prep-IN
+  dt.getPathBetween(4, 4)                         //> res11: String = TO-ERR
   
-  dt.subGraph(4)                                  //> res9: Set[Int] = Set(4)
-  dt.subGraph(9)                                  //> res10: Set[Int] = Set(9)
-  dt.subGraph(0)                                  //> res11: Set[Int] = Set(0, 5, 1, 6, 9, 2, 7, 3, 8, 4)
-  dt.subGraph(3)                                  //> res12: Set[Int] = Set(5, 1, 6, 9, 2, 7, 3, 8, 4)
+  dt.subGraph(4)                                  //> res12: Set[Int] = Set(4)
+  dt.subGraph(9)                                  //> res13: Set[Int] = Set(9)
+  dt.subGraph(0)                                  //> res14: Set[Int] = Set(0, 5, 1, 6, 9, 2, 7, 3, 8, 4)
+  dt.subGraph(3)                                  //> res15: Set[Int] = Set(5, 1, 6, 9, 2, 7, 3, 8, 4)
   
-  dt.getDistanceBetween(4, 9)                     //> res13: Int = 4
-  dt.getDistanceBetween(9, 4)                     //> res14: Int = 4
-  dt.getDistanceBetween(0, 3)                     //> res15: Int = 1
-  dt.getDistanceBetween(2, 8)                     //> res16: Int = 4
-  dt.getDistanceBetween(4, 4)                     //> res17: Int = 0
+  dt.getDistanceBetween(4, 9)                     //> res16: Int = 4
+  dt.getDistanceBetween(9, 4)                     //> res17: Int = 4
+  dt.getDistanceBetween(0, 3)                     //> res18: Int = 1
+  dt.getDistanceBetween(2, 8)                     //> res19: Int = 4
+  dt.getDistanceBetween(4, 4)                     //> res20: Int = 0
   val testData = AMRGraph.importFile("C:\\AMR\\AMR2.txt")
                                                   //> testData  : IndexedSeq[(String, String)] = Vector((2008-05-14,"(d / date-ent
                                                   //| ity :month 5 :day 14 :year 2008) "), (Estonia (EE); Latvia (LV); Lithuania (
@@ -92,7 +98,7 @@ object AMRtoDTmapping {
                                                   //| 1)) :purpose (b / bolster-01 :ARG0 p :ARG1 (d / defend-01 :prep-against (a3 
                                                   //| / attack :mod (c2 / cyber)))))))))
   DependencyTree("Estonia (EE); Latvia (LV); Lithuania (LT); Germany (DE): Italy (IT); Spain (ES); Slovakia (SK); United States (US)")
-                                                  //> res18: amr.DependencyTree = 
+                                                  //> res21: amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
                                                   //| > Lithuania, 13 -> LT, 16 -> Germany, 18 -> DE, 21 -> Italy, 23 -> IT, 26 -
                                                   //| > Spain, 28 -> ES, 31 -> Slovakia, 33 -> SK, 36 -> United, 37 -> States, 39
@@ -108,6 +114,7 @@ object AMRtoDTmapping {
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List()
   val s1 = Sentence(testData(1)._1, testData(1)._2)
                                                   //> s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT),
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
@@ -118,16 +125,17 @@ object AMRtoDTmapping {
                                                   //| ,11) -> dep, (11,13) -> appos)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 0
-                                                  //| .1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.0.0 
-                                                  //| -> "Latvia", 0 -> and, 0.2 -> country, ROOT -> ROOT, 0.2.0.0 -> "Lithuania"
-                                                  //| ),Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0 -
-                                                  //| > (1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6)),
-                                                  //| Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1
-                                                  //| .0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0
-                                                  //| .2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0,
-                                                  //|  1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
-  s1.positionToAMR                                //> res19: Map[Int,String] = Map(11 -> 0.2.0.0, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 
+                                                  //| 0.1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.0.0
+                                                  //|  -> "Latvia", 0 -> and, 0.2 -> country, ROOT -> ROOT, 0.2.0.0 -> "Lithuania
+                                                  //| "),Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0 
+                                                  //| -> (1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6))
+                                                  //| ,Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.
+                                                  //| 1.0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,
+                                                  //| 0.2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0
+                                                  //| , 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
+  s1.positionToAMR                                //> res22: Map[Int,String] = Map(11 -> 0.2.0.0, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -
                                                   //| > ROOT)
   val s2 = Sentence(testData(3)._1, testData(3)._2)
                                                   //> WARNING: Found duplicate match for concept attack-01
@@ -153,21 +161,22 @@ object AMRtoDTmapping {
                                                   //| -> pobj)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name,
-                                                  //|  0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0 
-                                                  //| -> civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3.
-                                                  //| 0.1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> att
-                                                  //| ack, 0.3.0 -> strike-01, 0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 -
-                                                  //| > computer, 0 -> consider-02, 0.3.0.1 -> government-organization, 0.2 -> th
-                                                  //| ing, 0.3.0.2 -> date-entity, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0.
-                                                  //| 2.0.0 -> and, 0.3.0.1.0.0.0 -> name, 0.3.0.0.0 -> cyber),Map(0.1 -> (4,5), 
-                                                  //| 0.0.0 -> (1,2), 0.3.0.1.0.0 -> (15,16), 0.2.0.0.0 -> (12,13), 0.1.0 -> (3,4
-                                                  //| ), 0.2.0.0.1.0 -> (10,11), 0.3.0.2.0 -> (23,24), 0.0 -> (8,9), 0.0.0.0 -> (
-                                                  //| 1,2), 0.2.0 -> (6,7), 0.3.0.0 -> (21,22), 0.3.0 -> (18,19), 0.3 -> (13,14),
-                                                  //|  0.2.0.0.2 -> (11,12), 0 -> (2,3), 0.3.0.1 -> (16,17), 0.2 -> (6,7), 0.3.0.
-                                                  //| 2 -> (23,24), 0.3.0.1.0.0.0.0 -> (15,16),
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name
+                                                  //| , 0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0
+                                                  //|  -> civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3
+                                                  //| .0.1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> at
+                                                  //| tack, 0.3.0 -> strike-01, 0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 
+                                                  //| -> computer, 0 -> consider-02, 0.3.0.1 -> government-organization, 0.2 -> t
+                                                  //| hing, 0.3.0.2 -> date-entity, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0
+                                                  //| .2.0.0 -> and, 0.3.0.1.0.0.0 -> name, 0.3.0.0.0 -> cyber),Map(0.1 -> (4,5),
+                                                  //|  0.0.0 -> (1,2), 0.3.0.1.0.0 -> (15,16), 0.2.0.0.0 -> (12,13), 0.1.0 -> (3,
+                                                  //| 4), 0.2.0.0.1.0 -> (10,11), 0.3.0.2.0 -> (23,24), 0.0 -> (8,9), 0.0.0.0 -> 
+                                                  //| (1,2), 0.2.0 -> (6,7), 0.3.0.0 -> (21,22), 0.3.0 -> (18,19), 0.3 -> (13,14)
+                                                  //| , 0.2.0.0.2 -> (11,12), 0 -> (2,3), 0.3.0.1 -> (16,17), 0.2 -> (6,7), 0.3.0
+                                                  //| .2 -> (23,24), 0
                                                   //| Output exceeds cutoff limit.
-  s2.positionToAMR                                //> res20: Map[Int,String] = Map(0 -> ROOT, 10 -> 0.2.0.0.1.0, 20 -> 0.3.0.0.0,
+  s2.positionToAMR                                //> res23: Map[Int,String] = Map(0 -> ROOT, 10 -> 0.2.0.0.1.0, 20 -> 0.3.0.0.0,
                                                   //|  1 -> 0.0.0.0, 6 -> 0.2.0, 21 -> 0.3.0.0, 9 -> 0.2.0.0, 13 -> 0.3, 2 -> 0, 
                                                   //| 12 -> 0.2.0.0.0, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.2.0.0.2, 2
                                                   //| 3 -> 0.3.0.2.0, 8 -> 0.0, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0.0)
@@ -205,5 +214,5 @@ object AMRtoDTmapping {
                                                   //| uant 7 :ARG0-of (a / ally-01) :mod (m / military :name (n / name :op1 "NATO
                                                   //| "))) :ARG1 (a2 / agree-01 :ARG1 (f / fund-01 :ARG0 p :ARG1 (c / center :mod
                                                   //|  (r / research-01)))) :time (d / date-entity :month 5 :day 14 :ye
-                                                  //| Output exceeds cutoff limit.|
+                                                  //| Output exceeds cutoff limit.
  }
