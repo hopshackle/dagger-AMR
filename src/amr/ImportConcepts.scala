@@ -13,7 +13,7 @@ object ImportConcepts {
   var amrFile: String = "C:\\AMR\\AMR2.txt"
   val quote = """"""".r
   val numbers = "[0-9.,]".r
-  val commonLemmas = List("the", "be", "and", "of", "to", "a", "in", "that", "'s", "have", "for", "on", "by", "with", "from", "it")
+  val commonLemmas = List("the", "and", "a")
 
   lazy val relationStrings = loadRelations + "polarity"
   lazy val relationMaster = (for {
@@ -94,7 +94,8 @@ object ImportConcepts {
     val initial = (for {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
-      lemma <- DependencyTree(sentence).nodeLemmas.values filter (x => (quote.findFirstIn(x)) == None) filter (numbers.replaceAllIn(_, "") != "")
+      val dt = DependencyTree(sentence)
+      lemma <- dt.nodeLemmas.values filter (x => (quote.findFirstIn(x)) == None) filter (numbers.replaceAllIn(_, "") != "")
       if !(commonLemmas contains lemma)
     } yield (lemma, concepts)).toList
 
