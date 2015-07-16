@@ -19,14 +19,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   val includeChildren = false
   val random = new Random()
   val numeric = "[0-9,.]".r
-  var cachedFeatures = Map[Int, Double]()
+  var cachedFeatures = Map[Int, Float]()
   var cachedState: WangXueTransitionState = null
 
-  def add(map: gnu.trove.map.hash.THashMap[Int, Double], feat: String, value: Double = 1.0) = {
+  def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
   }
 
-  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
+  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
     // if we have cached Features for this state, and the action does not have a node parameter,
     // then we can save ourselves the effort (and memory) of re-calculating everything
     val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]
@@ -56,9 +56,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     }
   }
 
-  def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
+  def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
     val quadraticTurbo = options.contains("--quadratic")
-    val hmap = new gnu.trove.map.hash.THashMap[Int, Double]
+    val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
     assert(sigmaWord != "!!??", "Sigma not found: " + state)
@@ -157,8 +157,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     hmap
   }
 
-  def sigmaBetaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Double] = {
-    val hmap = new gnu.trove.map.hash.THashMap[Int, Double]
+  def sigmaBetaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
+    val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
     val quadraticTurbo = options.contains("--quadratic")
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
@@ -230,8 +230,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       sigmaFeatures(sentence, state, action) ++ hmap
   }
 
-  def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Double] = {
-    val hmap = new gnu.trove.map.hash.THashMap[Int, Double]
+  def kFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction, parameterNode: Int): Map[Int, Float] = {
+    val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
     val quadraticTurbo = options.contains("--quadratic")
     val beta = state.childrenToProcess.head
     val sigma = state.nodesToProcess.head
@@ -289,7 +289,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     hmap
   }
 
-  def quadraticCombination(linearFeatures: Map[Int, Double]): Map[Int, Double] = {
+  def quadraticCombination(linearFeatures: Map[Int, Float]): Map[Int, Float] = {
     // We wish to create a quadratic feature from every combination of the input
     // 'linear' features. The value we calculate by multiplication.
     val linearKeys = linearFeatures.keys.toList.sorted filterNot (x => (dict.elem(x) contains "PATH") || (dict.elem(x) contains "BIAS"))

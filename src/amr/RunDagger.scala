@@ -65,7 +65,7 @@ object RunDagger {
       val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
       for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
         outputFile.write(j + "\n")
-        var relevantFeatures = List[(Int, Double)]()
+        var relevantFeatures = List[(Int, Float)]()
         for (i <- 1 to featureIndex.size) {
           val weight = classifier.weightOf(j, i)
           if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
