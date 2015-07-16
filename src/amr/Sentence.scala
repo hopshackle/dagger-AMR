@@ -67,13 +67,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 
   def labelNode(node: Int, label: String): DependencyTree = {
     // We account for the fact that if we have no idea of the concept, then using the actual word might just work
-    val quote = """""""
     val oldValue = nodes.getOrElse(node, "UNKNOWN")
-    val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
-    val newLabel = if (label == "UNKNOWN") {
-      // Add quotes if the parent node is "name"
-      if (parentNodeIsName) quote + oldValue + quote else oldValue
-    } else label
+    val newLabel = if (label == "UNKNOWN") oldValue else label
     val newNodes = nodes + (node -> newLabel)
     this.copy(nodes = newNodes)
   }
@@ -199,11 +194,15 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def toAMR: AMRGraph = {
-    //      val amrNodes: Map[String, String] = (nodes map {
-    //   case (key, value) => if (parentLabels(key) contains "name") { (key.toString -> """"""" + value + """"""") }
-    //   else { (key.toString -> value) }.toMap
-    //  }
-    val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> value) }
+
+    def extractConcept(node: Int): String = {
+      val quote = """""""
+      val oldValue = nodes(node)
+      val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
+      if (parentNodeIsName) quote + oldValue + quote else oldValue
+    }
+
+    val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
     val amrNodeSpan = nodeSpans map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
     AMRGraph(amrNodes, amrNodeSpan, amrArcs)
@@ -377,6 +376,17 @@ object DependencyTree {
     var output = redDate replaceAllIn (input, m => (m group 1).toInt + " " + (m group 2).toInt + " " + (m group 3).toInt)
     output = redDate2 replaceAllIn (output, m => (m group 1).toInt + " " + (m group 2).toInt + " " + (m group 3).toInt)
     redDate3 replaceAllIn (output, m => (m group 1).toInt + (if ((m group 1).toInt > 50) 1900 else 2000) + " " + (m group 2).toInt + " " + (m group 3).toInt)
+  }
+
+  def extractNumbers(input: String): String = {
+    val regexStr = "^$ | $ | $[,.?!;:]"
+    val numbers = List("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve")
+    var output = input
+    for ((str, number) <- numbers.zipWithIndex) {
+      val regexToUse = """\$""".r.replaceAllIn(regexStr, str).r
+      output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
+    }
+    output
   }
 }
 
