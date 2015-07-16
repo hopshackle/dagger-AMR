@@ -49,7 +49,7 @@ object ImportConcepts {
     (for {
       graph <- allAMR
       concept <- graph.nodes.values
-      //      if (quote findFirstIn concept) == None  // ignore anything with quotes
+      if (quote findFirstIn concept) == None // ignore anything with quotes
       if numbers.replaceAllIn(concept, "") != "" // and anything that is purely numeric
     } yield concept).toSet
 
@@ -95,7 +95,7 @@ object ImportConcepts {
     val initial = (for {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
-      lemma <- DependencyTree(sentence).nodeLemmas.values filter (numbers.replaceAllIn(_, "") != "")
+      lemma <- DependencyTree(sentence).nodeLemmas.values filter (x => (quote.findFirstIn(x)) == None) filter (numbers.replaceAllIn(_, "") != "")
       if !(commonLemmas contains lemma)
     } yield (lemma, concepts)).toList
 

@@ -1,78 +1,81 @@
 package amr
 
 object AMRtoDTmapping {
-  val dt = DependencyTree("The police want to arrest Michael Karras in Singapore.")
+  val dt = DependencyTree("In 2007 the Estonian Government was struck by cyber attacks.")
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.7 sec].
+                                                  //| hPCFG.ser.gz ... done [1.1 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
                                                   //| im.crf.ser.gz ... done [4.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.0 sec].
+                                                  //| im.crf.ser.gz ... done [2.8 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [3.9 sec].
+                                                  //| tsim.crf.ser.gz ... done [3.8 sec].
                                                   //| dt  : amr.DependencyTree = 
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> police, 3 -> want, 4 -> to, 5 -> a
-                                                  //| rrest, 6 -> Michael, 7 -> Karras, 8 -> in, 9 -> Singapore)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> In, 2 -> 2007, 3 -> the, 4 -> Estonian, 5 ->
+                                                  //|  Government, 6 -> was, 7 -> struck, 8 -> by, 9 -> cyber, 10 -> attacks)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
-                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10))
-                                                  //| Edges:	Map((0,3) -> root, (2,1) -> det, (3,2) -> nsubj, (3,5) -> xcomp,
-                                                  //|  (5,4) -> aux, (5,7) -> dobj, (7,6) -> nn, (7,8) -> prep, (8,9) -> pobj)
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11))
+                                                  //| Edges:	Map((0,7) -> root, (1,2) -> pobj, (5,3) -> det, (5,4) -> amod, (
+                                                  //| 7,1) -> prep, (7,5) -> nsubjpass, (7,6) -> auxpass, (7,8) -> prep, (8,10) ->
+                                                  //|  pobj, (10,9) -> nn)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
                                                   //| DeletedNodes:	List()
-  dt.nodeLemmas                                   //> res0: Map[Int,String] = Map(5 -> arrest, 1 -> the, 6 -> Michael, 9 -> Singap
-                                                  //| ore, 2 -> police, 7 -> Karras, 3 -> want, 8 -> in, 4 -> to)
-dt.nodePOS                                        //> res1: Map[Int,String] = Map(5 -> VB, 1 -> DT, 6 -> NNP, 9 -> NNP, 2 -> NN, 7
-                                                  //|  -> NNP, 3 -> VBP, 8 -> IN, 4 -> TO)
-dt.nodeNER                                        //> res2: Map[Int,String] = Map(5 -> O, 1 -> O, 6 -> PERSON, 9 -> LOCATION, 2 ->
-                                                  //|  O, 7 -> PERSON, 3 -> O, 8 -> O, 4 -> O)
+  dt.nodeLemmas                                   //> res0: Map[Int,String] = Map(5 -> government, 10 -> attack, 1 -> in, 6 -> be,
+                                                  //|  9 -> cyber, 2 -> 2007, 7 -> strike, 3 -> the, 8 -> by, 4 -> estonian)
+dt.nodePOS                                        //> res1: Map[Int,String] = Map(5 -> NN, 10 -> NNS, 1 -> IN, 6 -> VBD, 9 -> NN, 
+                                                  //| 2 -> CD, 7 -> VBN, 3 -> DT, 8 -> IN, 4 -> JJ)
+dt.nodeNER                                        //> res2: Map[Int,String] = Map(5 -> O, 10 -> O, 1 -> O, 6 -> O, 9 -> O, 2 -> DA
+                                                  //| TE, 7 -> O, 3 -> O, 8 -> O, 4 -> MISC)
   dt.nodes foreach (_ match { case (node, word) => println(s"$node -> $word has parents ${dt.edgesToParents(node)}") })
                                                   //> 0 -> ROOT has parents List()
-                                                  //| 5 -> arrest has parents List((3,5))
-                                                  //| 1 -> The has parents List((2,1))
-                                                  //| 6 -> Michael has parents List((7,6))
-                                                  //| 9 -> Singapore has parents List((8,9))
-                                                  //| 2 -> police has parents List((3,2))
-                                                  //| 7 -> Karras has parents List((5,7))
-                                                  //| 3 -> want has parents List((0,3))
-                                                  //| 8 -> in has parents List((7,8))
-                                                  //| 4 -> to has parents List((5,4))
+                                                  //| 5 -> Government has parents List((7,5))
+                                                  //| 10 -> attacks has parents List((8,10))
+                                                  //| 1 -> In has parents List((7,1))
+                                                  //| 6 -> was has parents List((7,6))
+                                                  //| 9 -> cyber has parents List((10,9))
+                                                  //| 2 -> 2007 has parents List((1,2))
+                                                  //| 7 -> struck has parents List((0,7))
+                                                  //| 3 -> the has parents List((5,3))
+                                                  //| 8 -> by has parents List((7,8))
+                                                  //| 4 -> Estonian has parents List((5,4))
   dt.nodes foreach (_ match { case (node, word) => println(s"$node -> $word has depth ${dt.depth(node)}") })
                                                   //> 0 -> ROOT has depth 0
-                                                  //| 5 -> arrest has depth 2
-                                                  //| 1 -> The has depth 3
-                                                  //| 6 -> Michael has depth 4
-                                                  //| 9 -> Singapore has depth 5
-                                                  //| 2 -> police has depth 2
-                                                  //| 7 -> Karras has depth 3
-                                                  //| 3 -> want has depth 1
-                                                  //| 8 -> in has depth 4
-                                                  //| 4 -> to has depth 3
-  dt.getNodesBetween(4, 9)                        //> res3: List[Int] = List(9, 8, 7, 5, 4)
-  dt.getPathBetween(4, 9)                         //> res4: String = TO-aux-VB-dobj-NNP-prep-IN-pobj-NNP
-  dt.getNodesBetween(9, 4)                        //> res5: List[Int] = List(4, 5, 7, 8, 9)
-  dt.getPathBetween(9, 4)                         //> res6: String = NNP-pobj-IN-prep-NNP-dobj-VB-aux-TO
-  dt.getNodesBetween(0, 3)                        //> res7: List[Int] = List(3, 0)
-  dt.getPathBetween(0, 3)                         //> res8: String = XX-root-VBP
-  dt.getNodesBetween(2, 8)                        //> res9: List[Int] = List(8, 7, 5, 3, 2)
-  dt.getPathBetween(2, 8)                         //> res10: String = NN-nsubj-VBP-xcomp-VB-dobj-NNP-prep-IN
-  dt.getPathBetween(4, 4)                         //> res11: String = TO-ERR
+                                                  //| 5 -> Government has depth 2
+                                                  //| 10 -> attacks has depth 3
+                                                  //| 1 -> In has depth 2
+                                                  //| 6 -> was has depth 2
+                                                  //| 9 -> cyber has depth 4
+                                                  //| 2 -> 2007 has depth 3
+                                                  //| 7 -> struck has depth 1
+                                                  //| 3 -> the has depth 3
+                                                  //| 8 -> by has depth 2
+                                                  //| 4 -> Estonian has depth 3
+  dt.getNodesBetween(4, 9)                        //> res3: List[Int] = List(9, 10, 8, 7, 5, 4)
+  dt.getPathBetween(4, 9)                         //> res4: String = JJ-amod-NN-nsubjpass-VBN-prep-IN-pobj-NNS-nn-NN
+  dt.getNodesBetween(9, 4)                        //> res5: List[Int] = List(4, 5, 7, 8, 10, 9)
+  dt.getPathBetween(9, 4)                         //> res6: String = NN-nn-NNS-pobj-IN-prep-VBN-nsubjpass-NN-amod-JJ
+  dt.getNodesBetween(0, 3)                        //> res7: List[Int] = List(3, 5, 7, 0)
+  dt.getPathBetween(0, 3)                         //> res8: String = XX-root-VBN-nsubjpass-NN-det-DT
+  dt.getNodesBetween(2, 8)                        //> res9: List[Int] = List(8, 7, 1, 2)
+  dt.getPathBetween(2, 8)                         //> res10: String = CD-pobj-IN-prep-VBN-prep-IN
+  dt.getPathBetween(4, 4)                         //> res11: String = JJ-ERR
   
   dt.subGraph(4)                                  //> res12: Set[Int] = Set(4)
   dt.subGraph(9)                                  //> res13: Set[Int] = Set(9)
-  dt.subGraph(0)                                  //> res14: Set[Int] = Set(0, 5, 1, 6, 9, 2, 7, 3, 8, 4)
-  dt.subGraph(3)                                  //> res15: Set[Int] = Set(5, 1, 6, 9, 2, 7, 3, 8, 4)
+  dt.subGraph(0)                                  //> res14: Set[Int] = Set(0, 5, 10, 1, 6, 9, 2, 7, 3, 8, 4)
+  dt.subGraph(3)                                  //> res15: Set[Int] = Set(3)
   
-  dt.getDistanceBetween(4, 9)                     //> res16: Int = 4
-  dt.getDistanceBetween(9, 4)                     //> res17: Int = 4
-  dt.getDistanceBetween(0, 3)                     //> res18: Int = 1
-  dt.getDistanceBetween(2, 8)                     //> res19: Int = 4
+  dt.getDistanceBetween(4, 9)                     //> res16: Int = 5
+  dt.getDistanceBetween(9, 4)                     //> res17: Int = 5
+  dt.getDistanceBetween(0, 3)                     //> res18: Int = 3
+  dt.getDistanceBetween(2, 8)                     //> res19: Int = 3
   dt.getDistanceBetween(4, 4)                     //> res20: Int = 0
   val testData = AMRGraph.importFile("C:\\AMR\\AMR2.txt")
                                                   //> testData  : IndexedSeq[(String, String)] = Vector((2008-05-14,"(d / date-ent

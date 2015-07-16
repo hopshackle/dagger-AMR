@@ -20,7 +20,7 @@ case class GraphViz(outputFile: String, graph: AMRGraph) {
 
 object GraphViz {
   def graphVizOutputFunction(options: DAGGEROptions, text: String, prediction: Sentence): Unit = {
-    val outputFile = options.DAGGER_OUTPUT_PATH + "AMRPrediction_" + text + ".dot"
+    val outputFile = options.DAGGER_OUTPUT_PATH + "AMRPrediction_" + text + ".txt"
     prediction.amr match {
       case Some(t) => GraphViz(outputFile, t)
       case None =>

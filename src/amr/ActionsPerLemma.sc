@@ -12,11 +12,11 @@ ImportConcepts.conceptStrings                     //> Adding annotator tokenize
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.5 sec].
+                                                  //| im.crf.ser.gz ... done [3.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.7 sec].
+                                                  //| im.crf.ser.gz ... done [2.0 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [5.0 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.2 sec].
                                                   //| WARNING: Found duplicate match for concept "for"
                                                   //| WARNING: Found duplicate match for concept "for"
                                                   //| WARNING: Found duplicate match for concept "Arab"
@@ -53,109 +53,221 @@ ImportConcepts.conceptStrings                     //> Adding annotator tokenize
                                                   //| WARNING: Found duplicate match for concept and
                                                   //| WARNING: Found 
                                                   //| Output exceeds cutoff limit.
-ImportConcepts.conceptStrings                     //> res1: scala.collection.immutable.Set[String] = Set(incident, "Saudi", submit
-                                                  //| -01, rate, command-02, "Ichiro", respond-01, scenario, close-01, defend-01, 
-                                                  //| hail-02, automatic, "Gulf", secretary, "Zafar", altitude, workshop, relate-0
-                                                  //| 1, lead-01, engage-01, down, "IRNA", "Electric", expert-41, strangle-01, dan
-                                                  //| gerous, "Su-32", contend-01, measure, panel, economy, raid-01, outlaw, "Jais
-                                                  //| h-e-Mohammad", trouble, diram, facilitate-01, convert-01, percentage, "Bahra
-                                                  //| in", number, rule-03, contrast-01, headline, "Hindustan", demonstrate-01, "S
-                                                  //| aint", chief, organization, jury, ruble, "Shaun", mention-01, "Meeting", pol
-                                                  //| itics, distance-quantity, "American", "Cole", program, "bin", enable-01, "Ko
-                                                  //| ber", network, business, say-01, "FIFA", prevent-01, interrogative, school, 
-                                                  //| see-01, false, soldier, art, fourth, function-01, community, budget-01, meth
-                                                  //| od, officer, post, test, further, defense, "Chong", "North", patrol-01, peop
-                                                  //| le, electric, "Rafale", "Ozawa", "Kamchatenergo", gram, series, newspaper, a
-                                                  //| ddress-01, any, behave-01, pose-01, portion, "Quintao", website, gain-02, ci
-                                                  //| ty, on-time, module, sell-01, significance, body, "Lao", stage, kill-01, acr
-                                                  //| oss, come-01, plant, percentage-entity, young, area, remain-01, name, huge, 
-                                                  //| "Brian", this, issue-01, state-01, work-01, "Board", fall-05, strict, death,
-                                                  //|  imply-01, instead, move, entrench-01, "The", drive-02, consist-01, "Stalin"
-                                                  //| , show-01, brothel, women, "Control", critic, win-01, regional, "al-Rashid",
-                                                  //|  traffic-00, reliable, "Ministers'", reason-01, scientist, vote-01, "East", 
-                                                  //| include-91, define-01, result-01, black-out, priority, "Pakistan", substance
-                                                  //| , defraud-01, channel, addict-01, "Arab", fair, point, fire-arm, "Wales", cu
-                                                  //| ltural, crisis, source, smuggle-01, taste-01, task, be-from-91, insist-01, h
-                                                  //| ysteria, cut-01, trade-01, tie, go-08, "Asia", too, "Computer", force, presi
-                                                  //| dent, plane, "Mohanty", "Cambodia", applaud-01, group-01, militia, foreigner
-                                                  //| , name-01, defame-01, seminar, "Academy", effort, fund-01, subsidiary, "Kabu
-                                                  //| l", likely, intend-01, "Cooperation", "Daily", evaluate-01, location, market
-                                                  //| , approximate, hard, remove-01, purchase-01, select-01, "Morocco", leak-01, 
-                                                  //| "Warner", "Sudan", parliament, "Aviation", soon, differ-02, "II", "Burnell",
-                                                  //|  "SA", cheap, "Musharraf", "MiG-21-93", consult-01, less, "Yugoslavia", date
-                                                  //| -entity, year-on-year, "Committee", private, "Nations", "Belyanino
+ImportConcepts.conceptStrings                     //> res1: scala.collection.immutable.Set[String] = Set(incident, submit-01, rate
+                                                  //| , command-02, respond-01, scenario, close-01, defend-01, hail-02, automatic,
+                                                  //|  secretary, altitude, workshop, relate-01, lead-01, engage-01, down, expert-
+                                                  //| 41, strangle-01, dangerous, contend-01, measure, panel, economy, raid-01, ou
+                                                  //| tlaw, trouble, diram, facilitate-01, convert-01, percentage, number, rule-03
+                                                  //| , contrast-01, headline, demonstrate-01, chief, organization, jury, ruble, m
+                                                  //| ention-01, politics, distance-quantity, program, enable-01, network, busines
+                                                  //| s, say-01, prevent-01, interrogative, school, see-01, false, soldier, art, f
+                                                  //| ourth, function-01, community, budget-01, method, officer, post, test, furth
+                                                  //| er, defense, patrol-01, people, electric, gram, series, newspaper, address-0
+                                                  //| 1, any, behave-01, pose-01, portion, website, gain-02, city, on-time, module
+                                                  //| , sell-01, significance, body, stage, kill-01, across, come-01, plant, perce
+                                                  //| ntage-entity, young, area, remain-01, name, huge, this, issue-01, state-01, 
+                                                  //| work-01, fall-05, strict, death, imply-01, instead, move, entrench-01, drive
+                                                  //| -02, consist-01, show-01, brothel, women, critic, win-01, regional, traffic-
+                                                  //| 00, reliable, reason-01, scientist, vote-01, include-91, define-01, result-0
+                                                  //| 1, black-out, priority, substance, defraud-01, channel, addict-01, fair, poi
+                                                  //| nt, fire-arm, cultural, crisis, source, smuggle-01, taste-01, task, be-from-
+                                                  //| 91, insist-01, hysteria, cut-01, trade-01, tie, go-08, too, force, president
+                                                  //| , plane, applaud-01, group-01, militia, foreigner, name-01, defame-01, semin
+                                                  //| ar, effort, fund-01, subsidiary, likely, intend-01, evaluate-01, location, m
+                                                  //| arket, approximate, hard, remove-01, purchase-01, select-01, leak-01, parlia
+                                                  //| ment, soon, differ-02, cheap, consult-01, less, date-entity, year-on-year, p
+                                                  //| rivate, system, weekend, relation, accordingly, raise-02, society, partner-0
+                                                  //| 1, electrocution, elder, process-01, economic, hope-01, relevant-41, libel-0
+                                                  //| 1, research, cause-01, history, initial, apply-02, disappear-01, late, field
+                                                  //| , caution-01, populate-01, anonymous, standoff, backlash, advise-01, rural, 
+                                                  //| border, desperate, perform-01, back-01, have-org-role-91, hang-01, negotiate
+                                                  //| -01, monopoly, export-01, state, challenge-01, make-01, nation, agreement, t
+                                                  //| error, revise-01, accuse-01, coordinate-01, lab, et-cetera, clarify-01, draw
+                                                  //| -03, tender, circulate-01, so-far, report-01, conflict-01, improve
                                                   //| Output exceeds cutoff limit.
-ImportConcepts.conceptsPerLemma foreach println   //> (incident,Set(1, 710, 1592, 488, 64, 230, 1293, 1098, 1546))
-                                                  //| (serious,Set(1596, 683, 1243, 1724, 802, 1136, 1377, 85, 1636, 65, 493, 1592
-                                                  //| , 391, 230, 271, 387, 1218, 258, 119, 1308, 1513, 536, 283, 803))
-                                                  //| (comply,Set(1322, 1200, 1013, 1343, 1592, 124, 1720, 779, 1727, 856, 49, 134
-                                                  //| 9, 434, 103, 609, 1044, 295, 1218, 119, 536, 1578, 967, 1480, 178, 491))
-                                                  //| (rate,Set(1750, 115, 683, 1269, 511, 1305, 715, 153, 1391, 417, 184, 372, 96
-                                                  //| 9, 106, 147, 1377, 89, 312, 1696, 381, 1676, 815, 852, 842, 224, 1592, 1082,
-                                                  //|  124, 1060, 1627, 205, 1563, 1054, 1747, 1007, 1675, 187, 377, 7, 868, 1694,
-                                                  //|  473, 1025, 872, 1225, 993, 502, 1218, 1353, 43, 1654, 1481, 258, 186, 75, 1
-                                                  //| 19, 1294, 383, 1097, 4, 294, 94, 796, 992, 131, 501, 122, 491, 1449))
-                                                  //| (Amateur,Set(730, 185, 1682, 1622, 1521, 1580, 65, 1573, 1592, 753, 997, 173
-                                                  //| 3, 49, 181, 900, 1509, 1049, 1218, 1654, 119, 151, 950, 1363, 992))
-                                                  //| (scenario,Set(555, 275, 710, 1592, 403, 1118, 124, 654, 1599, 541, 662, 888,
-                                                  //|  118, 462, 868, 1218, 1654, 1126, 1674, 8, 119, 58, 283, 1653))
-                                                  //| (combate,Set(760, 909, 893, 683, 1735, 325, 1136, 1570, 197, 1592, 1567, 230
-                                                  //| , 616, 278, 780, 1364, 1025, 1218, 43, 1654, 517, 568, 119, 383, 283, 575, 1
-                                                  //| 78))
-                                                  //| (unity,Set(683, 597, 1601, 1592, 1540, 105, 1637, 1188, 119))
-                                                  //| (VN,Set(683, 866, 1592, 188, 1654, 119))
-                                                  //| (Province,Set(683, 1705, 153, 1222, 829, 1619, 1592, 1534, 1567, 124, 1231, 
-                                                  //| 1246, 22, 1389, 1175, 494, 1594, 823, 1218, 612, 465, 119, 146, 354))
-                                                  //| (automatic,Set(523, 715, 78, 1502, 165, 852, 1592, 578, 1017, 124, 1599, 205
-                                                  //| , 1563, 298, 423, 12, 230, 868, 1516, 1605, 1218, 258, 119, 432))
-                                                  //| (secretary,Set(1105, 1618, 42, 1645, 14, 321, 1592, 1007, 1699, 1218, 119, 9
-                                                  //| 0))
-                                                  //| (Gorbunov,Set(683, 1205, 1233, 1592, 1118, 1029, 278, 1218, 119, 447, 283, 4
-                                                  //| 59))
-                                                  //| (II,Set(1295, 1554, 683, 1243, 14, 870, 1377, 221, 1238, 1592, 1006, 476, 96
-                                                  //| , 1167, 1616, 979, 836, 48, 409, 1230, 1218, 571, 1649, 119, 283))
-                                                  //| (Golden,Set(683, 1366, 1518, 1119, 1592, 1329, 1131, 653, 1654, 119, 1737))
-                                                  //| 
-                                                  //| (altitude,Set(683, 1570, 1592, 980, 610, 1333, 382, 1675, 1556, 16, 359, 158
-                                                  //| 5, 903, 771, 258, 119, 294, 358, 696))
-                                                  //| (workshop,Set(683, 1486, 1671, 153, 24, 37, 1323, 196, 638, 325, 216, 1465, 
-                                                  //| 1418, 623, 1183, 1215, 877, 1447, 920, 1519, 1355, 297, 1619, 65, 435, 1592,
-                                                  //|  1017, 1644, 679, 1297, 1451, 1060, 2, 508, 1071, 17, 819, 611, 1239, 919, 1
-                                                  //| 408, 230, 811, 103, 213, 251, 1293,
+ImportConcepts.conceptsPerLemma foreach println   //> (incident,Set(1, 547, 1202, 176, 1011, 1240, 860, 47, 369))
+                                                  //| (serious,Set(1072, 1274, 1174, 889, 212, 176, 291, 204, 1344, 374, 194, 48, 
+                                                  //| 971, 951, 1023, 1240, 1244, 410, 294, 94, 528))
+                                                  //| (comply,Set(468, 142, 814, 372, 220, 38, 1054, 750, 787, 98, 663, 1340, 1049
+                                                  //| , 327, 951, 1240, 410, 79, 1346, 94))
+                                                  //| (rate,Set(5, 120, 1305, 797, 670, 782, 288, 1359, 651, 1287, 372, 751, 1147,
+                                                  //|  1319, 57, 1362, 1020, 1072, 116, 233, 1306, 381, 847, 1012, 1121, 356, 1082
+                                                  //| , 96, 173, 674, 34, 148, 161, 772, 286, 71, 382, 1058, 219, 98, 827, 3, 194,
+                                                  //|  282, 951, 1218, 314, 612, 859, 1240, 991, 627, 1321, 104, 771, 82, 146, 94,
+                                                  //|  528, 90, 659))
+                                                  //| (Amateur,Set(1287, 147, 38, 697, 819, 563, 48, 580, 951, 1240, 771, 119, 117
+                                                  //| 2, 94))
+                                                  //| (scenario,Set(670, 1287, 504, 1247, 93, 6, 512, 874, 547, 212, 1286, 880, 98
+                                                  //| , 303, 1304, 414, 951, 1240, 688, 94))
+                                                  //| (combate,Set(142, 797, 288, 1287, 587, 692, 1351, 243, 435, 889, 156, 212, 3
+                                                  //| 4, 176, 704, 599, 441, 951, 1221, 1240, 94, 395, 528))
+                                                  //| (unity,Set(460, 81, 1240, 929, 94, 528))
+                                                  //| (VN,Set(94, 528, 1240, 1287))
+                                                  //| (Province,Set(115, 120, 1191, 348, 1242, 974, 266, 375, 641, 919, 98, 951, 1
+                                                  //| 221, 1240, 961, 635, 955, 94, 1261, 528))
+                                                  //| (automatic,Set(10, 670, 1247, 325, 443, 60, 161, 176, 98, 1177, 130, 223, 12
+                                                  //| 50, 194, 791, 951, 1218, 1240, 319, 400, 1165, 94, 659))
+                                                  //| (secretary,Set(1260, 782, 33, 240, 951, 11, 1240, 94))
+                                                  //| (Gorbunov,Set(942, 874, 212, 951, 336, 1240, 801, 94, 528))
+                                                  //| (II,Set(308, 37, 1013, 1072, 1210, 212, 647, 73, 1258, 672, 1282, 971, 951, 
+                                                  //| 11, 1240, 781, 960, 94, 528))
+                                                  //| (Golden,Set(885, 1287, 1353, 1240, 94, 528))
+                                                  //| (altitude,Set(1305, 1041, 270, 761, 1234, 593, 537, 12, 219, 271, 194, 1240,
+                                                  //|  699, 1212, 287, 94, 528, 469))
+                                                  //| (workshop,Set(760, 1179, 120, 715, 1254, 1287, 14, 949, 157, 189, 1100, 29, 
+                                                  //| 623, 1151, 348, 1119, 243, 248, 810, 1123, 388, 837, 13, 926, 176, 772, 1256
+                                                  //| , 413, 713, 1092, 1011, 599, 631, 827, 1034, 490, 426, 1134, 1018, 48, 525, 
+                                                  //| 712, 18, 791, 951, 336, 1240, 478, 214, 967, 79, 828, 94, 1261, 528, 222))
+                                                  //| (Nations,Set(645, 468, 730, 1205, 878, 814, 885, 1359, 301, 1287, 587, 902, 
+                                                  //| 969, 924, 253, 348, 353, 766, 147, 61, 956, 1351, 243, 233, 942, 381, 220, 1
+                                                  //| 274, 38, 729, 467, 229, 435, 889, 842, 1089, 156, 1121, 212, 96, 654, 569, 2
+                                                  //| 66, 1167, 750, 819, 176, 44, 713, 1239, 1092, 947, 1349, 98, 599, 609, 636, 
+                                                  //| 1245, 455, 426, 1208, 1340, 194, 1049, 48, 18, 951, 808, 72,
                                                   //| Output exceeds cutoff limit.
-val t = (ImportConcepts.conceptsPerLemma map { case (lemma, set) => (lemma, set.size)}).toList.sortWith((a, b) => a._2 > b._2)
-                                                  //> t  : List[(String, Int)] = List((the,1498), (be,1222), (of,1191), (and,1190)
-                                                  //| , (to,1162), (a,1113), (in,1096), (that,1071), (state,832), ('s,808), (have,
-                                                  //| 724), (for,636), (on,556), (by,520), (with,437), (government,434), (from,378
-                                                  //| ), (will,363), (it,336), (official,310), (drug,310), (Korea,300), (say,298),
-                                                  //|  (at,289), (Afghanistan,281), (South,265), (would,251), (year,247), (as,246)
-                                                  //| , (nuclear,239), (against,236), (not,232), (they,229), (its,229), (program,2
-                                                  //| 23), (also,220), (russian,216), (include,216), (United,216), (group,210), (c
-                                                  //| ould,208), (international,207), (military,192), (heroin,190), (make,189), (N
-                                                  //| orth,184), (States,183), (other,182), (trafficking,181), (country,179), (wea
-                                                  //| pon,177), (security,175), (terrorism,175), (which,172), (Defense,169), (he,1
-                                                  //| 67), (power,167), (Asia,164), (newspaper,163), (report,161), (Russia,160), (
-                                                  //| over,160), (Japan,159), (attack,159), (January,158), (than,157), (there,157)
-                                                  //| , (ban,156), (or,154), (this,153), (but,152), (Boeing,152), (opium,149), (bo
-                                                  //| rder,148), (trade,146), (more,146), (cooperation,144), (Tajikistan,142), (Oz
-                                                  //| awa,140), (between,138), (end,137), (take,136), (plutonium,136), (afghan,135
-                                                  //| ), (system,135), (fighter,135), (rights,135), (first,134), (plan,134), (kore
-                                                  //| an,133), (action,133), (because,132), (property,132), (intellectual,132), (n
-                                                  //| ation,130), (U.S.,130), (dollar,129), (company,129), (daily,128), (April,128
-                                                  //| ), (many,127), (one,127), (if,126), (dog,126), (space,126), (February,125), 
-                                                  //| (Mohanty,125), (N.,125), (R.,125), (force,124), (Southeast,124), (any,123), 
-                                                  //| (Aeronautics,123), (Hindustan,123), (Limited,123), (under,123), (meet,123), 
-                                                  //| (technology,122), (Myanmar,121), (service,120), (Asian,120), (launch,119), (
-                                                  //| Nations,117), (International,117), (rule,117), (who,117), (Rakhimov,117), (u
-                                                  //| se,117), (million,117), (all,116), (statement,116), (defense,114), (when,113
-                                                  //| ), (ASEAN,112), (publication,112), (recent,111), (call,111), (support,110), 
-                                                  //| (no,110), (people,109), (islamic,109), (last,109), (need,109), (after,109), 
-                                                  //| (should,109), (war,108), (jet,108), (percent,108), (world,107), (work,107), 
-                                                  //| (terrorist,107), (firm,107), (during,107), (become,106), (poppy,106), (some,
-                                                  //| 106), (center,105), (Islam,105), (Rafale,105), (Laden,105), (bin,105), (day,
-                                                  //| 105), (IAEA,104), (cost,104), (Ministry,103), (european,103), (transfer,103)
-                                                  //| , (tell,103), (announce,102), (police,102), (infrastructure,102), 
-                                                  //| Output exceeds cutoff limit.
+(ImportConcepts.conceptsPerLemma map { case (lemma, set) => (lemma, set.size)}).toList.sortWith((a, b) => a._2 > b._2) foreach println
+                                                  //> (state,623)
+                                                  //| (government,325)
+                                                  //| (will,293)
+                                                  //| (drug,262)
+                                                  //| (Korea,255)
+                                                  //| (Afghanistan,236)
+                                                  //| (say,230)
+                                                  //| (official,225)
+                                                  //| (at,223)
+                                                  //| (South,216)
+                                                  //| (would,203)
+                                                  //| (year,203)
+                                                  //| (they,201)
+                                                  //| (nuclear,191)
+                                                  //| (as,181)
+                                                  //| (its,179)
+                                                  //| (not,176)
+                                                  //| (could,176)
+                                                  //| (program,175)
+                                                  //| (against,175)
+                                                  //| (group,174)
+                                                  //| (include,172)
+                                                  //| (United,171)
+                                                  //| (russian,166)
+                                                  //| (heroin,165)
+                                                  //| (also,161)
+                                                  //| (military,161)
+                                                  //| (North,160)
+                                                  //| (international,156)
+                                                  //| (weapon,149)
+                                                  //| (trafficking,147)
+                                                  //| (States,146)
+                                                  //| (power,144)
+                                                  //| (make,142)
+                                                  //| (security,139)
+                                                  //| (Japan,137)
+                                                  //| (terrorism,137)
+                                                  //| (opium,135)
+                                                  //| (than,133)
+                                                  //| (ban,132)
+                                                  //| (country,132)
+                                                  //| (other,131)
+                                                  //| (report,130)
+                                                  //| (this,129)
+                                                  //| (there,128)
+                                                  //| (newspaper,127)
+                                                  //| (Russia,127)
+                                                  //| (or,125)
+                                                  //| (which,125)
+                                                  //| (Ozawa,124)
+                                                  //| (but,123)
+                                                  //| (Boeing,123)
+                                                  //| (border,122)
+                                                  //| (more,120)
+                                                  //| (Asia,118)
+                                                  //| (cooperation,118)
+                                                  //| (January,117)
+                                                  //| (afghan,117)
+                                                  //| (over,117)
+                                                  //| (he,115)
+                                                  //| (end,115)
+                                                  //| (Tajikistan,115)
+                                                  //| (because,113)
+                                                  //| (system,112)
+                                                  //| (korean,112)
+                                                  //| (trade,112)
+                                                  //| (rights,111)
+                                                  //| (plutonium,111)
+                                                  //| (dog,110)
+                                                  //| (attack,110)
+                                                  //| (take,109)
+                                                  //| (dollar,108)
+                                                  //| (space,107)
+                                                  //| (property,107)
+                                                  //| (Defense,107)
+                                                  //| (many,107)
+                                                  //| (one,107)
+                                                  //| (intellectual,107)
+                                                  //| (U.S.,106)
+                                                  //| (between,106)
+                                                  //| (if,105)
+                                                  //| (plan,103)
+                                                  //| (launch,102)
+                                                  //| (any,101)
+                                                  //| (use,101)
+                                                  //| (force,100)
+                                                  //| (Mohanty,100)
+                                                  //| (N.,100)
+                                                  //| (technology,100)
+                                                  //| (fighter,100)
+                                                  //| (R.,100)
+                                                  //| (action,99)
+                                                  //| (nation,98)
+                                                  //| (Aeronautics,98)
+                                                  //| (Hindustan,98)
+                                                  //| (Limited,98)
+                                                  //| (all,97)
+                                                  //| (daily,97)
+                                                  //| (under,97)
+                                                  //| (terrorist,96)
+                                                  //| (million,96)
+                                                  //| (recent,95)
+                                                  //| (publication,95)
+                                                  //| (poppy,95)
+                                                  //| (first,94)
+                                                  //| (when,94)
+                                                  //| (February,93)
+                                                  //| (after,93)
+                                                  //| (meet,93)
+                                                  //| (Southeast,92)
+                                                  //| (IAEA,91)
+                                                  //| (world,91)
+                                                  //| (islamic,91)
+                                                  //| (Myanmar,91)
+                                                  //| (service,91)
+                                                  //| (company,91)
+                                                  //| (support,90)
+                                                  //| (defense,90)
+                                                  //| (statement,90)
+                                                  //| (April,90)
+                                                  //| (center,88)
+                                                  //| (who,88)
+                                                  //| (percent,88)
+                                                  //| (Nations,87)
+                                                  //| (International,87)
+                                                  //| (some,87)
+                                                  //| (last,86)
+                                                  //| (become,86)
+                                                  //| (Asian,86)
+                                                  //| (people,85)
+                                                  //| (rule,85)
+                                                  //| (work,85)
+                                                  //| (issue,85)
+                                                  //| (pakistani,85)
+                                                  //| (ASEAN,84)
+                                                  //| (need,84)
+                                                  //| (Rakhimov,84)
+                                                  //| (jet,83)
+                                                  //| (cost,83)
+                                                  //| (religious,83)
+                                                  //| (police,82)
+                                                  //| (China,82)
+                                                  //| (transfer,82)
 ImportConcepts.edgesPerLemma foreach println      //> (incident,Set(24, 37, 17, 59, 3, 50, 31, 62))
                                                   //| (serious,Set(5, 24, 37, 25, 6, 9, 17, 59, 54, 50, 31, 36, 62))
                                                   //| (comply,Set(5, 24, 37, 14, 6, 9, 17, 59, 55, 36, 47, 62))
@@ -209,31 +321,16 @@ ImportConcepts.relationStrings                    //> res2: scala.collection.imm
                                                   //| art-of, condition-of, example, instrument-of, ROOT, destination, value, ARG0
                                                   //| , prep-with, day, instrument, ord, poss-of, month)
 (ImportConcepts.edgesPerLemma map { case (lemma, set) => (lemma, set.size)}).toList.sortWith((a, b) => a._2 > b._2) foreach println
-                                                  //> (the,68)
-                                                  //| (be,64)
-                                                  //| (and,64)
-                                                  //| (of,61)
-                                                  //| (in,60)
-                                                  //| (a,60)
-                                                  //| (to,59)
-                                                  //| (that,56)
-                                                  //| ('s,55)
-                                                  //| (state,51)
-                                                  //| (for,48)
-                                                  //| (have,48)
-                                                  //| (on,47)
+                                                  //> (state,51)
                                                   //| (Korea,46)
                                                   //| (nuclear,45)
-                                                  //| (by,45)
                                                   //| (Afghanistan,43)
                                                   //| (South,42)
                                                   //| (will,42)
-                                                  //| (with,42)
                                                   //| (say,42)
                                                   //| (year,41)
                                                   //| (at,41)
                                                   //| (government,41)
-                                                  //| (from,40)
                                                   //| (drug,39)
                                                   //| (would,36)
                                                   //| (dog,36)
@@ -250,7 +347,6 @@ ImportConcepts.relationStrings                    //> res2: scala.collection.imm
                                                   //| (its,35)
                                                   //| (group,35)
                                                   //| (ban,34)
-                                                  //| (it,34)
                                                   //| (russian,34)
                                                   //| (power,34)
                                                   //| (more,34)
@@ -359,6 +455,19 @@ ImportConcepts.relationStrings                    //> res2: scala.collection.imm
                                                   //| (Iran,27)
                                                   //| (energy,27)
                                                   //| (ton,27)
-                                                  //| (or,27
+                                                  //| (or,27)
+                                                  //| (statement,27)
+                                                  //| (last,27)
+                                                  //| (issue,27)
+                                                  //| (take,27)
+                                                  //| (U.S.,27)
+                                                  //| (pakistani,27)
+                                                  //| (cooperation,27)
+                                                  //| (kill,27)
+                                                  //| (major,27)
+                                                  //| (increase,27)
+                                                  //| (workshop,26)
+                                                  //| (announce,26)
+                                                  //| 
                                                   //| Output exceeds cutoff limit.
 }

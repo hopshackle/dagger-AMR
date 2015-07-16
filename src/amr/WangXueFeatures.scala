@@ -16,6 +16,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   import scala.collection.JavaConversions.mapAsScalaMap
 
   val debug = false
+  val includeChildren = false
   val random = new Random()
   val numeric = "[0-9,.]".r
   var cachedFeatures = Map[Int, Double]()
@@ -62,27 +63,28 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
     assert(sigmaWord != "!!??", "Sigma not found: " + state)
     val sigmaInserted = state.currentGraph.insertedNodes contains sigma
-    val wordTokens: Double = sentence.dependencyTree.nodes.size
-    val insertedNodes: Double = state.currentGraph.insertedNodes.size
-    if (insertedNodes > 0) add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
-    val insertedConcepts = state.currentGraph.insertedNodes.keys map (node => state.currentGraph.nodes.getOrElse(node, "DELETED"))
-    val conceptSet = insertedConcepts
-    conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
+    //    val wordTokens: Double = sentence.dependencyTree.nodes.size
+    //    val insertedNodes: Double = state.currentGraph.insertedNodes.size
+    //    if (insertedNodes > 0) add(hmap, "RATIO-INSERT-WORDS", insertedNodes / wordTokens)
+    //    val insertedConcepts = state.currentGraph.insertedNodes.keys map (node => state.currentGraph.nodes.getOrElse(node, "DELETED"))
+    //    val conceptSet = insertedConcepts
+    //    conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     add(hmap, "BIAS")
     if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
-    if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
-    if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
+    //    if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
+    //    if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
     if (!quadraticTurbo) {
-      if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
-      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+      //      if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
+      //      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     }
-    add(hmap, "SIGMA-WORD=" + sigmaWord)
+
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
     val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     if (sigmaPOS != "") add(hmap, "SIGMA-POS=" + sigmaPOS)
     if (sigmaLemma != "") add(hmap, "SIGMA-LEMMA=" + sigmaLemma)
+    if (sigmaWord != sigmaLemma) add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (sigmaNER != "") add(hmap, "SIGMA-NER=" + sigmaNER)
     if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
@@ -94,7 +96,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         parent <- sigmaParents
         label <- state.currentGraph.labelsBetween(parent, sigma)
       } yield (parent, label)
-      add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
+      //      add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
 
       parentLabelCombos foreach {
         case (parent, label) =>
@@ -107,9 +109,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             add(hmap, "PARENT-INSERTED=" + parentWord)
             if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
           }
-          add(hmap, "PARENT-SIGMA-LABEL=" + label)
-          add(hmap, "PARENT-WORD=" + parentWord)
+
+          if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
           if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)
+          if (parentLemma != parentWord) add(hmap, "PARENT-WORD=" + parentWord)
           if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
           if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
           for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
@@ -124,28 +127,30 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           }
       }
 
-      val sigmaChildren = state.currentGraph.childrenOf(sigma) diff // we exclude beta from children - as that is covered elsewhere
-        (state.childrenToProcess match {
-          case Nil => List()
-          case head :: tail => List(head)
-        })
-      if (sigmaChildren.nonEmpty) {
-        add(hmap, "CHILDREN-SIGMA-NO", sigmaParents.size)
-        val childrenLabelCombos = for {
-          child <- sigmaChildren
-          label <- state.currentGraph.labelsBetween(sigma, child)
-        } yield (child, label)
+      if (includeChildren) {
+        val sigmaChildren = state.currentGraph.childrenOf(sigma) diff // we exclude beta from children - as that is covered elsewhere
+          (state.childrenToProcess match {
+            case Nil => List()
+            case head :: tail => List(head)
+          })
+        if (sigmaChildren.nonEmpty) {
+          add(hmap, "CHILDREN-SIGMA-NO=" + sigmaChildren.size)
+          val childrenLabelCombos = for {
+            child <- sigmaChildren
+            label <- state.currentGraph.labelsBetween(sigma, child)
+          } yield (child, label)
 
-        childrenLabelCombos foreach {
-          case (child, label) =>
-            val childWord = state.currentGraph.nodes(child)
-            if (state.currentGraph.insertedNodes contains child) {
-              add(hmap, "CHILD-INSERTED=" + childWord)
-              if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
-            }
-            add(hmap, "CHILD-SIGMA-LABEL=" + label)
-            add(hmap, "CHILD-WORD=" + childWord)
-            if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
+          childrenLabelCombos foreach {
+            case (child, label) =>
+              val childWord = state.currentGraph.nodes(child)
+              if (state.currentGraph.insertedNodes contains child) {
+                add(hmap, "CHILD-INSERTED=" + childWord)
+                if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
+              }
+              add(hmap, "CHILD-SIGMA-LABEL=" + label)
+              add(hmap, "CHILD-WORD=" + childWord)
+              if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
+          }
         }
       }
     }
@@ -185,7 +190,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (betaInserted) add(hmap, "BETA-INSERTED")
     if (!quadraticTurbo) if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
-    add(hmap, "BETA-WORD=" + betaWord)
     if (numeric.replaceAllIn(betaWord, "") == "") add(hmap, "BETA-NUMERIC")
     if (!quadraticTurbo) add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
 
@@ -207,9 +211,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     if (betaPOS != "") add(hmap, "BETA-POS=" + betaPOS)
     if (betaLemma != "") add(hmap, "BETA-LEMMA=" + betaLemma)
+    if (betaLemma != betaWord) add(hmap, "BETA-WORD=" + betaWord)
     if (betaNER != "") add(hmap, "BETA-NER=" + betaNER)
-    add(hmap, "SIGMA-BETA-LABEL=" + label)
     for (bdl <- betaDL) add(hmap, "BETA-DL=" + bdl)
+    if (!(betaDL contains label)) add(hmap, "SIGMA-BETA-LABEL=" + label)
 
     if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")
 
@@ -255,7 +260,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (kappaNER != "") add(hmap, "KAPPA-NER=" + kappaNER)
     if (kappaPOS != "") add(hmap, "KAPPA-POS=" + kappaPOS)
     if (kappaLemma != "") add(hmap, "KAPPA-LEMMA=" + kappaLemma)
-    add(hmap, "KAPPA-WORD=" + kappaWord)
+    if (kappaWord != kappaLemma) add(hmap, "KAPPA-WORD=" + kappaWord)
     //    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
     //    add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
     //    if (kappaPOS != "" && betaPOS != "") add(hmap, "KAPPA-BETA-POS=" + kappaPOS + "-" + betaPOS)

@@ -67,9 +67,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 
   def labelNode(node: Int, label: String): DependencyTree = {
     // We account for the fact that if we have no idea of the concept, then using the actual word might just work
-    val parentNodeIsName = parentsOf(node) contains conceptIndex("name")
     val quote = """""""
     val oldValue = nodes.getOrElse(node, "UNKNOWN")
+    val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
     val newLabel = if (label == "UNKNOWN") {
       // Add quotes if the parent node is "name"
       if (parentNodeIsName) quote + oldValue + quote else oldValue
