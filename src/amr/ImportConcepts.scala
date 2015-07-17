@@ -13,7 +13,8 @@ object ImportConcepts {
   var amrFile: String = "C:\\AMR\\AMR2.txt"
   val quote = """"""".r
   val numbers = "[0-9.,]".r
-  val commonLemmas = List("the", "and", "a")
+//  val commonLemmas = List("the", "and", "a", "in", "of", "to")
+  val commonLemmas: List[String] = List()
 
   lazy val relationStrings = loadRelations + "polarity"
   lazy val relationMaster = (for {
@@ -95,10 +96,10 @@ object ImportConcepts {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
       val dt = DependencyTree(sentence)
-      val eligibleNodes = dt.nodes filter {case (i, v) => quote.findFirstIn(v) == None && numbers.replaceAllIn(v, "") != ""} map (_._1)
+      val eligibleNodes = dt.nodes filter {case (i, v) => dt.nodeNER.getOrElse(i, "O") == "O" && numbers.replaceAllIn(v, "") != ""} map (_._1)
       n <- eligibleNodes
       lemma = dt.nodeLemmas.getOrElse(n, "a")
-//      if !(commonLemmas contains lemma)
+      if !(commonLemmas contains lemma)
     } yield (lemma, concepts)).toList
 
     val grouped = initial.groupBy(_._1)
@@ -111,7 +112,7 @@ object ImportConcepts {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       relations = graph.arcs.values.toSet filter (numbers.replaceAllIn(_, "") != "") map relationIndex
       lemma <- DependencyTree(sentence).nodeLemmas.values filter (numbers.replaceAllIn(_, "") != "")
- //     if !(commonLemmas contains lemma)
+      if !(commonLemmas contains lemma)
     } yield (lemma -> relations)).toList
     val grouped = initial.groupBy(_._1)
     val cleaned = grouped.mapValues(_.map(_._2))
