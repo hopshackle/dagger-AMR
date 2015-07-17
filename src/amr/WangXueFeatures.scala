@@ -17,6 +17,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
   val debug = false
   val includeChildren = false
+  val includeParents = false
   val random = new Random()
   val numeric = "[0-9,.]".r
   var cachedFeatures = Map[Int, Float]()
@@ -71,7 +72,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     //    conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     add(hmap, "BIAS")
-    if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
+    //    if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
     //    if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
     //    if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
     if (!quadraticTurbo) {
@@ -90,70 +91,73 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
     val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     for (sdl <- sigmaDL) add(hmap, "SIGMA-DL=" + sdl)
-    val sigmaParents = state.currentGraph.parentsOf(sigma)
-    if (sigmaParents.nonEmpty) {
-      val parentLabelCombos = for {
-        parent <- sigmaParents
-        label <- state.currentGraph.labelsBetween(parent, sigma)
-      } yield (parent, label)
-      //      add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
 
-      parentLabelCombos foreach {
-        case (parent, label) =>
-          val parentWord = state.currentGraph.nodes(parent)
-          val parentLemma = state.currentGraph.nodeLemmas.getOrElse(parent, "")
-          val parentNER = state.currentGraph.nodeNER.getOrElse(parent, "")
-          val parentPOS = state.currentGraph.nodePOS.getOrElse(parent, "")
-          val parentDL = state.startingDT.edgesToParents(parent) map state.startingDT.arcs
-          if (state.currentGraph.insertedNodes contains parent) {
-            add(hmap, "PARENT-INSERTED=" + parentWord)
-            if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
-          }
+    if (includeParents) {
+      val sigmaParents = state.currentGraph.parentsOf(sigma)
+      if (sigmaParents.nonEmpty) {
+        val parentLabelCombos = for {
+          parent <- sigmaParents
+          label <- state.currentGraph.labelsBetween(parent, sigma)
+        } yield (parent, label)
+        //      add(hmap, "PARENT-SIGMA-NO", sigmaParents.size)
 
-          if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
-          if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)
-          if (parentLemma != parentWord) add(hmap, "PARENT-WORD=" + parentWord)
-          if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
-          if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
-          for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
-          if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
-          if (!quadraticTurbo) {
-            add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
-            if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
-            if (parentPOS != "" && sigmaLemma != "") add(hmap, "PARENT-POS-SIGMA-LEMMA=" + parentPOS + "-" + sigmaLemma)
-            if (parentDL.nonEmpty && sigmaLemma != "") for (pdl <- parentDL) add(hmap, "PARENT-DL-SIGMA-LEMMA=" + pdl + "-" + sigmaLemma)
-            if (parentLemma != "" && sigmaDL.nonEmpty) for (sdl <- sigmaDL) add(hmap, "PARENT-LEMMA-SIGMA-DL=" + parentLemma + "-" + sdl)
-            if (parentNER != "" && sigmaNER != "") add(hmap, "PARENT-SIGMA-NER=" + parentNER + "-" + sigmaNER)
-          }
-      }
+        parentLabelCombos foreach {
+          case (parent, label) =>
+            val parentWord = state.currentGraph.nodes(parent)
+            val parentLemma = state.currentGraph.nodeLemmas.getOrElse(parent, "")
+            val parentNER = state.currentGraph.nodeNER.getOrElse(parent, "")
+            val parentPOS = state.currentGraph.nodePOS.getOrElse(parent, "")
+            val parentDL = state.startingDT.edgesToParents(parent) map state.startingDT.arcs
+            if (state.currentGraph.insertedNodes contains parent) {
+              add(hmap, "PARENT-INSERTED=" + parentWord)
+              if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
+            }
 
-      if (includeChildren) {
-        val sigmaChildren = state.currentGraph.childrenOf(sigma) diff // we exclude beta from children - as that is covered elsewhere
-          (state.childrenToProcess match {
-            case Nil => List()
-            case head :: tail => List(head)
-          })
-        if (sigmaChildren.nonEmpty) {
-          add(hmap, "CHILDREN-SIGMA-NO=" + sigmaChildren.size)
-          val childrenLabelCombos = for {
-            child <- sigmaChildren
-            label <- state.currentGraph.labelsBetween(sigma, child)
-          } yield (child, label)
-
-          childrenLabelCombos foreach {
-            case (child, label) =>
-              val childWord = state.currentGraph.nodes(child)
-              if (state.currentGraph.insertedNodes contains child) {
-                add(hmap, "CHILD-INSERTED=" + childWord)
-                if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
-              }
-              add(hmap, "CHILD-SIGMA-LABEL=" + label)
-              add(hmap, "CHILD-WORD=" + childWord)
-              if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
-          }
+            if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
+            if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)
+            if (parentLemma != parentWord) add(hmap, "PARENT-WORD=" + parentWord)
+            if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
+            if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
+            for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
+            if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
+            if (!quadraticTurbo) {
+              add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+              if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
+              if (parentPOS != "" && sigmaLemma != "") add(hmap, "PARENT-POS-SIGMA-LEMMA=" + parentPOS + "-" + sigmaLemma)
+              if (parentDL.nonEmpty && sigmaLemma != "") for (pdl <- parentDL) add(hmap, "PARENT-DL-SIGMA-LEMMA=" + pdl + "-" + sigmaLemma)
+              if (parentLemma != "" && sigmaDL.nonEmpty) for (sdl <- sigmaDL) add(hmap, "PARENT-LEMMA-SIGMA-DL=" + parentLemma + "-" + sdl)
+              if (parentNER != "" && sigmaNER != "") add(hmap, "PARENT-SIGMA-NER=" + parentNER + "-" + sigmaNER)
+            }
         }
       }
     }
+    if (includeChildren) {
+      val sigmaChildren = state.currentGraph.childrenOf(sigma) diff // we exclude beta from children - as that is covered elsewhere
+        (state.childrenToProcess match {
+          case Nil => List()
+          case head :: tail => List(head)
+        })
+      if (sigmaChildren.nonEmpty) {
+        add(hmap, "CHILDREN-SIGMA-NO=" + sigmaChildren.size)
+        val childrenLabelCombos = for {
+          child <- sigmaChildren
+          label <- state.currentGraph.labelsBetween(sigma, child)
+        } yield (child, label)
+
+        childrenLabelCombos foreach {
+          case (child, label) =>
+            val childWord = state.currentGraph.nodes(child)
+            if (state.currentGraph.insertedNodes contains child) {
+              add(hmap, "CHILD-INSERTED=" + childWord)
+              if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
+            }
+            add(hmap, "CHILD-SIGMA-LABEL=" + label)
+            add(hmap, "CHILD-WORD=" + childWord)
+            if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
+        }
+      }
+    }
+
     hmap
   }
 
