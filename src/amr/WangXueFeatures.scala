@@ -3,6 +3,8 @@ import scala.collection.Map
 import ImportConcepts.{ concept }
 import java.io._
 import scala.util.Random
+import gnu.trove.map.hash.THashMap
+import dagger.ml.Instance
 import dagger.core._
 
 class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
@@ -17,17 +19,17 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
   val debug = false
   val includeChildren = false
-  val includeParents = false
+  val includeParents = true
   val random = new Random()
   val numeric = "[0-9,.]".r
-  var cachedFeatures = Map[Int, Float]()
+  var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
   var cachedState: WangXueTransitionState = null
 
   def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
   }
 
-  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
+  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): gnu.trove.map.hash.THashMap[Int, Float] = {
     // if we have cached Features for this state, and the action does not have a node parameter,
     // then we can save ourselves the effort (and memory) of re-calculating everything
     val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]
@@ -50,10 +52,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         featuresDebug.close
       }
       if (!parameterisedAction) {
-        cachedFeatures = output
+        cachedFeatures = Instance.scalaMapToTrove(output)
         cachedState = state
       }
-      output
+      Instance.scalaMapToTrove(output)
     }
   }
 
@@ -121,12 +123,12 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
             if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
             if (!quadraticTurbo) {
-              add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
-              if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
-              if (parentPOS != "" && sigmaLemma != "") add(hmap, "PARENT-POS-SIGMA-LEMMA=" + parentPOS + "-" + sigmaLemma)
-              if (parentDL.nonEmpty && sigmaLemma != "") for (pdl <- parentDL) add(hmap, "PARENT-DL-SIGMA-LEMMA=" + pdl + "-" + sigmaLemma)
-              if (parentLemma != "" && sigmaDL.nonEmpty) for (sdl <- sigmaDL) add(hmap, "PARENT-LEMMA-SIGMA-DL=" + parentLemma + "-" + sdl)
-              if (parentNER != "" && sigmaNER != "") add(hmap, "PARENT-SIGMA-NER=" + parentNER + "-" + sigmaNER)
+  //            add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+  //            if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
+  //            if (parentPOS != "" && sigmaLemma != "") add(hmap, "PARENT-POS-SIGMA-LEMMA=" + parentPOS + "-" + sigmaLemma)
+  //            if (parentDL.nonEmpty && sigmaLemma != "") for (pdl <- parentDL) add(hmap, "PARENT-DL-SIGMA-LEMMA=" + pdl + "-" + sigmaLemma)
+  //            if (parentLemma != "" && sigmaDL.nonEmpty) for (sdl <- sigmaDL) add(hmap, "PARENT-LEMMA-SIGMA-DL=" + parentLemma + "-" + sdl)
+  //            if (parentNER != "" && sigmaNER != "") add(hmap, "PARENT-SIGMA-NER=" + parentNER + "-" + sigmaNER)
             }
         }
       }

@@ -32,7 +32,8 @@ object RunDagger {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
+    val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
+    //   val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
@@ -59,9 +60,9 @@ object RunDagger {
     val WXTransitionSystem = new WangXueTransitionSystem
     val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WXTransitionSystem, lossFunctionFactory, devData, score,
       GraphViz.graphVizOutputFunction)
- //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
+    //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
     if (options.DEBUG) {
-      
+
       val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
       for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
         outputFile.write(j + "\n")

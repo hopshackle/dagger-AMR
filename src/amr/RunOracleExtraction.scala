@@ -8,7 +8,8 @@ object RunOracleExtraction {
     val extractor = new OracleExtractor[Sentence, WangXueAction, WangXueTransitionState](options)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     println("Loading training data")
-    val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
+  //  val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
+    val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
     val devFile = options.getString("--validation.data", "")
     println("Loading validation data")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
