@@ -28,37 +28,51 @@ object RunDagger {
     expertSystem.construct(nextState, data)
   }
 
+  def corpusSmatchScore(i: Iterable[(Sentence, Sentence)]): Double = {
+    val amrToCompare = i map {
+      case (s1, s2) =>
+        val amr1 = s1.amr match {
+          case None => s1.dependencyTree.toAMR
+          case Some(graph) => graph
+        }
+        val amr2 = s2.amr match {
+          case None => s2.dependencyTree.toAMR
+          case Some(graph) => graph
+        }
+        (amr1, amr2)
+    }
+    corpusSmatchScoreAMR(amrToCompare)
+    //  the commented out line is the mean F-Score - rather than the corpus-level F-Score that we need
+    //      (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
+  }
+
+  def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)]): Double = {
+    val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 4, 1000) } }
+    val totalTriples = i map {case(x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size)} reduce {(a, b) => (a._1 + b._1, a._2 + b._2)}
+    val totalMatches = results map (_._5) sum
+    val overallPrecision =  totalMatches / totalTriples._1
+    val overallRecall = totalMatches / totalTriples._2
+    val overallScore = (2 * overallPrecision * overallRecall) / (overallPrecision + overallRecall)
+    overallScore
+  }
+
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
+    val alignerToUse = options.getString("--aligner", "")
+    AMRGraph.setAligner(alignerToUse)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
     //   val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
-    def score = (i: Iterable[(Sentence, Sentence)]) => {
-      val amrToCompare = i map {
-        case (s1, s2) =>
-          val amr1 = s1.amr match {
-            case None => s1.dependencyTree.toAMR
-            case Some(graph) => graph
-          }
-          val amr2 = s2.amr match {
-            case None => s2.dependencyTree.toAMR
-            case Some(graph) => graph
-          }
-          (amr1, amr2)
-      }
-
-      (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
-    }
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
     val WXTransitionSystem = new WangXueTransitionSystem
-    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WXTransitionSystem, lossFunctionFactory, devData, score,
+    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WXTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore,
       GraphViz.graphVizOutputFunction)
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
     if (options.DEBUG) {

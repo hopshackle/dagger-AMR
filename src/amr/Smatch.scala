@@ -6,18 +6,22 @@ object Smatch {
 
   val debug = false
 
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double) = {
+  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Double) = {
     val smallGraph = if (AMR1.nodes.size < AMR2.nodes.size) AMR1 else AMR2
     val largeGraph = if (AMR1.nodes.size >= AMR2.nodes.size) AMR1 else AMR2
     val allScores = 1 to attempts map (_ => oneIteration(largeGraph, smallGraph, movesToConsider))
-    allScores.maxBy(_._1)
+    val maxScore = allScores.maxBy(_._1)
+    val precision = if (AMR1.nodes.size < AMR2.nodes.size) maxScore._2 else maxScore._3
+    val recall = if (AMR1.nodes.size < AMR2.nodes.size) maxScore._3 else maxScore._2
+    (maxScore._1, precision, recall, maxScore._4, maxScore._5)
     // Returned tuple is (F-Score, Precision, Recall, Absolute Errors)
+    // We may have swapped the input graphs based on relative size, so we need to switch back precision/ recall in this case
   }
 
-  def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double) = {
+  def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double, Double) = {
     var currentBestMap = initialMap(AMR1, AMR2)
     var improvement = true
-    var lastBestScore = (0.0, 0.0, 0.0, 0.0)
+    var lastBestScore = (0.0, 0.0, 0.0, 0.0, 0.0)
     do {
       var lastBestMap = currentBestMap
       currentBestMap = getBestMove(AMR1, AMR2, currentBestMap, movesToConsider)
@@ -104,7 +108,7 @@ object Smatch {
     satisficingMove
   }
 
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double) = {
+  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double, Double) = {
     // nodeMap is keyed on AMR2 node names, and links them to node names in AMR1
     // i.e. AMR1 (larger) is our fixed reference point around which we permute AMR2 (smaller)
     // Rather than get fiddly - we convert each graph to a Seq of String representations of the triples
@@ -119,7 +123,7 @@ object Smatch {
     val fScore = if (precision + recall > 0.00)
       (2 * precision * recall) / (precision + recall)
     else 0.00
-    (fScore, precision, recall, incorrect)
+    (fScore, precision, recall, incorrect, matches)
   }
 
   def stringSeq(AMR: AMRGraph): Seq[String] = {

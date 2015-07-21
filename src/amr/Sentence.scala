@@ -302,7 +302,7 @@ object DependencyTree {
   val processor = new StanfordProcessor
 
   def preProcess(sentence: String): List[String] = {
-    val parsedForDates = extractDates(sentence)
+    val parsedForDates = extractNumbers(extractDates(sentence))
     val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
     stanfordTree map {
       case ConllToken(_, form, _, _, _, _, _, _, _, _) => form.getOrElse("")
@@ -311,7 +311,7 @@ object DependencyTree {
 
   def apply(sentence: String): DependencyTree = {
 
-    val parsedForDates = extractDates(sentence)
+    val parsedForDates = extractNumbers(extractDates(sentence))
     val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
     val monthFiddledTree = stanfordTree map {
       case full @ ConllToken(_, form, _, _, _, _, _, _, _, ner) if (ner.getOrElse("") == "DATE") => { full.copy(form = convertMonth(form)) }
@@ -386,13 +386,26 @@ object DependencyTree {
       val regexToUse = """\$""".r.replaceAllIn(regexStr, str).r
       output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
     }
-    output
+    
+    val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
+    output = realNumbers replaceAllIn (output, _ match {
+      case realNumbers(number, multiple) =>
+        val replacement = number.toDouble * (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
+        f"$replacement%.0f "
+      case other => ""
+    })
+    
+    val dollars = """\$""".r
+    dollars.replaceAllIn(output, "dollars ")
   }
 }
 
 object AMRGraph {
   // We then use the JAMR functionality here
-  // 
+  var useImprovedAligner = false
+  def setAligner(code: String): Unit = {
+    if (code == "improved") useImprovedAligner = true
+  }
   def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
     val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
     val nodeSpans = (for {
@@ -414,12 +427,14 @@ object AMRGraph {
 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-    //    val tokenisedSentence = rawSentence.split(" ")
     val amr = Graph.parse(rawAMR)
-    val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-    //    wordAlignments foreach println
+    val wordAlignments = if (useImprovedAligner)
+      AlignTest.alignWords(tokenisedSentence.toArray, amr)
+    else
+      AlignWords.alignWords(tokenisedSentence.toArray, amr)
+
     val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
-    //    spanAlignments foreach println
+
     AMRGraph(amr)
   }
 

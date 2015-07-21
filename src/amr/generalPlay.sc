@@ -57,32 +57,44 @@ object generalPlay {
   redDate2.replaceAllIn("20011201", m => (m group 1) + " " + (m group 2) + " " + (m group 3))
                                                   //> res16: String = 2001 12 01
 
-"""[.-]""".r.replaceAllIn("He-llo.0.0", "0")      //> res17: String = He0llo0000
-"Hell'o".toLowerCase.replaceAll("""[^0-9a-zA-Z\- ]""", "")
+  """[.-]""".r.replaceAllIn("He-llo.0.0", "0")    //> res17: String = He0llo0000
+  "Hell'o".toLowerCase.replaceAll("""[^0-9a-zA-Z\- ]""", "")
                                                   //> res18: String = hello
-  val b1 = List((1, "one"), (2, "two"), (3, "three"), (1,"oneA"))
+  val b1 = List((1, "one"), (2, "two"), (3, "three"), (1, "oneA"))
                                                   //> b1  : List[(Int, String)] = List((1,one), (2,two), (3,three), (1,oneA))
- val tallinn = """"Tallinn""""                    //> tallinn  : String = "Tallinn"
- val test = " [label = " +  tallinn + "]"         //> test  : String = " [label = "Tallinn"]"
- 
-val t2 = "one two once, one, onet"                //> t2  : String = one two once, one, onet
-val one = """^one | one | one[,.?!;:]""".r        //> one  : scala.util.matching.Regex = ^one | one | one[,.?!;:]
-one.replaceAllIn(t2, " 1 ")                       //> res19: String = " 1 two once, 1  onet"
-DependencyTree.extractNumbers(t2)                 //> Adding annotator tokenize
-                                                  //| Adding annotator ssplit
-                                                  //| Adding annotator parse
-                                                  //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
-                                                  //| shPCFG.ser.gz ... done [1.2 sec].
-                                                  //| Adding annotator lemma
-                                                  //| Adding annotator ner
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
-                                                  //| sim.crf.ser.gz ... done [4.7 sec].
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
-                                                  //| sim.crf.ser.gz ... done [2.2 sec].
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
-                                                  //| stsim.crf.ser.gz ... done [5.0 sec].
-                                                  //| res20: String = " 1 2 once, 1  onet"
-val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)     //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
-val (highScore, index) = (t3 zipWithIndex).max    //> highScore  : Double = 9.0073
+  val tallinn = """"Tallinn""""                   //> tallinn  : String = "Tallinn"
+  val test = " [label = " + tallinn + "]"         //> test  : String = " [label = "Tallinn"]"
+
+  val t2 = "one billion 2 million once, one, 6.02 billions onet"
+                                                  //> t2  : String = one billion 2 million once, one, 6.02 billions onet
+  val one = """^one | one | one[,.?!;:]""".r      //> one  : scala.util.matching.Regex = ^one | one | one[,.?!;:]
+  one.replaceAllIn(t2, " 1 ")                     //> res19: String = " 1 billion 2 million once, 1  6.02 billions onet"
+  val old = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))"""
+                                                  //> old  : String = ((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))
+  val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
+                                                  //> realNumbers  : scala.util.matching.Regex = ((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[
+                                                  //| 0-9]+)|(?:[0-9]+)) (thousand|million|billion)
+  val matches = (realNumbers findAllIn t2).toList //> matches  : List[String] = List(2 million, 6.02 billion)
+  // matches foreach println
+  val text = matches map (x => x.split(" "))      //> text  : List[Array[String]] = List(Array(2, million), Array(6.02, billion))
+                                                  //| 
+  // val replacements = text map { x => x(0).toDouble * (x(1) match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 }) } map (x => f"${x}%.0f")
+  // replacements foreach println
+  realNumbers.replaceAllIn(t2, " rep ")           //> res20: String = one billion  rep  once, one,  rep s onet
+  t2 match { case realNumbers(number) => "f"; case other => other }
+                                                  //> res21: String = one billion 2 million once, one, 6.02 billions onet
+  val a2 = realNumbers findAllIn t2               //> a2  : scala.util.matching.Regex.MatchIterator = non-empty iterator
+  val reformatted = realNumbers replaceAllIn (t2, _ match {
+    case realNumbers(number, multiple) =>
+      val replacement = number.toDouble *  (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
+      f"$replacement%.0f "
+    case other => ""
+  })                                              //> reformatted  : String = one billion 2000000  once, one, 6020000000 s onet
+
+val dollar = """\$""".r                           //> dollar  : scala.util.matching.Regex = \$
+dollar.replaceAllIn("$56", "dollars ")            //> res22: String = dollars 56
+  // DependencyTree.extractNumbers(t2)
+  val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)   //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
+  val (highScore, index) = (t3 zipWithIndex).max  //> highScore  : Double = 9.0073
                                                   //| index  : Int = 3
 }

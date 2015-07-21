@@ -52,15 +52,13 @@ class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXu
     }
     relationIndex(relationString)
   }
-
 }
 
 object WangXueExpertCheck {
 
   def main(args: Array[String]): Unit = {
-
     val iterations = 4
-    val movesToConsider = 500
+    val movesToConsider = 1000
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
@@ -69,14 +67,17 @@ object WangXueExpertCheck {
     val timer = new Timer()
     var timerStarted = false
     var allScores = List[Double]()
-    sentences foreach { sentence =>
-      val fScore = Smatch.fScore(RunDagger.sampleTrajectory(sentence).amr.get, sentence.amr.get, iterations, movesToConsider)
+    val allAMR = sentences map { sentence =>
+      val amrGraph = RunDagger.sampleTrajectory(sentence).amr.get
+      val fScore = Smatch.fScore(amrGraph, sentence.amr.get, iterations, movesToConsider)
       if (!timerStarted) { timerStarted = true; timer.start; println("Starting Timer: " + timer) }
       allScores = fScore._1 :: allScores
       println(f"${fScore._1}%.2f" + "\t" + sentence.rawText)
+      (sentence.amr.get, amrGraph)
     }
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size
     println(f"Average f-Score of $meanScore%.3f in $timer")
+    println(f"Corpus level f-Score of ${RunDagger.corpusSmatchScoreAMR(allAMR)}%.3f in $timer")
   }
 }

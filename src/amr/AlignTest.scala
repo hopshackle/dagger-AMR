@@ -49,8 +49,8 @@ object AlignTest {
       for (i <- Range(0, stemmedSentence.size)) {
         for (word <- stemmedSentence(i)) {
           if (word == concept && alignments(i) == None) {
-            logger(3, "concept: " + node.concept + " word: " + word + " AMR: " + node.concept)
-            possibleMatches.put(i, node.concept :: possibleMatches.getOrElse(i, List()))
+            logger(3, "concept: " + node.concept + " word: " + word + " AMR: " + node.id)
+            possibleMatches.put(i, node.id :: possibleMatches.getOrElse(i, List()))
           }
         }
       }
