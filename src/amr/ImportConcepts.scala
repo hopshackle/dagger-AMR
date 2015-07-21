@@ -96,7 +96,7 @@ object ImportConcepts {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
       val dt = DependencyTree(sentence)
-      val eligibleNodes = dt.nodes filter {case (i, v) => dt.nodeNER.getOrElse(i, "O") == "O" && numbers.replaceAllIn(v, "") != ""} map (_._1)
+      val eligibleNodes = dt.nodes filter {case (i, v) => dt.nodeNER.getOrElse(i, "O") != "PERSON" && numbers.replaceAllIn(v, "") != ""} map (_._1)
       n <- eligibleNodes
       lemma = dt.nodeLemmas.getOrElse(n, "a")
       if !(commonLemmas contains lemma)

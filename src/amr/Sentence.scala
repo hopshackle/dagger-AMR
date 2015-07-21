@@ -393,6 +393,25 @@ object DependencyTree {
 object AMRGraph {
   // We then use the JAMR functionality here
   // 
+  def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
+    val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
+    val nodeSpans = (for {
+      span <- jamrGraph.spans
+      nodeId <- span.nodeIds
+    } yield (nodeId -> (span.start + 1, span.end + 1))).toMap
+    // Note our convention is that the first word in a sentence is at index 1
+
+    val Relation = """:?(.*)""".r
+    val arcs = (for {
+      node1 <- jamrGraph.nodes
+      (label, node2) <- node1.relations
+      Relation(relation) = label // label includes the ":"
+      relation2 = if (relation.size == 3 && relation.startsWith("op")) "opN" else relation
+    } yield ((node1.id, node2.id) -> relation2)).toMap + (("ROOT", jamrGraph.root.id) -> "ROOT")
+
+    AMRGraph(nodes, nodeSpans, arcs)
+  }
+
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
     //    val tokenisedSentence = rawSentence.split(" ")
@@ -401,23 +420,7 @@ object AMRGraph {
     //    wordAlignments foreach println
     val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
     //    spanAlignments foreach println
-    val nodes = amr.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
-
-    val nodeSpans = (for {
-      span <- amr.spans
-      nodeId <- span.nodeIds
-    } yield (nodeId -> (span.start + 1, span.end + 1))).toMap
-    // Note our convention is that the first word in a sentence is at index 1
-
-    val Relation = """:?(.*)""".r
-    val arcs = (for {
-      node1 <- amr.nodes
-      (label, node2) <- node1.relations
-      Relation(relation) = label // label includes the ":"
-      relation2 = if (relation.size == 3 && relation.startsWith("op")) "opN" else relation
-    } yield ((node1.id, node2.id) -> relation2)).toMap + (("ROOT", amr.root.id) -> "ROOT")
-
-    AMRGraph(nodes, nodeSpans, arcs)
+    AMRGraph(amr)
   }
 
   def importFile(fileName: String): IndexedSeq[(String, String)] = {

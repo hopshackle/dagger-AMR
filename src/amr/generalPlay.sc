@@ -72,14 +72,17 @@ DependencyTree.extractNumbers(t2)                 //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
-                                                  //| shPCFG.ser.gz ... done [1.6 sec].
+                                                  //| shPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
-                                                  //| sim.crf.ser.gz ... done [6.4 sec].
+                                                  //| sim.crf.ser.gz ... done [4.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
-                                                  //| sim.crf.ser.gz ... done [2.9 sec].
+                                                  //| sim.crf.ser.gz ... done [2.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
-                                                  //| stsim.crf.ser.gz ... done [6.3 sec].
+                                                  //| stsim.crf.ser.gz ... done [5.0 sec].
                                                   //| res20: String = " 1 2 once, 1  onet"
+val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)     //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
+val (highScore, index) = (t3 zipWithIndex).max    //> highScore  : Double = 9.0073
+                                                  //| index  : Int = 3
 }
