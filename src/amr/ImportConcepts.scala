@@ -13,8 +13,8 @@ object ImportConcepts {
   var amrFile: String = "C:\\AMR\\AMR2.txt"
   val quote = """"""".r
   val numbers = "[0-9.,]".r
-  val commonLemmas = List("the", "and", "a", "in", "of", "to")
-//  val commonLemmas: List[String] = List()
+//  val commonLemmas = List("the", "and", "a", "in", "of", "to")
+  val commonLemmas: List[String] = List()
 
   lazy val relationStrings = loadRelations + "polarity"
   lazy val relationMaster = (for {

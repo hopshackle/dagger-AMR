@@ -6,15 +6,15 @@ object AMRtoDTmapping {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.0 sec].
+                                                  //| hPCFG.ser.gz ... done [1.3 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.2 sec].
+                                                  //| im.crf.ser.gz ... done [5.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.1 sec].
+                                                  //| im.crf.ser.gz ... done [3.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.3 sec].
+                                                  //| tsim.crf.ser.gz ... done [2.2 sec].
                                                   //| dt  : amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> Riyadh-based, 3 -> Naif, 4 -> Arab
                                                   //| , 5 -> Academy, 6 -> for, 7 -> Security, 8 -> Sciences, 9 -> said, 10 -> in,
@@ -120,29 +120,19 @@ dt.nodeNER                                        //> res2: Map[Int,String] = Ma
   dt.getDistanceBetween(0, 3)                     //> res18: Int = 3
   dt.getDistanceBetween(2, 8)                     //> res19: Int = 3
   dt.getDistanceBetween(4, 4)                     //> res20: Int = 0
-  val testData = AMRGraph.importFile("C:\\AMR\\AMR2.txt")
-                                                  //> testData  : IndexedSeq[(String, String)] = Vector((2008-05-14,"(d / date-en
-                                                  //| tity :month 5 :day 14 :year 2008) "), (Estonia (EE); Latvia (LV); Lithuania
-                                                  //|  (LT),"(a / and :op1 (c / country :name (n / name :op1 "Estonia")) :op2 (c2
-                                                  //|  / country :name (n3 / name :op1 "Latvia")) :op3 (c3 / country :name (n5 / 
-                                                  //| name :op1 "Lithuania"))) "), (International; Government; Telecom; technolog
-                                                  //| y; science,"(a / and :op1 (i / international) :op2 (g / government-organiza
-                                                  //| tion :ARG0-of (g2 / govern-01)) :op3 (t / telecommunication) :op4 (t2 / tec
-                                                  //| hnology) :op5 (s / science)) "), (NATO CONSIDERS cyber attacks a threat to 
-                                                  //| military and civilian computer networks after the Estonian Government was s
-                                                  //| truck by cyber attacks in 2007.,"(c / consider-02 :ARG0 (m2 / military :nam
-                                                  //| e (n / name :op1 "NATO")) :ARG1 (a / attack-01 :mod (c2 / cyber)) :ARG2 (t 
-                                                  //| / thing :ARG1-of (t2 / threaten-01 :ARG2 (a5 / and :op1 (n2 / network :mod 
-                                                  //| (m / military)) :op2 (n4 / network :mod (c3 / civilian)) :mod (c4 / compute
-                                                  //| r)))) :time (a3 / after :op1 (s / strike-01 :ARG0 (a4 / attack :mod (c6 / c
-                                                  //| yber)) :ARG1 (g / government-organization :ARG0-of (g2 / govern-01 :ARG1 (c
-                                                  //| 5 / country :name (n3 / name :op1 "Estonia")))) :time (d / date-entity :yea
-                                                  //| r 2007)))) "), (NATO allies have signed an agreement to fund a research cen
-                                                  //| ter to bolster defenses against cyber attacks.,(s / sign-01 :ARG0 (p / pers
-                                                  //| on :ARG0-of (a / ally-01) :mod (m / military :name (n / name :op1 "NATO")))
-                                                  //|  :ARG1 (a2 / agree-01 :ARG0 p :ARG1 (f / fund-01 :ARG0 p :ARG1 (c / center 
-                                                  //| :mod (r / research-01)) :purpose (b / bolster-01 :ARG0 p :ARG1 (d / defend-
-                                                  //| 01 :prep-against (a3 / attack :mod (c2 / cyber)))))))))
+  val testData = AMRGraph.importFile("C:\\AMR\\IRNA.txt")
+                                                  //> testData  : IndexedSeq[(String, String)] = Vector((IRNA stated that in the 
+                                                  //| large-scale army operation along the eastern borders with Afghanistan and P
+                                                  //| akistan 21 drug traffickers were killed, 1500 arrested and approximately 5 
+                                                  //| tons of drugs seized.,(s / state-01 :ARG0 (p3 / publication :name (n / name
+                                                  //|  :op1 "IRNA")) :ARG1 (a / and :op1 (k / kill-01 :ARG1 (p / person :quant 21
+                                                  //|  :ARG0-of (t / traffic-00 :ARG1 (d / drug)))) :op2 (a2 / arrest-01 :ARG1 (p
+                                                  //| 2 / person :quant 1500)) :op3 (s2 / seize-01 :ARG1 (m / mass-quantity :unit
+                                                  //|  (t2 / ton) :quant (a3 / approximate :op1 5) :consist-of (d2 / drug))) :ins
+                                                  //| trument (o / operation :mod (a4 / army) :mod (l / large-scale) :location (a
+                                                  //| 5 / along :op1 (b / border :location (a6 / and :op1 (c2 / country :name (n2
+                                                  //|  / name :op1 "Afghanistan")) :op2 (c3 / country :name (n3 / name :op1 "Paki
+                                                  //| stan"))) :direction (e / east))))))))
   DependencyTree("Estonia (EE); Latvia (LV); Lithuania (LT); Germany (DE): Italy (IT); Spain (ES); Slovakia (SK); United States (US)")
                                                   //> res21: amr.DependencyTree = 
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
@@ -161,71 +151,73 @@ dt.nodeNER                                        //> res2: Map[Int,String] = Ma
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
                                                   //| DeletedNodes:	List()
-  val s1 = Sentence(testData(1)._1, testData(1)._2)
-                                                  //> s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT),
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
-                                                  //| > Lithuania, 13 -> LT)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
-                                                  //|  13 -> (6,7))
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
-                                                  //| ,11) -> dep, (11,13) -> appos)
-                                                  //| InsertedNodes:	Map()
-                                                  //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set()
-                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 
-                                                  //| 0.1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.0.0
-                                                  //|  -> "Latvia", 0 -> and, 0.2 -> country, ROOT -> ROOT, 0.2.0.0 -> "Lithuania
-                                                  //| "),Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0 
-                                                  //| -> (1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6))
-                                                  //| ,Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.
-                                                  //| 1.0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,
-                                                  //| 0.2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0
-                                                  //| , 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
-  s1.positionToAMR                                //> res22: Map[Int,String] = Map(11 -> 0.2.0.0, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 0 -
-                                                  //| > ROOT)
-  val s2 = Sentence(testData(3)._1, testData(3)._2)
-                                                  //> WARNING: Found duplicate match for concept attack-01
-                                                  //| WARNING: Found duplicate match for concept cyber
-                                                  //| s2  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to mili
-                                                  //| tary and civilian computer networks after the Estonian Government was struc
-                                                  //| k by cyber attacks in 2007.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> NATO, 2 -> CONSIDERS, 3 -> cyber, 4 -> attac
-                                                  //| ks, 5 -> a, 6 -> threat, 7 -> to, 8 -> military, 9 -> and, 10 -> civilian, 
-                                                  //| 11 -> computer, 12 -> networks, 13 -> after, 14 -> the, 15 -> Estonian, 16 
-                                                  //| -> Government, 17 -> was, 18 -> struck, 19 -> by, 20 -> cyber, 21 -> attack
-                                                  //| s, 22 -> in, 23 -> 2007)
+  val s1 = Sentence(testData(0)._1, testData(0)._2)
+                                                  //> WARNING: Found duplicate match for concept and
+                                                  //| WARNING: Found duplicate match for concept drug
+                                                  //| s1  : amr.Sentence = Sentence(IRNA stated that in the large-scale army oper
+                                                  //| ation along the eastern borders with Afghanistan and Pakistan 21 drug traff
+                                                  //| ickers were killed, 1500 arrested and approximately 5 tons of drugs seized.
+                                                  //| ,
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> IRNA, 2 -> stated, 3 -> that, 4 -> in, 5 -> 
+                                                  //| the, 6 -> large-scale, 7 -> army, 8 -> operation, 9 -> along, 10 -> the, 11
+                                                  //|  -> eastern, 12 -> borders, 13 -> with, 14 -> Afghanistan, 15 -> and, 16 ->
+                                                  //|  Pakistan, 17 -> 21, 18 -> drug, 19 -> traffickers, 20 -> were, 21 -> kille
+                                                  //| d, 23 -> 1500, 24 -> arrested, 25 -> and, 26 -> approximately, 27 -> 5, 28 
+                                                  //| -> tons, 29 -> of, 30 -> drugs, 31 -> seized)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
                                                   //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,1
                                                   //| 2), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16), 16 -> (16,1
                                                   //| 7), 17 -> (17,18), 18 -> (18,19), 19 -> (19,20), 20 -> (20,21), 21 -> (21,2
-                                                  //| 2), 22 -> (22,23), 23 -> (23,24))
-                                                  //| Edges:	Map((0,4) -> root, (3,1) -> nn, (3,2) -> nn, (4,3) -> nsubj, (4,
-                                                  //| 6) -> dobj, (4,7) -> prep, (4,18) -> advcl, (6,5) -> det, (7,12) -> pobj, (
-                                                  //| 8,9) -> cc, (8,10) -> conj, (12,8) -> amod, (12,11) -> nn, (16,14) -> det, 
-                                                  //| (16,15) -> amod, (18,13) -> mark, (18,16) -> nsubjpass, (18,17) -> auxpass,
-                                                  //|  (18,19) -> prep, (19,21) -> pobj, (21,20) -> nn, (21,22) -> prep, (22,23) 
-                                                  //| -> pobj)
+                                                  //| 2), 23 -> (22,23), 24 -> (23,24), 25 -> (24,25), 26 -> (25,26), 27 -> (26,2
+                                                  //| 7), 28 -> (27,28), 29 -> (28,29), 30 -> (29,30), 31 -> (30,31))
+                                                  //| Edges:	Map((0,2) -> root, (2,1) -> nsubj, (2,21) -> ccomp, (4,8) -> pob
+                                                  //| j, (8,5) -> det, (8,6) -> amod, (8,7) -> nn, (8,9) -> prep, (9,12) -> pobj,
+                                                  //|  (12,10) -> det, (12,11) -> amod, (12,13) -> prep, (13,14) -> pobj, (14,15)
+                                                  //|  -> cc, (14,16) -> conj, (19,17) -> num, (19,18) -> nn, (21,3) -> mark, (21
+                                                  //| ,4) -> prep, (21,19) -> nsubjpass, (21,20) -> auxpass, (21,23) -> dobj, (23
+                                                  //| ,24) -> amod, (23,25) -> cc, (23,28) -> conj, (27,26) -> quantmod, (28,27) 
+                                                  //| -> num, (28,29) -> prep, (29,30) -> pobj, (30,31) -> vmod)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name
-                                                  //| , 0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0
-                                                  //|  -> civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3
-                                                  //| .0.1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> at
-                                                  //| tack, 0.3.0 -> strike-01, 0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 
-                                                  //| -> computer, 0 -> consider-02, 0.3.0.1 -> government-organization, 0.2 -> t
-                                                  //| hing, 0.3.0.2 -> date-entity, 0.3.0.1.0.0.0.0 -> "Estonia", ROOT -> ROOT, 0
-                                                  //| .2.0.0 -> and, 0.3.0.1.0.0.0 -> name, 0.3.0.0.0 -> cyber),Map(0.1 -> (4,5),
-                                                  //|  0.0.0 -> (1,2), 0.3.0.1.0.0 -> (15,16), 0.2.0.0.0 -> (12,13), 0.1.0 -> (3,
-                                                  //| 4), 0.2.0.0.1.0 -> (10,11), 0.3.0.2.0 -> (23,24), 0.0 -> (8,9), 0.0.0.0 -> 
-                                                  //| (1,2), 0.2.0 -> (6,7), 0.3.0.0 -> (21,22), 0.3.0 -> (18,19), 0.3 -> (13,14)
-                                                  //| , 0.2.0.0.2 -> (11,12), 0 -> (2,3), 0.3.0.1 -> (16,17), 0.2 -> (6,7), 0.3.0
-                                                  //| .2 -> (23,24), 0
+                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> and, 0.0.0 -> name, 0.1.
+                                                  //| 3.2.0.1 -> east, 0.1.3.2.0.0.0.0.0 -> "Afghanistan", 0.1.3.2.0.0.0 -> count
+                                                  //| ry, 0.1.3.2.0.0.0.0 -> name, 0.1.2.0.0 -> ton, 0.1.0 -> kill-01, 0.1.3.2.0.
+                                                  //| 0 -> and, 0.1.0.0.1.0 -> drug, 0.1.0.0.0 -> 21, 0.0 -> publication, 0.1.3.2
+                                                  //| .0.0.1.0 -> name, 0.1.2.0.1 -> approximate, 0.1.3.2 -> along, 0.0.0.0 -> "I
+                                                  //| RNA", 0.1.3 -> operation, 0.1.1.0.0 -> 1500, 0.1.0.0.1 -> traffic-00, 0.1.3
+                                                  //| .2.0.0.1.0.0 -> "Pakistan", 0.1.0.0 -> person, 0.1.2.0 -> mass-quantity, 0.
+                                                  //| 1.3.1 -> large-scale, 0 -> sta
                                                   //| Output exceeds cutoff limit.
-  s2.positionToAMR                                //> res23: Map[Int,String] = Map(0 -> ROOT, 10 -> 0.2.0.0.1.0, 20 -> 0.3.0.0.0,
-                                                  //|  1 -> 0.0.0.0, 6 -> 0.2.0, 21 -> 0.3.0.0, 9 -> 0.2.0.0, 13 -> 0.3, 2 -> 0, 
-                                                  //| 12 -> 0.2.0.0.0, 3 -> 0.1.0, 18 -> 0.3.0, 16 -> 0.3.0.1, 11 -> 0.2.0.0.2, 2
-                                                  //| 3 -> 0.3.0.2.0, 8 -> 0.0, 4 -> 0.1, 15 -> 0.3.0.1.0.0.0.0)
+  s1.positionToAMR map {case (k, v) => s1.dependencyTree.nodes(k) + " -> " + s1.amr.get.nodes(v)} foreach println
+                                                  //> ROOT -> ROOT
+                                                  //| arrested -> arrest-01
+                                                  //| and -> and
+                                                  //| Afghanistan -> "Afghanistan"
+                                                  //| of -> mass-quantity
+                                                  //| IRNA -> "IRNA"
+                                                  //| large-scale -> large-scale
+                                                  //| tons -> ton
+                                                  //| killed -> kill-01
+                                                  //| along -> along
+                                                  //| stated -> state-01
+                                                  //| 21 -> 21
+                                                  //| 5 -> 5
+                                                  //| borders -> border
+                                                  //| army -> army
+                                                  //| drug -> drug
+                                                  //| Pakistan -> "Pakistan"
+                                                  //| seized -> seize-01
+                                                  //| eastern -> east
+                                                  //| approximately -> approximate
+                                                  //| 1500 -> 1500
+                                                  //| operation -> operation
+                                                  //| drugs -> drug
+                                                  //| traffickers -> traffic-00
+                                                  //| and -> and
+  
+  // val s2 = Sentence(testData(3)._1, testData(3)._2)
+  // s2.positionToAMR
 
 
   val testDataFull = AMRGraph.importFile("C:\\AMR\\trainingSet150.txt")

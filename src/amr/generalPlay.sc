@@ -19,9 +19,8 @@ object generalPlay {
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
-                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
-                                                  //| , 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
+                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -62,13 +61,14 @@ object generalPlay {
                                                   //> res18: String = hello
   val b1 = List((1, "one"), (2, "two"), (3, "three"), (1, "oneA"))
                                                   //> b1  : List[(Int, String)] = List((1,one), (2,two), (3,three), (1,oneA))
+  b1.sortWith((a, b) => a._1 > b._1)              //> res19: List[(Int, String)] = List((3,three), (2,two), (1,one), (1,oneA))
   val tallinn = """"Tallinn""""                   //> tallinn  : String = "Tallinn"
   val test = " [label = " + tallinn + "]"         //> test  : String = " [label = "Tallinn"]"
 
   val t2 = "one billion 2 million once, one, 6.02 billions onet"
                                                   //> t2  : String = one billion 2 million once, one, 6.02 billions onet
   val one = """^one | one | one[,.?!;:]""".r      //> one  : scala.util.matching.Regex = ^one | one | one[,.?!;:]
-  one.replaceAllIn(t2, " 1 ")                     //> res19: String = " 1 billion 2 million once, 1  6.02 billions onet"
+  one.replaceAllIn(t2, " 1 ")                     //> res20: String = " 1 billion 2 million once, 1  6.02 billions onet"
   val old = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))"""
                                                   //> old  : String = ((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))
   val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
@@ -80,9 +80,9 @@ object generalPlay {
                                                   //| 
   // val replacements = text map { x => x(0).toDouble * (x(1) match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 }) } map (x => f"${x}%.0f")
   // replacements foreach println
-  realNumbers.replaceAllIn(t2, " rep ")           //> res20: String = one billion  rep  once, one,  rep s onet
+  realNumbers.replaceAllIn(t2, " rep ")           //> res21: String = one billion  rep  once, one,  rep s onet
   t2 match { case realNumbers(number) => "f"; case other => other }
-                                                  //> res21: String = one billion 2 million once, one, 6.02 billions onet
+                                                  //> res22: String = one billion 2 million once, one, 6.02 billions onet
   val a2 = realNumbers findAllIn t2               //> a2  : scala.util.matching.Regex.MatchIterator = non-empty iterator
   val reformatted = realNumbers replaceAllIn (t2, _ match {
     case realNumbers(number, multiple) =>
@@ -92,7 +92,7 @@ object generalPlay {
   })                                              //> reformatted  : String = one billion 2000000  once, one, 6020000000 s onet
 
 val dollar = """\$""".r                           //> dollar  : scala.util.matching.Regex = \$
-dollar.replaceAllIn("$56", "dollars ")            //> res22: String = dollars 56
+dollar.replaceAllIn("$56", "dollars ")            //> res23: String = dollars 56
   // DependencyTree.extractNumbers(t2)
   val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)   //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
   val (highScore, index) = (t3 zipWithIndex).max  //> highScore  : Double = 9.0073

@@ -89,7 +89,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (sigmaLemma != "") add(hmap, "SIGMA-LEMMA=" + sigmaLemma)
     if (sigmaWord != sigmaLemma) add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (sigmaNER != "") add(hmap, "SIGMA-NER=" + sigmaNER)
-    if (numeric.replaceAllIn(sigmaWord, "") == "") add(hmap, "SIGMA-NUMERIC")
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
     val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     for (sdl <- sigmaDL) add(hmap, "SIGMA-DL=" + sdl)
@@ -121,7 +120,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
             if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
             for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
-            if (numeric.replaceAllIn(parentWord, "") == "") add(hmap, "PARENT-NUMERIC")
             if (!quadraticTurbo) {
   //            add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
   //            if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
@@ -196,7 +194,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (betaInserted) add(hmap, "BETA-INSERTED")
     if (!quadraticTurbo) if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
-    if (numeric.replaceAllIn(betaWord, "") == "") add(hmap, "BETA-NUMERIC")
     if (!quadraticTurbo) add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
 
     // WangXue features
@@ -243,7 +240,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigma = state.nodesToProcess.head
     val betaWord = state.currentGraph.nodes(beta)
     val kappaWord = state.currentGraph.nodes(parameterNode)
-    if (numeric.replaceAllIn(kappaWord, "") == "") add(hmap, "KAPPA-NUMERIC")
     val (betaPosition, _) = state.currentGraph.nodeSpans.getOrElse(beta, (0, 0))
     val (kappaPosition, _) = state.currentGraph.nodeSpans.getOrElse(parameterNode, (0, 0))
     val distance = if (kappaPosition > 0 && betaPosition > 0) Math.abs(kappaPosition - betaPosition) else 0

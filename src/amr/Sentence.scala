@@ -271,29 +271,43 @@ object Sentence {
   }
 
   def mapAMRtoDTNodes(amrKeys: Seq[String], wordIndices: Seq[Int], amr: Option[AMRGraph], dependencyTree: DependencyTree): Map[Int, String] = {
-    // TODO: Use rockymadden/stringmetrics here!
+    import com.rockymadden.stringmetric.similarity.JaroMetric
     val amrNodes = amr.get.nodes
     if (debug) println(amrKeys)
     if (debug) println(wordIndices)
-    val greedyMatch = (for {
+    val similarities = (for {
       amrKey <- amrKeys
       val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       word <- wordIndices
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
-      if (dtWord == amrConcept)
-    } yield (word -> amrKey)).toMap
-    if (debug) println("Greedy mapping: " + greedyMatch)
-    // At this stage we have mapped any DT to AMR nodes with an exact String match
+      val similarity = JaroMetric.compare(dtWord, amrConcept).getOrElse(0.0)
+      if similarity > 0.001
+    } yield (word, amrKey, similarity))  sortWith((x, y) => x._3 > y._3)
+    // We now have a list of all non-zero similarities, sorted in descending order of similarity
+    
+    var mappings = scala.collection.mutable.Map[Int, String]()
+    var wordsMapped = scala.collection.mutable.Set[Int]()
+    var conceptsMapped = scala.collection.mutable.Set[String]()
+    for ((word, concept, similarity) <- similarities) {
+      if (!(wordsMapped contains word) && !(conceptsMapped contains concept)) {
+        mappings.put(word, concept)
+        wordsMapped.add(word)
+        conceptsMapped.add(concept)
+      }
+    }
+    
+    if (debug) println("Jaro mapping: " + mappings)
+    // At this stage we have mapped any DT to AMR nodes with a non-zero similarity
     // We then select the topmost DT nodes that are required to match the remaining unmapped AMR nodes
     // (up to all of them, with 'topmost' defined as being closest to root of DT)
-    val unmappedAMRInDecreasingDepthOrder = amrKeys diff greedyMatch.values.toSeq sortWith (amr.get.depth(_) > amr.get.depth(_))
+    val unmappedAMRInDecreasingDepthOrder = amrKeys diff mappings.values.toSeq sortWith (amr.get.depth(_) > amr.get.depth(_))
     if (debug && unmappedAMRInDecreasingDepthOrder.size > 0) println("AMR Dec: " + unmappedAMRInDecreasingDepthOrder)
-    val unmappedDTInIncreasingDepthOrder = wordIndices diff greedyMatch.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
+    val unmappedDTInIncreasingDepthOrder = wordIndices diff mappings.keys.toSeq sortWith (dependencyTree.depth(_) < dependencyTree.depth(_))
     if (debug && unmappedDTInIncreasingDepthOrder.size > 0) println("DT Inc: " + unmappedDTInIncreasingDepthOrder)
     val randomMatch = (unmappedDTInIncreasingDepthOrder zip unmappedAMRInDecreasingDepthOrder).toMap
     // we then concatenate the greedy and random matches, plus a hard-coded mapping of the Root nodes
     if (debug) println("Random mapping: " + randomMatch)
-    greedyMatch ++ randomMatch
+    mappings.toMap ++ randomMatch
   }
 }
 
