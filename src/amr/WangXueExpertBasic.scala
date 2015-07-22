@@ -78,6 +78,9 @@ object WangXueExpertCheck {
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size
     println(f"Average f-Score of $meanScore%.3f in $timer")
-    println(f"Corpus level f-Score of ${RunDagger.corpusSmatchScoreAMR(allAMR)}%.3f in $timer")
+    val scores = RunDagger.corpusSmatchScoreAMR(allAMR)
+    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer")
+    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer")
+    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer")
   }
 }

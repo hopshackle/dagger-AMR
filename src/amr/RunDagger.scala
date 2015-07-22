@@ -28,7 +28,7 @@ object RunDagger {
     expertSystem.construct(nextState, data)
   }
 
-  def corpusSmatchScore(i: Iterable[(Sentence, Sentence)]): Double = {
+  def corpusSmatchScore(i: Iterable[(Sentence, Sentence)]): List[(String, Double)] = {
     val amrToCompare = i map {
       case (s1, s2) =>
         val amr1 = s1.amr match {
@@ -46,14 +46,14 @@ object RunDagger {
     //      (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
   }
 
-  def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)]): Double = {
+  def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)]): List[(String, Double)] = {
     val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 4, 1000) } }
     val totalTriples = i map {case(x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size)} reduce {(a, b) => (a._1 + b._1, a._2 + b._2)}
     val totalMatches = results map (_._5) sum
     val overallPrecision =  totalMatches / totalTriples._1
     val overallRecall = totalMatches / totalTriples._2
     val overallScore = (2 * overallPrecision * overallRecall) / (overallPrecision + overallRecall)
-    overallScore
+    List(("F-Score", overallScore), ("Precision", overallPrecision), ("Recall", overallRecall))
   }
 
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
