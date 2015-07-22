@@ -9,3 +9,9 @@ class WangXueLossFunctionActionPenalty extends WangXueLossFunction {
     1.0 - Smatch.fScore(gold.amr.get, testAMR, 1, 500)._1 + (testActions.size / 1000.0)
   }
 }
+
+class WXConstantLoss extends WangXueLossFunction {
+  override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
+    0.0
+  }
+}

@@ -5,8 +5,10 @@ import amr.ImportConcepts.{ concept, relation }
 class WangXueLossFunctionFactory(lossToUse: String) extends LossFunctionFactory[Sentence, WangXueAction, WangXueTransitionState] {
   override def newLossFunction = lossToUse match {
     case "Penalty" => new WangXueLossFunctionActionPenalty
+    case "PenaltyAbs" => new WangXueLossFunctionAbsPenalty
     case "Abs" => new WangXueLossFunctionAbs
     case "Hamming" => new WXHammingLoss
+    case "None" => new WXConstantLoss
     case _ => new WangXueLossFunction
   }
 }

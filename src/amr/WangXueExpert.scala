@@ -72,8 +72,10 @@ class WangXueExpert extends WangXueExpertBasic {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
           println(state.currentGraph.insertedNodes)
         }
-   //     NextNode(conceptIndex(concept))
-        NextNode(if (state.currentGraph.insertedNodes contains state.nodesToProcess.head) 0 else conceptIndex(concept))
+        // If the node label is exactly what we want, then we use 0 - as this uses the label directly.
+        // This happens when we are processing an inserted node, or are revisiting a node
+        val conceptToUse = if (state.currentGraph.nodes(state.nodesToProcess.head) == concept) 0 else conceptIndex(concept)
+        NextNode(conceptToUse)
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>

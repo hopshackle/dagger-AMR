@@ -6,9 +6,11 @@ object RunOracleExtraction {
   def main(args: Array[String]): Unit = {
     val options = new DAGGEROptions(args)
     val extractor = new OracleExtractor[Sentence, WangXueAction, WangXueTransitionState](options)
+    val alignerToUse = options.getString("--aligner", "")
+    AMRGraph.setAligner(alignerToUse)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     println("Loading training data")
-  //  val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
+    //  val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
     val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
     val devFile = options.getString("--validation.data", "")
     println("Loading validation data")

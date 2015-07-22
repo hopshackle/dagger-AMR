@@ -386,7 +386,7 @@ object DependencyTree {
       val regexToUse = """\$""".r.replaceAllIn(regexStr, str).r
       output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
     }
-    
+
     val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
     output = realNumbers replaceAllIn (output, _ match {
       case realNumbers(number, multiple) =>
@@ -394,7 +394,7 @@ object DependencyTree {
         f"$replacement%.0f "
       case other => ""
     })
-    
+
     val dollars = """\$""".r
     dollars.replaceAllIn(output, "dollars ")
   }
