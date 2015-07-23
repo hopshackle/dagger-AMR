@@ -97,4 +97,20 @@ dollar.replaceAllIn("$56", "dollars ")            //> res23: String = dollars 56
   val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)   //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
   val (highScore, index) = (t3 zipWithIndex).max  //> highScore  : Double = 9.0073
                                                   //| index  : Int = 3
+val costs = List(0.686, 0.749, 0.744, 0.639, 0.386, 0.619, 0.674, 0.574, 0.785, 0.513, 0.412, 0.513, 0.321, 0.417)
+                                                  //> costs  : List[Double] = List(0.686, 0.749, 0.744, 0.639, 0.386, 0.619, 0.67
+                                                  //| 4, 0.574, 0.785, 0.513, 0.412, 0.513, 0.321, 0.417)
+val min = costs.minBy(_ * 1.0)                    //> min  : Double = 0.321
+val tempNormCosts = costs.map(x => (x - min))     //> tempNormCosts  : List[Double] = List(0.36500000000000005, 0.428, 0.423, 0.3
+                                                  //| 18, 0.065, 0.298, 0.35300000000000004, 0.25299999999999995, 0.464, 0.192, 0
+                                                  //| .09099999999999997, 0.192, 0.0, 0.09599999999999997)
+val normedCosts = if (tempNormCosts contains 0.0) tempNormCosts.toArray else (tempNormCosts map (x => 0.0)).toArray
+                                                  //> normedCosts  : Array[Double] = Array(0.36500000000000005, 0.428, 0.423, 0.3
+                                                  //| 18, 0.065, 0.298, 0.35300000000000004, 0.25299999999999995, 0.464, 0.192, 0
+                                                  //| .09099999999999997, 0.192, 0.0, 0.09599999999999997)
+normedCosts map (_.toFloat)                       //> res24: Array[Float] = Array(0.365, 0.428, 0.423, 0.318, 0.065, 0.298, 0.353
+                                                  //| , 0.253, 0.464, 0.192, 0.091, 0.192, 0.0, 0.096)
+var classifier = null.asInstanceOf[dagger.ml.MultiClassClassifier[String]]
+                                                  //> classifier  : dagger.ml.MultiClassClassifier[String] = null
+classifier == null                                //> res25: Boolean = true
 }
