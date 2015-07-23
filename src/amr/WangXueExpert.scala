@@ -79,8 +79,12 @@ class WangXueExpert extends WangXueExpertBasic {
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
-        if (betaAMRParents contains sigmaAMR) NextEdge(relationIndex(data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)))
-        else if ((sigmaAMRParents contains betaAMR)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
+        if (betaAMRParents contains sigmaAMR) {
+          val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
+          val relationRequired = relationIndex(relationText)
+          val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
+          NextEdge(relationRequired)
+        } else if ((sigmaAMRParents contains betaAMR)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
         else if (allNodesAMR contains betaAMRParents.head) {
           val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
