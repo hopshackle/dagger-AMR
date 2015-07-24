@@ -28,6 +28,36 @@ abstract class Graph[K] {
   def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
   def getRoots: Set[K] = nodes.keySet filter isRoot
+  def getNodesBetween(node1: K, node2: K): List[K] = {
+    def findPathTo(currentPaths: List[List[K]], target: K, acc: Int): List[K] = {
+      if (acc > 30) {
+        println("Path search has exceeded 30 nodes between " + node1 + " and " + node2 + ". Giving up.\n" + this.toString);
+        List()
+      } else {
+        val o = for {
+          currentPath <- currentPaths
+          val successorNodes = (parentsOf(currentPath.head) ++ childrenOf(currentPath.head)) diff currentPath
+        } yield successorNodes map (_ :: currentPath)
+        val updatedPaths = o.flatten
+        if (updatedPaths exists (_.head == target)) {
+          updatedPaths.find { x => x.head == target }.get
+        } else {
+          findPathTo(updatedPaths, target, acc + 1)
+        }
+      }
+    }
+    val start = List(List(node1))
+    if (node1 == node2) {
+      List(node1)
+    } else
+      findPathTo(start, node2, 0)
+  }
+
+  def getDistanceBetween(node1: K, node2: K): Int = {
+    val path = getNodesBetween(node2, node1)
+    if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
+  }
+  
   private def subGraph(node: K, acc: Int): Set[K] = {
     if (acc > 50) { println("Depth of subgraph exceeds 50 from " + node + " : \n" + this.toString); Set(node) } else {
       if (isLeafNode(node)) Set(node)
@@ -133,30 +163,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     (if (s == 999) 0 else s, if (e == 999) 0 else e)
   }
 
-  def getNodesBetween(node1: Int, node2: Int): List[Int] = {
-    def findPathTo(currentPaths: List[List[Int]], target: Int, acc: Int): List[Int] = {
-      if (acc > 20) {
-        println("Path search has exceeded 20 nodes between " + node1 + " and " + node2 + ". Giving up.\n" + this.toString);
-        List()
-      } else {
-        val o = for {
-          currentPath <- currentPaths
-          val successorNodes = (parentsOf(currentPath.head) ++ childrenOf(currentPath.head)) diff currentPath
-        } yield successorNodes map (_ :: currentPath)
-        val updatedPaths = o.flatten
-        if (updatedPaths exists (_.head == target)) {
-          updatedPaths.find { x => x.head == target }.get
-        } else {
-          findPathTo(updatedPaths, target, acc + 1)
-        }
-      }
-    }
-    val start = List(List(node1))
-    if (node1 == node2) {
-      List(node1)
-    } else
-      findPathTo(start, node2, 0)
-  }
   def getPathBetween(node1: Int, node2: Int): String = {
     // starting with node1, we're just conducting a search until we hit node2
     val path = getNodesBetween(node2, node1)
@@ -174,10 +180,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
         }
       } yield b).mkString("-")
     pathString
-  }
-  def getDistanceBetween(node1: Int, node2: Int): Int = {
-    val path = getNodesBetween(node2, node1)
-    if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
   }
 
   override def toString: String = {
@@ -282,9 +284,9 @@ object Sentence {
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       val similarity = JaroMetric.compare(dtWord, amrConcept).getOrElse(0.0)
       if similarity > 0.001
-    } yield (word, amrKey, similarity))  sortWith((x, y) => x._3 > y._3)
+    } yield (word, amrKey, similarity)) sortWith ((x, y) => x._3 > y._3)
     // We now have a list of all non-zero similarities, sorted in descending order of similarity
-    
+
     var mappings = scala.collection.mutable.Map[Int, String]()
     var wordsMapped = scala.collection.mutable.Set[Int]()
     var conceptsMapped = scala.collection.mutable.Set[String]()
@@ -295,7 +297,7 @@ object Sentence {
         conceptsMapped.add(concept)
       }
     }
-    
+
     if (debug) println("Jaro mapping: " + mappings)
     // At this stage we have mapped any DT to AMR nodes with a non-zero similarity
     // We then select the topmost DT nodes that are required to match the remaining unmapped AMR nodes

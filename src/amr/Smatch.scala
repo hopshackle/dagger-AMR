@@ -25,7 +25,7 @@ object Smatch {
     do {
       var lastBestMap = currentBestMap
       currentBestMap = getBestMove(AMR1, AMR2, currentBestMap, movesToConsider)
-      var newScore = fScore(AMR1, AMR2, currentBestMap)
+      var newScore = fScoreWithMap(AMR1, AMR2, currentBestMap)
       improvement = newScore._1 > lastBestScore._1
       if (improvement) lastBestScore = newScore
       if (!improvement) currentBestMap = lastBestMap
@@ -138,13 +138,13 @@ object Smatch {
     } yield currentMap + (i -> jPointer) + (j -> iPointer)
 
     val allMoves = Random.shuffle(allVacantMoves ++ allSwapMoves).take(movesToConsider)
-    val startScore = fScore(AMR1, AMR2, currentMap)
+    val startScore = fScoreWithMap(AMR1, AMR2, currentMap)
     var satisficingMove = currentMap
 
     val loop = new Breaks;
     loop.breakable {
       for (move <- allMoves) {
-        val score = fScore(AMR1, AMR2, move)
+        val score = fScoreWithMap(AMR1, AMR2, move)
         if (score._1 > startScore._1) {
           satisficingMove = move
           loop.break
@@ -154,7 +154,7 @@ object Smatch {
     satisficingMove
   }
 
-  def fScore(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double, Double) = {
+  def fScoreWithMap(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double, Double) = {
     // nodeMap is keyed on AMR2 node names, and links them to node names in AMR1
     // i.e. AMR1 (larger) is our fixed reference point around which we permute AMR2 (smaller)
     // Rather than get fiddly - we convert each graph to a Seq of String representations of the triples
@@ -166,6 +166,21 @@ object Smatch {
     val precision = matches / amr2.size
     val recall = matches / amr1.size
     val incorrect = amr2.size - matches + amr1.size - matches
+    val fScore = if (precision + recall > 0.00)
+      (2 * precision * recall) / (precision + recall)
+    else 0.00
+    (fScore, precision, recall, incorrect, matches)
+  }
+
+  def naiveFScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Double) = {
+    val triples1 = naiveStringSeq(AMR1)
+    val triples2 = naiveStringSeq(AMR2)
+    val oneNotTwo = triples1 diff triples2 size
+    val twoNotOne = triples2 diff triples1 size
+    val matches: Double = Math.min(triples1.size - oneNotTwo, triples2.size - twoNotOne)
+    val precision = matches / triples2.size
+    val recall = matches / triples1.size
+    val incorrect = triples2.size - matches + triples1.size - matches
     val fScore = if (precision + recall > 0.00)
       (2 * precision * recall) / (precision + recall)
     else 0.00
@@ -184,6 +199,14 @@ object Smatch {
     val nodes = AMR.nodes map (node => alias(node._1, nodeMap) + ":" + node._2)
     val arcs = AMR.arcs map {
       case ((source, dest), arcName) => alias(source, nodeMap) + ":" + arcName + ":" + alias(dest, nodeMap)
+    }
+    (nodes ++ arcs).toSeq
+  }
+
+  def naiveStringSeq(AMR: AMRGraph): Seq[String] = {
+    val nodes = AMR.nodes map (_._2)
+    val arcs = AMR.arcs map {
+      case ((source, dest), arcName) => AMR.nodes(source) + ":" + arcName + ":" + AMR.nodes(dest)
     }
     (nodes ++ arcs).toSeq
   }

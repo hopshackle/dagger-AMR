@@ -46,8 +46,9 @@ object RunDagger {
     //      (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
   }
 
-  def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)], iterations: Int = 4, attempts: Int = 1000): List[(String, Double)] = {
-    val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, iterations, attempts) } }
+  def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)], iterations: Int = 4, attempts: Int = 1000, naive: Boolean = false): List[(String, Double)] = {
+    val fScoreFn = if (naive) Smatch.naiveFScore _ else Smatch.fScore _
+    val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => fScoreFn(x, y, iterations, attempts) } }
     val totalTriples = i map {case(x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size)} reduce {(a, b) => (a._1 + b._1, a._2 + b._2)}
     val totalMatches = results map (_._5) sum
     val overallPrecision =  totalMatches / totalTriples._1

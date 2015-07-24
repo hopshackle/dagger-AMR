@@ -15,3 +15,5 @@ class WXConstantLoss extends WangXueLossFunction {
     0.0
   }
 }
+
+

@@ -62,6 +62,7 @@ object WangXueExpertCheck {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
+ //   AMRGraph.setAligner("improved")
     val rawData = AMRGraph.importFile(fileName)
     val sentences = rawData map (d => Sentence(d._1, d._2))
     val timer = new Timer()
@@ -69,7 +70,7 @@ object WangXueExpertCheck {
     var allScores = List[Double]()
     val allAMR = sentences map { sentence =>
       val amrGraph = RunDagger.sampleTrajectory(sentence).amr.get
-      val fScore = Smatch.fScore(amrGraph, sentence.amr.get, iterations, movesToConsider)
+      val fScore = Smatch.naiveFScore(amrGraph, sentence.amr.get)
       if (!timerStarted) { timerStarted = true; timer.start; println("Starting Timer: " + timer) }
       allScores = fScore._1 :: allScores
       println(f"${fScore._1}%.2f" + "\t" + sentence.rawText)

@@ -83,7 +83,7 @@ class WangXueExpert extends WangXueExpertBasic {
           val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
           val relationRequired = relationIndex(relationText)
           val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
-          NextEdge(relationRequired)
+          NextEdge(relationToUse)
         } else if ((sigmaAMRParents contains betaAMR)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
         else if (allNodesAMR contains betaAMRParents.head) {
           val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
