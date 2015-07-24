@@ -95,7 +95,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
       case Some(graph) => graph
     }
 
-    1.0 - Smatch.fScore(gold.amr.get, testAMR, 1, 500)._1
+    1.0 - Smatch.fScore(gold.amr.get, testAMR, 1, 1000)._1
   }
 
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence

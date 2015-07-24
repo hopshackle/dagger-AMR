@@ -19,7 +19,7 @@ object Smatch {
   }
 
   def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double, Double) = {
-    var currentBestMap = initialMap(AMR1, AMR2)
+    var currentBestMap = initialMap2(AMR1, AMR2)
     var improvement = true
     var lastBestScore = (0.0, 0.0, 0.0, 0.0, 0.0)
     do {
@@ -45,6 +45,52 @@ object Smatch {
       currentBestMap foreach { case (i, v) => println(i + " -> " + v) }
     }
     lastBestScore
+  }
+
+  def initialMap2(AMR1: AMRGraph, AMR2: AMRGraph): Map[String, String] = {
+    def topologicalSimilarity(key1: String, key2: String, mapping: scala.collection.mutable.Map[String, String]): Double = {
+      val parentsInCommon = (AMR2.parentsOf(key2) map { p => mapping.getOrElse(p, "NOT FOUND") } intersect AMR1.parentsOf(key1)).size
+      val childrenInCommon = (AMR2.childrenOf(key2) map { c => mapping.getOrElse(c, "NOT FOUND") } intersect AMR1.childrenOf(key1)).size
+      parentsInCommon + childrenInCommon
+    }
+    val iterations = 4
+    var bestMapping = scala.collection.mutable.Map[String, String]()
+    for (i <- 1 to iterations) {
+      val amrNodes1 = AMR1.nodes
+      val amrNodes2 = AMR2.nodes
+      val similarities = (for {
+        amrKey1 <- amrNodes1.keys
+        val amrConcept1 = amrNodes1(amrKey1)
+        amrKey2 <- amrNodes2.keys
+        val amrConcept2 = amrNodes2(amrKey2)
+        val conceptCount: Double = if (amrConcept1 == amrConcept2) (amrNodes1.values count (_ == amrConcept1)) +
+          (amrNodes2.values count (_ == amrConcept1))
+        else 0.0
+        val similarity = (1.0 + topologicalSimilarity(amrKey1, amrKey2, bestMapping)) *
+          (1.0 + (if (amrConcept1 == amrConcept2) 5.0 * Math.pow(0.5, conceptCount - 1) else 0.0))
+        if similarity > 0.001
+      } yield (amrKey1, amrKey2, similarity)).toSeq.sortWith((x, y) => x._3 > y._3)
+      // We now have a list of all non-zero similarities, sorted in descending order of similarity
+      var mappings = scala.collection.mutable.Map[String, String]()
+      var amr1Mapped = scala.collection.mutable.Set[String]()
+      var amr2Mapped = scala.collection.mutable.Set[String]()
+      for ((amrKey1, amrKey2, similarity) <- similarities) {
+        if (!(amr1Mapped contains amrKey1) && !(amr2Mapped contains amrKey2)) {
+          amr1Mapped.add(amrKey1)
+          amr2Mapped.add(amrKey2)
+          mappings.put(amrKey2, amrKey1)
+        }
+      }
+      bestMapping = mappings
+    }
+
+    val remainingNodes1 = AMR1.nodes.keySet -- bestMapping.values
+    val remainingNodes2 = Random.shuffle(AMR2.nodes.keySet -- bestMapping.keys)
+
+    // then the remainder get allocated entirely at random
+    val remainder = (remainingNodes2 zip remainingNodes1).toMap
+
+    bestMapping.toMap ++ remainder
   }
 
   def initialMap(AMR1: AMRGraph, AMR2: AMRGraph): Map[String, String] = {

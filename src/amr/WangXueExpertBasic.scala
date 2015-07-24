@@ -57,7 +57,7 @@ class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXu
 object WangXueExpertCheck {
 
   def main(args: Array[String]): Unit = {
-    val iterations = 4
+    val iterations = 1
     val movesToConsider = 1000
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
@@ -78,7 +78,7 @@ object WangXueExpertCheck {
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size
     println(f"Average f-Score of $meanScore%.3f in $timer")
-    val scores = RunDagger.corpusSmatchScoreAMR(allAMR)
+    val scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, movesToConsider)
     println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer")
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer")

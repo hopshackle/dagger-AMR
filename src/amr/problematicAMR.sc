@@ -14,23 +14,23 @@ object problematicAMR {
                                                   //| d (c6 / cyber)) :ARG1 (g / government-organization :ARG0-of (g2 / govern-01 
                                                   //| :ARG1 (c5 / country :name (n3 / name :op1 "Estonia")))) :time (d / date-enti
                                                   //| ty :year 2007))))))
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@d2cc05a
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@4f
-                                                  //| 933fd1
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@548a9f61
+  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@17
+                                                  //| 53acfe
   val s1 = Sentence(testData(0)._1, testData(0)._2)
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.2 sec].
+                                                  //| hPCFG.ser.gz ... done [1.3 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
                                                   //| im.crf.ser.gz ... done [3.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.3 sec].
+                                                  //| im.crf.ser.gz ... done [3.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.6 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.6 sec].
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| s1  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to milit
@@ -54,12 +54,12 @@ object problematicAMR {
                                                   //| obj)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name,
-                                                  //|  0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0 -
-                                                  //| > civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3.0.
-                                                  //| 1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> attack
-                                                  //| , 0.3.0 -> strike-01, 0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0.0.2 -> co
-                                                  //| mputer, 0 
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> attack-01, 0.0.0 -> name
+                                                  //| , 0.3.0.1.0.0 -> country, 0.2.0.0.0 -> network, 0.1.0 -> cyber, 0.2.0.0.1.0 
+                                                  //| -> civilian, 0.3.0.2.0 -> 2007, 0.0 -> military, 0.2.0.0.1 -> network, 0.3.0
+                                                  //| .1.0 -> govern-01, 0.0.0.0 -> "NATO", 0.2.0 -> threaten-01, 0.3.0.0 -> attac
+                                                  //| k, 0.3.0 -> strike-01, 0.3 -> after, 0.2.0.0.0.0 -> military, 0.2.0
                                                   //| Output exceeds cutoff limit.
   var state = expertSystem.init(s1)               //> state  : amr.WangXueTransitionState = 
                                                   //| NodesToGo:	List(23, 22, 20, 10, 9, 14, 21, 11, 8, 15, 5, 1, 13, 2, 17, 12, 
@@ -85,6 +85,7 @@ object problematicAMR {
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List()
                                                   //| Mappings:	0 -> ROOT
                                                   //| 10 -> 0.2.0.0.1.0
                                                   //| 20 -> 0.3.0.0.0
@@ -178,7 +179,7 @@ object problematicAMR {
                                                   //| 0.2.0.0) -> ARG2, (0.3.0.2,0.3.0.2.0) -> year, (0.2.0.0,0.2.0.0.2) -> mod)
   import java.io._
   val file = new FileWriter("C://AMR//i4_output.txt")
-                                                  //> file  : java.io.FileWriter = java.io.FileWriter@2eae8e6e
+                                                  //> file  : java.io.FileWriter = java.io.FileWriter@700fb871
   for (i <- 0 to 300) {
     if (!expertSystem.isTerminal(state)) {
       stateHistory(i) = state
@@ -191,8 +192,6 @@ object problematicAMR {
       state = action(i)(state)
     }                                             //> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
-                                                  //| WARNING: Found duplicate match for concept attack-01
-                                                  //| WARNING: Found duplicate match for concept cyber
   }
   file.close
   println("Here")                                 //> Here
@@ -200,12 +199,12 @@ object problematicAMR {
                                                   //> outputAdv  : amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat 
                                                   //| to military and civilian computer networks after the Estonian Government wa
                                                   //| s struck by cyber attacks in 2007.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> "NATO", 2 -> consider-02, 3 -> cyber, 4 -> a
-                                                  //| ttack-01, 6 -> threaten-01, 8 -> military, 9 -> and, 10 -> civilian, 11 -> 
-                                                  //| computer, 12 -> network, 13 -> after, 15 -> "Estonia", 16 -> government-org
-                                                  //| anization, 18 -> strike-01, 20 -> cyber, 21 -> attack, 23 -> 2007, 24 -> da
-                                                  //| te-entity, 25 -> network, 26 -> name, 27 -> country, 28 -> govern-01, 29 ->
-                                                  //|  name, 30 -> thing)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> NATO, 2 -> consider-02, 3 -> cyber, 4 -> att
+                                                  //| ack-01, 6 -> threaten-01, 8 -> military, 9 -> and, 10 -> civilian, 11 -> co
+                                                  //| mputer, 12 -> network, 13 -> after, 15 -> Estonian, 16 -> government-organi
+                                                  //| zation, 18 -> strike-01, 20 -> cyber, 21 -> attack, 23 -> 2007, 24 -> date-
+                                                  //| entity, 25 -> network, 26 -> name, 27 -> country, 28 -> govern-01, 29 -> na
+                                                  //| me, 30 -> thing)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 6 -> (6,7), 
                                                   //| 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12), 12 -> (7,12), 13 -> 
                                                   //| (13,14), 15 -> (15,16), 16 -> (16,17), 18 -> (18,19), 20 -> (20,21), 21 -> 
@@ -221,27 +220,27 @@ object problematicAMR {
                                                   //| .3.0.1.0, 27 -> 0.3.0.1.0.0, 26 -> 0.3.0.1.0.0.0, 30 -> 0.2)
                                                   //| MergedNodes:	Map(24 -> List((22,in)), 21 -> List((19,by)), 12 -> List
                                                   //| ((7,to)))
-                                                  //| SwappedArcs:	Set((18,13)),Some(AMRGraph(Map(12 -> network, 8 -> milit
-                                                  //| ary, 23 -> 2007, 4 -> attack-01, 15 -> "Estonia", 11 -> computer, 9 -> and,
-                                                  //|  26 -> name, 13 -> after, 24 -> date-entity, 16 -> government-organization,
-                                                  //|  10 -> civilian, 21 -> attack, 6 -> threaten-01, 1 -> "NATO", 25 -> network
-                                                  //| , 0 -> ROOT, 20 -> cyber, 27 -> country, 2 -> consider-02, 18 -> strike-01,
-                                                  //|  30 -> thing, 29 -> name, 3 -> cyber, 28 -> govern-01),Map(12 -> (7,12), 8 
-                                                  //| -> (8,9), 23 -> (23,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,
-                                                  //| 10), 26 -> (15,16), 13 -> (13,14), 24 -> (22,23), 16 -> (16,17), 10 -> (10,
-                                                  //| 11), 21 -> (19,21), 6 -> (6,7), 1 -> (1,2), 25 -> (10,11), 20 -> (20,21), 2
-                                                  //| 7 -> (15,16), 2 -> (2,3), 18 -> (18,19), 30 -> (6,7), 29 -> (1,2), 3 -> (3,
-                                                  //| 4), 28 -> (15,16)
+                                                  //| SwappedArcs:	Set((18,13))
+                                                  //| DeletedNodes:	List(17, 5, 14),Some(AMRGraph(Map(12 -> network, 8 -> mi
+                                                  //| litary, 23 -> 2007, 4 -> attack-01, 15 -> "Estonian", 11 -> computer, 9 -> 
+                                                  //| and, 26 -> name, 13 -> after, 24 -> date-entity, 16 -> government-organizat
+                                                  //| ion, 10 -> civilian, 21 -> attack, 6 -> threaten-01, 1 -> "NATO", 25 -> net
+                                                  //| work, 0 -> ROOT, 20 -> cyber, 27 -> country, 2 -> consider-02, 18 -> strike
+                                                  //| -01, 30 -> thing, 29 -> name, 3 -> cyber, 28 -> govern-01),Map(12 -> (7,12)
+                                                  //| , 8 -> (8,9), 23 -> (23,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 ->
+                                                  //|  (9,10), 26 -> (15,16), 13 -> (13,14), 24 -> (22,23), 16 -> (16,17), 10 -> 
+                                                  //| (10,11), 21 -> (19,21), 6 -> (6,7), 1 -> (1,2), 25 -> (10,11), 20 -> (20,21
+                                                  //| ), 27 -> (15,16), 2 -> (2,3), 18 -> (18,19), 30 -> (6,7), 29 -> (1,2)
                                                   //| Output exceeds cutoff limit.
   outputAdv                                       //> res3: amr.Sentence = Sentence(NATO CONSIDERS cyber attacks a threat to mili
                                                   //| tary and civilian computer networks after the Estonian Government was struc
                                                   //| k by cyber attacks in 2007.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> "NATO", 2 -> consider-02, 3 -> cyber, 4 -> a
-                                                  //| ttack-01, 6 -> threaten-01, 8 -> military, 9 -> and, 10 -> civilian, 11 -> 
-                                                  //| computer, 12 -> network, 13 -> after, 15 -> "Estonia", 16 -> government-org
-                                                  //| anization, 18 -> strike-01, 20 -> cyber, 21 -> attack, 23 -> 2007, 24 -> da
-                                                  //| te-entity, 25 -> network, 26 -> name, 27 -> country, 28 -> govern-01, 29 ->
-                                                  //|  name, 30 -> thing)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> NATO, 2 -> consider-02, 3 -> cyber, 4 -> att
+                                                  //| ack-01, 6 -> threaten-01, 8 -> military, 9 -> and, 10 -> civilian, 11 -> co
+                                                  //| mputer, 12 -> network, 13 -> after, 15 -> Estonian, 16 -> government-organi
+                                                  //| zation, 18 -> strike-01, 20 -> cyber, 21 -> attack, 23 -> 2007, 24 -> date-
+                                                  //| entity, 25 -> network, 26 -> name, 27 -> country, 28 -> govern-01, 29 -> na
+                                                  //| me, 30 -> thing)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 6 -> (6,7), 
                                                   //| 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12), 12 -> (7,12), 13 -> 
                                                   //| (13,14), 15 -> (15,16), 16 -> (16,17), 18 -> (18,19), 20 -> (20,21), 21 -> 
@@ -257,16 +256,15 @@ object problematicAMR {
                                                   //| .3.0.1.0, 27 -> 0.3.0.1.0.0, 26 -> 0.3.0.1.0.0.0, 30 -> 0.2)
                                                   //| MergedNodes:	Map(24 -> List((22,in)), 21 -> List((19,by)), 12 -> List
                                                   //| ((7,to)))
-                                                  //| SwappedArcs:	Set((18,13)),Some(AMRGraph(Map(12 -> network, 8 -> milit
-                                                  //| ary, 23 -> 2007, 4 -> attack-01, 15 -> "Estonia", 11 -> computer, 9 -> and,
-                                                  //|  26 -> name, 13 -> after, 24 -> date-entity, 16 -> government-organization,
-                                                  //|  10 -> civilian, 21 -> attack, 6 -> threaten-01, 1 -> "NATO", 25 -> network
-                                                  //| , 0 -> ROOT, 20 -> cyber, 27 -> country, 2 -> consider-02, 18 -> strike-01,
-                                                  //|  30 -> thing, 29 -> name, 3 -> cyber, 28 -> govern-01),Map(12 -> (7,12), 8 
-                                                  //| -> (8,9), 23 -> (23,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 -> (9,
-                                                  //| 10), 26 -> (15,16), 13 -> (13,14), 24 -> (22,23), 16 -> (16,17), 10 -> (10,
-                                                  //| 11), 21 -> (19,21), 6 -> (6,7), 1 -> (1,2), 25 -> (10,11), 20 -> (20,21), 2
-                                                  //| 7 -> (15,16), 2 -> (2,3), 18 -> (18,19), 30 -> (6,7), 29 -> (1,2), 3 -> (3,
-                                                  //| 4), 28 -> (15,16)),Map((
-                                                  //| Output exceeds cutoff limit.
+                                                  //| SwappedArcs:	Set((18,13))
+                                                  //| DeletedNodes:	List(17, 5, 14),Some(AMRGraph(Map(12 -> network, 8 -> mi
+                                                  //| litary, 23 -> 2007, 4 -> attack-01, 15 -> "Estonian", 11 -> computer, 9 -> 
+                                                  //| and, 26 -> name, 13 -> after, 24 -> date-entity, 16 -> government-organizat
+                                                  //| ion, 10 -> civilian, 21 -> attack, 6 -> threaten-01, 1 -> "NATO", 25 -> net
+                                                  //| work, 0 -> ROOT, 20 -> cyber, 27 -> country, 2 -> consider-02, 18 -> strike
+                                                  //| -01, 30 -> thing, 29 -> name, 3 -> cyber, 28 -> govern-01),Map(12 -> (7,12)
+                                                  //| , 8 -> (8,9), 23 -> (23,24), 4 -> (4,5), 15 -> (15,16), 11 -> (11,12), 9 ->
+                                                  //|  (9,10), 26 -> (15,16), 13 -> (13,14), 24 -> (22,23), 16 -> (16,17), 10 -> 
+                                                  //| (10,11), 21 -> (19,21), 6 -> (6,7), 1 -> (1,2), 25 -> (10,11), 20 -> (20,21
+                                                  //| ), 27 -> (15,16), 2 -> (2,3), 18 -> (18,19), 30 -> (6,7), 29 -> (1,2), 3 ->
 }
