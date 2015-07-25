@@ -13,7 +13,7 @@ object ImportConcepts {
   var amrFile: String = "C:\\AMR\\AMR2.txt"
   val quote = """"""".r
   val numbers = "[0-9.,]".r
-//  val commonLemmas = List("the", "and", "a", "in", "of", "to")
+  //  val commonLemmas = List("the", "and", "a", "in", "of", "to")
   val commonLemmas: List[String] = List()
 
   lazy val relationStrings = loadRelations + "polarity"
@@ -49,11 +49,13 @@ object ImportConcepts {
   private def loadConcepts: Set[String] = {
     (for {
       graph <- allAMR
-      concept <- graph.nodes.values
-      if (quote findFirstIn concept) == None // ignore anything with quotes
-      if numbers.replaceAllIn(concept, "") != "" // and anything that is purely numeric
+      concept <- filterOutNumbersAndNames(graph.nodes.values.toSeq)
     } yield concept).toSet
 
+  }
+
+  private def filterOutNumbersAndNames(input: Seq[String]): Seq[String] = {
+    input filter (x => (quote findFirstIn x) == None) filter (x => numbers.replaceAllIn(x, "") != "")
   }
 
   private def loadRelations: Set[String] = {
@@ -75,20 +77,54 @@ object ImportConcepts {
 
     if (!conceptFileExists) {
       val expert = new WangXueExpert
-      val insertableConcepts = (for {
+      val expertResults = for {
         ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
         val s = Sentence(sentence, Some(amr))
-        val processedSentence = RunDagger.sampleTrajectory(s, "", expert)
-        (dt, amr) <- processedSentence.dependencyTree.insertedNodes
-        val name = s.amr.get.nodes(amr)
+      } yield (s, RunDagger.sampleTrajectory(s, "", expert))
+
+      val insertableConcepts = (for {
+        ((_, s), a) <- expertResults zip allAMR
+        (dt, amr) <- s.dependencyTree.insertedNodes
+        val name = a.nodes(amr)
       } yield name).toSet
+
+      val lemmasToConcepts = (for {
+        (original, processed) <- expertResults
+        val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
+      } yield l).flatten.groupBy(_._1).mapValues(_.map(_._2))
+
+      val filteredLtoC = lemmasToConcepts map { case (k, v) => (k, filterOutNumbersAndNames(v).toSet) }
+
       val fw = new FileWriter(amrFile + "_ic")
       insertableConcepts foreach (x => fw.write(x + "\n"))
       fw.close
+
+      val lc = new FileWriter(amrFile + "_lc")
+      filteredLtoC filter (_._2.nonEmpty) foreach (x => lc.write(x._1 + ":" + x._2.mkString(":") + "\n"))
+      lc.close
+
       insertableConcepts
     } else {
-      Source.fromFile(amrFile + "_ic").getLines().toSet
+      Source.fromFile(amrFile + "_ic").getLines.toSet
     }
+  }
+
+  private def loadConceptsPerLemmaReduced: Map[String, Set[Int]] = {
+    val conceptFileExists = {
+      try {
+        val fr = new FileReader(amrFile + "_lc")
+        true
+      } catch {
+        case e: FileNotFoundException => false
+      }
+    }
+
+    if (!conceptFileExists) insertableConcepts
+    // to load data
+
+    val input = Source.fromFile(amrFile + "_lc").getLines
+    val lineSplit = input map (_.split(":").toList)
+    (lineSplit map (x => (x.head, x.tail map conceptIndex toSet))).toMap
   }
 
   private def loadConceptsPerLemma: Map[String, Set[Int]] = {
@@ -96,7 +132,7 @@ object ImportConcepts {
       (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
       concepts = graph.nodes.values.toSet filter (numbers.replaceAllIn(_, "") != "") map conceptIndex
       val dt = DependencyTree(sentence)
-      val eligibleNodes = dt.nodes filter {case (i, v) => dt.nodeNER.getOrElse(i, "O") != "PERSON" && numbers.replaceAllIn(v, "") != ""} map (_._1)
+      val eligibleNodes = dt.nodes filter { case (i, v) => dt.nodeNER.getOrElse(i, "O") != "PERSON" && numbers.replaceAllIn(v, "") != "" } map (_._1)
       n <- eligibleNodes
       lemma = dt.nodeLemmas.getOrElse(n, "a")
       if !(commonLemmas contains lemma)
