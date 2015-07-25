@@ -57,7 +57,7 @@ abstract class Graph[K] {
     val path = getNodesBetween(node2, node1)
     if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
   }
-  
+
   private def subGraph(node: K, acc: Int): Set[K] = {
     if (acc > 50) { println("Depth of subgraph exceeds 50 from " + node + " : \n" + this.toString); Set(node) } else {
       if (isLeafNode(node)) Set(node)
@@ -92,7 +92,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
-    this.copy(arcs = arcs + ((parent, child) -> label))
+    val oldValue = arcs.getOrElse((parent, child), "UNKNOWN")
+    val newLabel = if (label == "UNKNOWN") oldValue else label
+    this.copy(arcs = arcs + ((parent, child) -> newLabel))
   }
 
   def labelNode(node: Int, label: String): DependencyTree = {

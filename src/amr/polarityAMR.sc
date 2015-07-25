@@ -13,15 +13,15 @@ val testData = AMRGraph.importFile("C:\\AMR\\polarityExample.txt") // Nato Consi
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [2.1 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.0 sec].
+                                                  //| im.crf.ser.gz ... done [3.9 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.1 sec].
+                                                  //| im.crf.ser.gz ... done [3.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [5.1 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.4 sec].
                                                   //| s1  : amr.Sentence = Sentence(The cyber attacks were unprecedented.,
                                                   //| NodeMap:	Map(0 -> ROOT, 1 -> The, 2 -> cyber, 3 -> attacks, 4 -> were, 5 
                                                   //| -> unprecedented)
