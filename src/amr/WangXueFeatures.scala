@@ -95,7 +95,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (includeParents) {
       val sigmaParents = state.currentGraph.parentsOf(sigma)
+  //    val sigmaGrandparents = (sigmaParents flatMap state.currentGraph.parentsOf).distinct
       if (sigmaParents.nonEmpty) {
+
         val parentLabelCombos = for {
           parent <- sigmaParents
           label <- state.currentGraph.labelsBetween(parent, sigma)
@@ -104,6 +106,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
         parentLabelCombos foreach {
           case (parent, label) =>
+
             val parentWord = state.currentGraph.nodes(parent)
             val parentLemma = state.currentGraph.nodeLemmas.getOrElse(parent, "")
             val parentNER = state.currentGraph.nodeNER.getOrElse(parent, "")
@@ -113,6 +116,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
               add(hmap, "PARENT-INSERTED=" + parentWord)
               if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
             }
+
+//            sigmaGrandparents foreach { gp =>
+ //             add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodes(gp) + "-" + parentWord + "-" + sigmaWord)
+//            }
 
             if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
             if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)

@@ -57,12 +57,12 @@ class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXu
 object WangXueExpertCheck {
 
   def main(args: Array[String]): Unit = {
-    val iterations = 1
+    val iterations = 4
     val movesToConsider = 1000
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     ImportConcepts.initialise(fileName)
-    AMRGraph.setAligner("improved")
+ //   AMRGraph.setAligner("improved")
     val rawData = AMRGraph.importFile(fileName)
     val sentences = rawData map (d => Sentence(d._1, d._2))
     val timer = new Timer()

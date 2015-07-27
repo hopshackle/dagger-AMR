@@ -10,34 +10,43 @@ abstract class Graph[K] {
   def nodeSpans: Map[K, (Int, Int)]
   def arcs: Map[(K, K), String]
   def isRoot(node: K): Boolean = edgesToParents(node).isEmpty
-
+  val debug = false
   def depth(node: K): Int = {
-    def depthHelper(nodes: List[K], accum: Int): Int = {
-      if (accum > 50) { println("Depth of tree exceeds 50: \n" + this.toString); accum } else {
+    def depthHelper(nodes: Seq[K], accum: Int): Int = {
+      if (accum > 50) { println("Depth of tree exceeds 50: " + (if (debug) "\n" + this.toString)); accum } else {
         val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
         if (nextNodes exists isRoot) accum else depthHelper(nextNodes, accum + 1)
       }
     }
-    if (isRoot(node)) 0 else depthHelper(List(node), 1)
+    if (isRoot(node)) 0 else depthHelper(Seq(node), 1)
   }
-  def edgesToParents(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toList filter (_ != node)
-  def parentsOf(node: K): List[K] = edgesToParents(node) map { case (p, c) => p }
-  def parentLabels(node: K): List[String] = (parentsOf(node) map (x => nodes(x))).toList
-  def childrenOf(node: K): List[K] = edgesToChildren(node) map { case (p, c) => c }
-  def labelsBetween(parent: K, child: K): List[String] = (arcs filter { case ((p, c), l) => p == parent && c == child } map { case ((p, c), l) => l }).toList
-  def edgesToChildren(node: K): List[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toList filter (_ != node)
+  def edgesToParents(node: K): Seq[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => c == node })).keys.toSeq filter (_ != node)
+  def parentsOf(node: K): Seq[K] = edgesToParents(node) map { case (p, c) => p }
+  def parentLabels(node: K): Seq[String] = (parentsOf(node) map (x => nodes(x)))
+  def getNeighbourhood(node: K, range: Int): Set[K] = {
+    range match {
+      case 1 => (parentsOf(node) ++ childrenOf(node)).toSet
+      case n => {
+        val immediate = getNeighbourhood(node, 1)
+        (immediate flatMap (getNeighbourhood(_, n - 1))) ++ immediate - node
+      }
+    }
+  }
+  def childrenOf(node: K): Seq[K] = edgesToChildren(node) map { case (p, c) => c }
+  def labelsBetween(parent: K, child: K): Seq[String] = (arcs filter { case ((p, c), l) => p == parent && c == child } map { case ((p, c), l) => l }).toSeq
+  def edgesToChildren(node: K): Seq[(K, K)] = (arcs filter (x => x match { case ((p, c), l) => p == node })).keys.toSeq filter (_ != node)
   def isLeafNode(node: K): Boolean = { !(arcs.keys exists (_ match { case (f, t) => f == node })) }
   def getRoots: Set[K] = nodes.keySet filter isRoot
-  def getNodesBetween(node1: K, node2: K): List[K] = {
-    def findPathTo(currentPaths: List[List[K]], target: K, acc: Int): List[K] = {
+  def getNodesBetween(node1: K, node2: K): Seq[K] = {
+    def findPathTo(currentPaths: Seq[Seq[K]], target: K, acc: Int): Seq[K] = {
       if (acc > 30) {
-        println("Path search has exceeded 30 nodes between " + node1 + " and " + node2 + ". Giving up.\n" + this.toString);
-        List()
+        println("Path search has exceeded 30 nodes between " + node1 + " and " + node2 + ". Giving up." + (if (debug) "\n" + this.toString));
+        Seq()
       } else {
         val o = for {
           currentPath <- currentPaths
           val successorNodes = (parentsOf(currentPath.head) ++ childrenOf(currentPath.head)) diff currentPath
-        } yield successorNodes map (_ :: currentPath)
+        } yield successorNodes map (_ +: currentPath)
         val updatedPaths = o.flatten
         if (updatedPaths exists (_.head == target)) {
           updatedPaths.find { x => x.head == target }.get
@@ -46,9 +55,9 @@ abstract class Graph[K] {
         }
       }
     }
-    val start = List(List(node1))
+    val start = Seq(Seq(node1))
     if (node1 == node2) {
-      List(node1)
+      Seq(node1)
     } else
       findPathTo(start, node2, 0)
   }
@@ -59,7 +68,7 @@ abstract class Graph[K] {
   }
 
   private def subGraph(node: K, acc: Int): Set[K] = {
-    if (acc > 50) { println("Depth of subgraph exceeds 50 from " + node + " : \n" + this.toString); Set(node) } else {
+    if (acc > 50) { println("Depth of subgraph exceeds 50 from " + node + (if (debug) " : \n" + this.toString)); Set(node) } else {
       if (isLeafNode(node)) Set(node)
       else (childrenOf(node) flatMap (subGraph(_, acc + 1))).toSet + node
     }
@@ -318,6 +327,7 @@ object Sentence {
 object DependencyTree {
 
   val processor = new StanfordProcessor
+  val numbers = "[0-9.,]".r
 
   def preProcess(sentence: String): List[String] = {
     val parsedForDates = extractNumbers(extractDates(sentence))
@@ -352,7 +362,7 @@ object DependencyTree {
 
     val nodeLemmas = (for {
       (ConllToken(Some(index), _, _, _, _, Some(lemma), _, _, _, _), wordCount) <- parseTree
-    } yield (index -> lemma)).toMap
+    } yield (index -> (numbers.replaceAllIn(lemma, "") match { case "" => "##"; case a => a.toLowerCase }))).toMap
 
     val nodePOS = (for {
       (ConllToken(Some(index), _, _, Some(pos), cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree

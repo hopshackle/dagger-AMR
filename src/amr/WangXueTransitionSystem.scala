@@ -2,7 +2,7 @@ package amr
 
 import dagger.core.TransitionSystem
 
-import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, universalConcepts, universalRelations }
+import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertableConcepts, conceptIndex }
 
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
@@ -16,19 +16,29 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
     //   val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
 
+    val sigma = state.nodesToProcess.head
+    val beta = state.childrenToProcess.headOption
+    val parents = state.currentGraph.parentsOf(sigma)
+    val grandParents = parents flatMap state.currentGraph.parentsOf
+    val children = state.currentGraph.childrenOf(sigma)
+    val grandChildren = children flatMap state.currentGraph.childrenOf
     val reattachActions = (if (state.childrenToProcess.isEmpty) {
       Set[Reattach]()
     } else {
-      val possibleNodes = state.currentGraph.nodes.keySet - state.nodesToProcess.head -- state.currentGraph.subGraph(state.childrenToProcess.head)
-      possibleNodes filter (state.currentGraph.getDistanceBetween(_, state.childrenToProcess.head) < 7) map (i => Reattach(i))
+      val possibleNodes = state.currentGraph.getNeighbourhood(sigma, 5) - sigma -- state.currentGraph.subGraph(beta.get)
+      possibleNodes map (Reattach(_))
+      //    possibleNodes filter (state.currentGraph.getDistanceBetween(_, beta.get) < 7) map (i => Reattach(i))
     }).toArray
-    val permissibleConceptsInSentence = universalConcepts ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => conceptsPerLemma.getOrElse(lemma, Set()) }).toSet
-    val permissibleConcepts = universalConcepts ++ conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(state.nodesToProcess.head, "UNKNOWN"), Set())
+    val insertNodes = (sigma +: parents) filter (state.currentGraph.nodeLemmas contains _)
+    val prohibitedNodes = ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
+    val insertable = (insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma, Set()) }).toSet diff prohibitedNodes map conceptIndex 
+    val permissibleConcepts = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + 0
     val nextNodeActions = permissibleConcepts map (NextNode(_))
-    val permissibleEdges = universalRelations ++ (state.startingDT.nodeLemmas flatMap { case (node, lemma) => edgesPerLemma.getOrElse(lemma, Set()) }).toSet
+    val edgeNodes = (beta match { case Some(index) => List(sigma, index); case None => List(sigma) }) filter (state.currentGraph.nodeLemmas contains _)
+    val permissibleEdges = (edgeNodes map state.currentGraph.nodeLemmas flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + relationIndex("ROOT") + 0
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
-    val insertActions = Insert.all filter { case Insert(nodeIndex, ref) => permissibleConceptsInSentence contains nodeIndex }
-    reattachActions ++ nextNodeActions ++  nextEdgeActions ++ insertActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
+    val insertActions = insertable map (Insert(_, ""))
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
@@ -57,7 +67,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)
     // and the complete dependency tree
-    WangXueTransitionState(allNodes, Nil, datum.dependencyTree, List(), Some(datum), datum.dependencyTree)
+    WangXueTransitionState(allNodes, Nil, datum.dependencyTree, List(), Some(datum), datum.dependencyTree, Set(), Set())
   }
 
   // helper method - as we don't always have the full Sentence

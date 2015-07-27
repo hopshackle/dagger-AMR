@@ -6,7 +6,7 @@ import dagger.core._
 case class GraphViz(outputFile: String, graph: AMRGraph) {
   val quote = """""""
   val bigQ = """"""
-  def clean = """[.-]""".r
+  def clean = """[.#'-]""".r
   val file = new FileWriter(outputFile, false)
   val string = new StringBuffer("digraph G {\n")
   // We replace . with - due to a graphviz issue that incorrectly parses labels with more than one .

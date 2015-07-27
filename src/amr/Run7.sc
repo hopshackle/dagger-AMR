@@ -1,12 +1,12 @@
 package amr
 object Run7 {
 
-  val testData = AMRGraph.importFile("C:\\AMR\\Large_7.txt")
-                                                  //> testData  : IndexedSeq[(String, String)] = Vector((Naif Arab Academy for Secu
-                                                  //| rity Sciences is run by an Arab Interior Ministers' Council.,(r / run-01 :ARG
-                                                  //| 0 (o / organization :name (n / name :op1 "Arab" :op2 "Interior" :op3 "Ministe
-                                                  //| rs'" :op4 "Council")) :ARG1 (u / university :name (n2 / name :op1 "Naif" :op2
-                                                  //|  "Arab" :op3 "Academy" :op4 "for" :op5 "Security" :op6 "Sciences")))))
+  val testData = AMRGraph.importFile("C:\\AMR\\CountryList.txt")
+                                                  //> testData  : IndexedSeq[(String, String)] = Vector((Myanmar (MM); Thailand (TH
+                                                  //| ); Lao People's Democratic Republic (LA),(a / and :op1 (c3 / country :name (n
+                                                  //| 7 / name :op1 "Myanmar")) :op2 (c4 / country :name (n8 / name :op1 "Thailand"
+                                                  //| )) :op3 (c5 / country :name (n9 / name :op1 "Lao" :op2 "People's" :op3 "Democ
+                                                  //| ratic" :op4 "Republic")))))
 
   val s0 = Sentence(testData(0)._1, testData(0)._2)
                                                   //> Adding annotator tokenize
@@ -17,215 +17,114 @@ object Run7 {
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.6 sec].
+                                                  //| im.crf.ser.gz ... done [4.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.2 sec].
+                                                  //| im.crf.ser.gz ... done [2.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [3.8 sec].
-                                                  //| WARNING: Found duplicate match for concept "Arab"
-                                                  //| Some("Naif")
-                                                  //| Some("Arab")
-                                                  //| Some("Academy")
-                                                  //| Some("for")
-                                                  //| Some("Security")
-                                                  //| Some("Sciences")
-                                                  //| None
-                                                  //| Some((run-01 :ARG0 (organization :name (name :op1 "Arab" :op2 "Interior" :op
-                                                  //| 3 "Ministers'" :op4 "Council")) :ARG1 (university :name (name :op1 "Naif" :o
-                                                  //| p2 "Arab" :op3 "Academy" :op4 "for" :op5 "Security" :op6 "Sciences"))))
-                                                  //| None
-                                                  //| None
-                                                  //| Some("Arab")
-                                                  //| Some("Interior")
-                                                  //| Some("Ministers'")
-                                                  //| None
-                                                  //| Some("Council")
-                                                  //| Some(2)
-                                                  //| Some(1)
-                                                  //| Some(2)
-                                                  //| Some(2)
-                                                  //| Some(2)
-                                                  //| Some(2)
-                                                  //| None
-                                                  //| Some(0)
-                                                  //| None
-                                                  //| None
-                                                  //| Some(2)
-                                                  //| Some(1)
-                                                  //| Some(1)
-                                                  //| None
-                                                  //| Some(1)
-                                                  //| s0  : amr.Sentence = Sentence(Naif Arab Academy for Security Sciences is run
-                                                  //|  by an Arab Interior Ministers' Council.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Naif, 2 -> Arab, 3 -> Academy, 4 -> for, 5 -
-                                                  //| > Security, 6 -> Sciences, 7 -> is, 8 -> run, 9 -> by, 10 -> an, 11 -> Arab,
-                                                  //|  12 -> Interior, 13 -> Ministers, 14 -> ', 15 -> Council)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
-                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
-                                                  //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16))
-                                                  //| Edges:	Map((0,8) -> root, (3,1) -> nn, (3,2) -> nn, (3,4) -> prep, (4,6
-                                                  //| ) -> pobj, (6,5) -> nn, (8,3) -> nsubjpass, (8,7) -> auxpass, (8,9) -> prep,
-                                                  //|  (9,15) -> pobj, (13,10) -> det, (13,11) -> nn, (13,12) -> nn, (13,14) -> po
-                                                  //| ssessive, (15,13) -> poss)
-                                                  //| InsertedNodes:	Map()
-                                                  //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0.1 -> university, 0.0.0 -> name
-                                                  //| , 0.1.0 -> name, 0.1.0.5 -> "Sciences", 0.1.0.1 -> "Arab", 0.0.0.3 -> "Counc
-                                                  //| il", 0.0 -> organization, 0.0.0.0 -> "Arab", 0.1.0.2 -> "Academy", 0.1.0.0 -
-                                                  //| > "Naif", 0 -> run-01, 0.0
-                                                  //| Output exceeds cutoff limit.
-
-  s0.amr.get                                      //> res0: amr.AMRGraph = AMRGraph(Map(0.1 -> university, 0.0.0 -> name, 0.1.0 ->
-                                                  //|  name, 0.1.0.5 -> "Sciences", 0.1.0.1 -> "Arab", 0.0.0.3 -> "Council", 0.0 -
-                                                  //| > organization, 0.0.0.0 -> "Arab", 0.1.0.2 -> "Academy", 0.1.0.0 -> "Naif", 
-                                                  //| 0 -> run-01, 0.0.0.1 -> "Interior", 0.1.0.3 -> "for", ROOT -> ROOT, 0.0.0.2 
-                                                  //| -> "Ministers'", 0.1.0.4 -> "Security"),Map(0 -> (8,9), 0.0 -> (16,1), 0.1 -
-                                                  //| > (16,1)),Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN,
-                                                  //|  (0.1,0.1.0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.1) -> ARG1, (0.1.0,0.1.0.
-                                                  //| 1) -> opN, (0.0.0,0.0.0.1) -> opN, (0.1.0,0.1.0.2) -> opN, (0.1.0,0.1.0.5) -
-                                                  //| > opN, (0.0.0,0.0.0.2) -> opN, (0.0.0,0.0.0.3) -> opN, (0.1.0,0.1.0.4) -> op
-                                                  //| N, (0.1.0,0.1.0.3) -> opN, (0,0.0) -> ARG0))
-  s0.amr.get.nodeSpans                            //> res1: Map[String,(Int, Int)] = Map(0 -> (8,9), 0.0 -> (16,1), 0.1 -> (16,1))
+                                                  //| tsim.crf.ser.gz ... done [3.9 sec].
+                                                  //| s0  : amr.Sentence = Sentence(Myanmar (MM); Thailand (TH); Lao People's Demo
+                                                  //| cratic Republic (LA),
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Myanmar, 3 -> MM, 6 -> Thailand, 8 -> TH, 11
+                                                  //|  -> Lao, 12 -> People, 13 -> 's, 14 -> Democratic, 15 -> Republic, 17 -> LA)
                                                   //| 
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@53045c6c
-  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@51
-                                                  //| 49d738
-  var state = expertSystem.init(s0)               //> state  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(5, 10, 14, 12, 11, 13, 6, 15, 4, 1, 2, 9, 3, 7, 8, 0)
-                                                  //| Children:	List()
-                                                  //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Naif, 2 -> Arab, 3 -> Academy, 4 -> for, 5 -
-                                                  //| > Security, 6 -> Sciences, 7 -> is, 8 -> run, 9 -> by, 10 -> an, 11 -> Arab,
-                                                  //|  12 -> Interior, 13 -> Ministers, 14 -> ', 15 -> Council)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
-                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
-                                                  //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16))
-                                                  //| Edges:	Map((0,8) -> root, (3,1) -> nn, (3,2) -> nn, (3,4) -> prep, (4,6
-                                                  //| ) -> pobj, (6,5) -> nn, (8,3) -> nsubjpass, (8,7) -> auxpass, (8,9) -> prep,
-                                                  //|  (9,15) -> pobj, (13,10) -> det, (13,11) -> nn, (13,12) -> nn, (13,14) -> po
-                                                  //| ssessive, (15,13) -> poss)
+                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
+                                                  //|  12 -> (6,7), 13 -> (7,8), 14 -> (8,9), 15 -> (9,10), 17 -> (10,11))
+                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
+                                                  //| ,15) -> dep, (12,11) -> nn, (12,13) -> possessive, (15,12) -> poss, (15,14) 
+                                                  //| -> amod, (15,17) -> appos)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| Mappings:	8 -> 0
-                                                  //| 0 -> ROOT
+                                                  //| DeletedNodes:	List(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 
+                                                  //| 0.1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Myanmar", 0.2.0.1 -> "People's", 
+                                                  //| 0.2.0 -> name, 0.1.0.0 -> "Thailand", 0 -> and, 0.2.0.3 -> "Republic", 0.2 -
+                                                  //| > country, 0.2.0.2 -> "Democratic", ROOT -> ROOT, 0.2.0.0 -> "Lao"),Map(0.1 
+                                                  //| -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0 -> (1,2), 0.
+                                                  //| 2.0.1 -> (5,10), 0.2.0 -> (5,10), 0.1.0.0 -> (3,4), 0.2.0.3 -> (5,10), 0.2 -
+                                                  //| > (5,10), 0.2.0.2 -> (5,10), 0.2.0.0 -> (5,10)),Map((0.0,0.0.0) -> name, (0.
+                                                  //| 2.0,0.2.0.3) -> opN, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -
+                                                  //| > name, (0.2.0,0.2.0.2) -> opN, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0
+                                                  //| .1) -> opN, (0.2,0.2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN, (0.
+                                                  //| 2.0,0.2.0.1) -> opN))),Map(0 -> ROOT, 14 -> 0.2.0.2, 1 -> 0.0.0.0, 6 -> 0.1.
+                                                  //| 0.0, 13 -> 0.2.0, 12 -> 0.2.0.1, 11 -> 0.2.0.0, 15 -> 0.2.0.3))
+
+  s0.amr.get                                      //> res0: amr.AMRGraph = AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 0.1.0 -> na
+                                                  //| me, 0.0 -> country, 0.0.0.0 -> "Myanmar", 0.2.0.1 -> "People's", 0.2.0 -> na
+                                                  //| me, 0.1.0.0 -> "Thailand", 0 -> and, 0.2.0.3 -> "Republic", 0.2 -> country, 
+                                                  //| 0.2.0.2 -> "Democratic", ROOT -> ROOT, 0.2.0.0 -> "Lao"),Map(0.1 -> (3,4), 0
+                                                  //| .0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0 -> (1,2), 0.2.0.1 -> (5
+                                                  //| ,10), 0.2.0 -> (5,10), 0.1.0.0 -> (3,4), 0.2.0.3 -> (5,10), 0.2 -> (5,10), 0
+                                                  //| .2.0.2 -> (5,10), 0.2.0.0 -> (5,10)),Map((0.0,0.0.0) -> name, (0.2.0,0.2.0.3
+                                                  //| ) -> opN, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> name, (0.
+                                                  //| 2.0,0.2.0.2) -> opN, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN,
+                                                  //|  (0.2,0.2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN, (0.2.0,0.2.0.1
+                                                  //| ) -> opN))
+  s0.amr.get.nodeSpans                            //> res1: Map[String,(Int, Int)] = Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3
+                                                  //| ,4), 0.0 -> (1,2), 0.0.0.0 -> (1,2), 0.2.0.1 -> (5,10), 0.2.0 -> (5,10), 0.1
+                                                  //| .0.0 -> (3,4), 0.2.0.3 -> (5,10), 0.2 -> (5,10), 0.2.0.2 -> (5,10), 0.2.0.0 
+                                                  //| -> (5,10))
+  s0.positionToAMR                                //> res2: Map[Int,String] = Map(0 -> ROOT, 14 -> 0.2.0.2, 1 -> 0.0.0.0, 6 -> 0.1
+                                                  //| .0.0, 13 -> 0.2.0, 12 -> 0.2.0.1, 11 -> 0.2.0.0, 15 -> 0.2.0.3)
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@74d1dc36
+  val expertSystem = new WangXueTransitionSystem  //> expertSystem  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@71
+                                                  //| 61d8d1
+  var state = expertSystem.init(s0)               //> state  : amr.WangXueTransitionState = 
+                                                  //| NodesToGo:	List(11, 13, 14, 12, 17, 8, 15, 1, 6, 3, 0)
+                                                  //| Children:	List()
+                                                  //| PartialGraph:	
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Myanmar, 3 -> MM, 6 -> Thailand, 8 -> TH, 11
+                                                  //|  -> Lao, 12 -> People, 13 -> 's, 14 -> Democratic, 15 -> Republic, 17 -> LA)
+                                                  //| 
+                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
+                                                  //|  12 -> (6,7), 13 -> (7,8), 14 -> (8,9), 15 -> (9,10), 17 -> (10,11))
+                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
+                                                  //| ,15) -> dep, (12,11) -> nn, (12,13) -> possessive, (15,12) -> poss, (15,14) 
+                                                  //| -> amod, (15,17) -> appos)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List()
+                                                  //| Mappings:	0 -> ROOT
+                                                  //| 14 -> 0.2.0.2
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 6 -> 0.1.0.0
+                                                  //| 13 -> 0.2.0
+                                                  //| 12 -> 0.2.0.1
+                                                  //| 11 -> 0.2.0.0
+                                                  //| 15 -> 0.2.0.3
                                                   //| 
   val permissibleActions = expertSystem.permissibleActions(state)
-                                                  //> Some(2008)
-                                                  //| Some(5)
-                                                  //| Some(14)
-                                                  //| Some(0)
-                                                  //| Some(0)
-                                                  //| Some(0)
-                                                  //| Some("Estonia")
-                                                  //| None
-                                                  //| Some("Latvia")
-                                                  //| None
-                                                  //| Some("Lithuania")
-                                                  //| None
-                                                  //| Some(0)
-                                                  //| None
-                                                  //| Some(1)
-                                                  //| None
-                                                  //| Some(2)
-                                                  //| None
-                                                  //| Some(international)
-                                                  //| Some((government-organization :ARG0-of govern-01))
-                                                  //| Some(telecommunication)
-                                                  //| Some(technology)
-                                                  //| Some(science)
-                                                  //| Some(0)
-                                                  //| Some(1)
-                                                  //| Some(2)
-                                                  //| Some(3)
-                                                  //| Some(4)
-                                                  //| WARNING: Found duplicate match for concept attack-01
+                                                  //> WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
-                                                  //| Some("NATO")
-                                                  //| Some((consider-02 :ARG0 (military :name (name :op1 "NATO")) :ARG1 (attack-01
-                                                  //|  :mod cyber) :ARG2 (thing :ARG1-of (threaten-01 :ARG2 (and :op1 (network :mo
-                                                  //| d military) :op2 (network :mod civilian) :mod computer))) :time (after :op1 
-                                                  //| (strike-01 :ARG0 (attack :mod cyber) :ARG1 (government-organization :ARG0-of
-                                                  //|  (govern-01 :ARG1 (country :name (name :op1 "Estonia")))) :time (date-entity
-                                                  //|  :year 2007)))))
-                                                  //| Some(cyber)
-                                                  //| Some((attack-01 :mod cyber))
-                                                  //| None
-                                                  //| Some((threaten-01 :ARG2 (and :op1 (network :mod military) :op2 (network :mod
-                                                  //|  civilian) :mod computer)))
-                                                  //| None
-                                                  //| Some((military :name (name :op1 "NATO")))
-                                                  //| Some((and :op1 (network :mod military) :op2 (network :mod civilian) :mod com
-                                                  //| puter))
-                                                  //| Some(civilian)
-                                                  //| Some(computer)
-                                                  //| Some((network :mod military))
-                                                  //| Some((after :op1 (strike-01 :ARG0 (attack :mod cyber) :ARG1 (government-orga
-                                                  //| nization :ARG0-of (govern-01 :ARG1 (country :name (name :op1 "Estonia")))) :
-                                                  //| time (date-entity :year 2007))))
-                                                  //| None
-                                                  //| Some("Estonia")
-                                                  //| Some((government-organization :ARG0-of (govern-01 :ARG1 (country :name (name
-                                                  //|  :op1 "Estonia")))))
-                                                  //| None
-                                                  //| Some((strike-01 :ARG0 (attack :mod cyber) :ARG1 (government-organization :AR
-                                                  //| G0-of (govern-01 :ARG1 (country :name (name :op1 "Estonia")))) :time (date-e
-                                                  //| ntity :year 2007)))
-                                                  //| None
-                                                  //| Some(cyber)
-                                                  //| Some((attack :mod cyber))
-                                                  //| None
-                                                  //| Some(2007)
-                                                  //| Some(2)
-                                                  //| Some(0)
-                                                  //| Some(4)
-                                                  //| Some(3)
-                                                  //| None
-                                                  //| Some(5)
-                                                  //| None
-                                                  //| Some(1)
-                                                  //| Some(6)
-                                                  //| Some(8)
-                                                  //| Some(9)
-                                                  //| Some(7)
-                                                  //| Some(10)
-                                                  //| None
-                                                  //| Some(15)
-                                                  //| Some(14)
-                                                  //| None
-                                                  //| Some(11)
-                                                  //| None
-                                                  //| Some(13)
-                                                  //| Some(12)
-                                                  //| None
-                                                  //| Some(16)
-                                                  //| Some("NATO")
-                                                  //| Some(ally-01)
-                                                  //| None
-                                                  //| Some((sign-01 :ARG0 (person :ARG0-of ally-01 :mod (military :name (name :op1
-                                                  //|  "NATO"))) :ARG1 (agree-01 :ARG1 (fund-01 
-                                                  //| Output exceeds cutoff limit.
+                                                  //| permissibleActions  : Array[amr.WangXueAction] = Array(NextNode: 0 -> UNKNOW
+                                                  //| N, DeleteNode, ReversePolarity)
   var expertNextAction = expert.chooseTransition(s0, state)
-                                                  //> expertNextAction  : amr.WangXueAction = DeleteNode
+                                                  //> expertNextAction  : amr.WangXueAction = NextNode: 0 -> UNKNOWN
   var expertNextState = expertNextAction(state)   //> expertNextState  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(10, 14, 12, 11, 13, 6, 15, 4, 1, 2, 9, 3, 7, 8, 0)
+                                                  //| NodesToGo:	List(13, 14, 12, 17, 8, 15, 1, 6, 3, 0)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Naif, 2 -> Arab, 3 -> Academy, 4 -> for, 6 -
-                                                  //| > Sciences, 7 -> is, 8 -> run, 9 -> by, 10 -> an, 11 -> Arab, 12 -> Interior
-                                                  //| , 13 -> Ministers, 14 -> ', 15 -> Council)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 6 -> (6,7), 
-                                                  //| 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12), 12 -> (12
-                                                  //| ,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16))
-                                                  //| Edges:	Map((0,8) -> root, (3,1) -> nn, (3,2) -> nn, (3,4) -> prep, (4,6
-                                                  //| ) -> pobj, (8,3) -> nsubjpass, (8,7) -> auxpass, (8,9) -> prep, (9,15) -> po
-                                                  //| bj, (13,10) -> det, (13,11) -> nn, (13,12) -> nn, (13,14) -> possessive, (15
-                                                  //| ,13) -> poss)
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Myanmar, 3 -> MM, 6 -> Thailand, 8 -> TH, 11
+                                                  //|  -> Lao, 12 -> People, 13 -> 's, 14 -> Democratic, 15 -> Republic, 17 -> LA)
+                                                  //| 
+                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
+                                                  //|  12 -> (6,7), 13 -> (7,8), 14 -> (8,9), 15 -> (9,10), 17 -> (10,11))
+                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
+                                                  //| ,15) -> dep, (12,11) -> nn, (12,13) -> possessive, (15,12) -> poss, (15,14) 
+                                                  //| -> amod, (15,17) -> appos)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| Mappings:	8 -> 0
-                                                  //| 0 -> ROOT
+                                                  //| DeletedNodes:	List()
+                                                  //| Mappings:	0 -> ROOT
+                                                  //| 14 -> 0.2.0.2
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 6 -> 0.1.0.0
+                                                  //| 13 -> 0.2.0
+                                                  //| 12 -> 0.2.0.1
+                                                  //| 11 -> 0.2.0.0
+                                                  //| 15 -> 0.2.0.3
+                                                  //| NextNode: 0 -> UNKNOWN
                                                   //| 
   import java.io._
   val action = new Array[WangXueAction](301)      //> action  : Array[amr.WangXueAction] = Array(null, null, null, null, null, nul
@@ -279,8 +178,7 @@ object Run7 {
                                                   //| null, null, null, null, null, null, null, null, null, null, null, null, null
                                                   //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
                                                   //| ll, null, null, null, null, null, null)
-  val file = new FileWriter("C://AMR//i7_output.txt")
-                                                  //> file  : java.io.FileWriter = java.io.FileWriter@7a1a3478
+  val file = new FileWriter("C://AMR//Laos.txt")  //> file  : java.io.FileWriter = java.io.FileWriter@5be49b60
   for (i <- 0 to 300) {
     if (!expertSystem.isTerminal(state)) {
       stateHistory(i) = state
@@ -296,23 +194,57 @@ object Run7 {
   file.close
   println("Here")                                 //> Here
   val outputAdv = RunDagger.sampleTrajectory(s0, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
-                                                  //> outputAdv  : amr.Sentence = Sentence(Naif Arab Academy for Security Science
-                                                  //| s is run by an Arab Interior Ministers' Council.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 8 -> run)
-                                                  //| SpanMap:	Map(8 -> (8,9))
-                                                  //| Edges:	Map((0,8) -> ROOT)
-                                                  //| InsertedNodes:	Map()
-                                                  //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0 -> ROOT, 8 -> run),Map(8 -> (8
-                                                  //| ,9)),Map((0,8) -> ROOT))),Map(8 -> 8, 0 -> ROOT))
-  outputAdv                                       //> res2: amr.Sentence = Sentence(Naif Arab Academy for Security Sciences is ru
-                                                  //| n by an Arab Interior Ministers' Council.,
-                                                  //| NodeMap:	Map(0 -> ROOT, 8 -> run)
-                                                  //| SpanMap:	Map(8 -> (8,9))
-                                                  //| Edges:	Map((0,8) -> ROOT)
-                                                  //| InsertedNodes:	Map()
-                                                  //| MergedNodes:	Map()
-                                                  //| SwappedArcs:	Set(),Some(AMRGraph(Map(0 -> ROOT, 8 -> run),Map(8 -> (8
-                                                  //| ,9)),Map((0,8) -> ROOT))),Map(8 -> 8, 0 -> ROOT))
+                                                  //> outputAdv  : amr.Sentence = Sentence(Myanmar (MM); Thailand (TH); Lao Peopl
+                                                  //| e's Democratic Republic (LA),
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Myanmar, 6 -> Thailand, 11 -> Lao, 12 -> Peo
+                                                  //| ple, 13 -> name, 14 -> Democratic, 15 -> Republic, 18 -> country, 19 -> and
+                                                  //| , 20 -> name, 21 -> name, 22 -> country, 23 -> country)
+                                                  //| SpanMap:	Map(1 -> (1,2), 6 -> (3,4), 11 -> (5,6), 12 -> (6,7), 13 -> (7,8
+                                                  //| ), 14 -> (8,9), 15 -> (9,10), 18 -> (7,8), 19 -> (7,8), 20 -> (1,2), 21 -> 
+                                                  //| (3,4), 22 -> (2,3), 23 -> (1,2))
+                                                  //| Edges:	Map((0,19) -> ROOT, (6,15) -> dep, (13,11) -> opN, (15,12) -> po
+                                                  //| ss, (15,14) -> amod, (18,13) -> name, (19,18) -> opN, (19,22) -> opN, (19,2
+                                                  //| 3) -> opN, (20,1) -> opN, (21,6) -> opN, (22,21) -> name, (23,20) -> name)
+                                                  //| InsertedNodes:	Map(20 -> 0.0.0, 21 -> 0.1.0, 22 -> 0.1, 18 -> 0.2, 23 -
+                                                  //| > 0.0, 19 -> 0)
+                                                  //| MergedNodes:	Map(22 -> List((3,MM)))
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List(8, 17),Some(AMRGraph(Map(12 -> People, 19 -> and, 2
+                                                  //| 3 -> country, 15 -> Republic, 11 -> "Lao", 22 -> country, 13 -> name, 21 ->
+                                                  //|  name, 6 -> "Thailand", 1 -> "Myanmar", 14 -> Democratic, 0 -> ROOT, 20 -> 
+                                                  //| name, 18 -> country),Map(12 -> (6,7), 19 -> (7,8), 23 -> (1,2), 15 -> (9,10
+                                                  //| ), 11 -> (5,6), 22 -> (2,3), 13 -> (7,8), 21 -> (3,4), 6 -> (3,4), 1 -> (1,
+                                                  //| 2), 14 -> (8,9), 20 -> (1,2), 18 -> (7,8)),Map((20,1) -> opN, (19,22) -> op
+                                                  //| N, (15,12) -> poss, (21,6) -> opN, (13,11) -> opN, (23,20) -> name, (0,19) 
+                                                  //| -> ROOT, (19,18) -> opN, (18,13) -> name, (15,14) -> amod, (22,21) -> name,
+                                                  //|  (6,15) -> dep, (19,23) -> opN))),Map(0 -> ROOT, 14 -> 14, 20 -> 20, 1 -> 1
+                                                  //| , 6 -> 6, 21 -> 21, 13 -> 13, 22 -> 22, 12 -> 12, 18 -> 18, 11 -> 11, 23 ->
+                                                  //|  23, 19 -> 19, 15 -> 15))
+  outputAdv                                       //> res3: amr.Sentence = Sentence(Myanmar (MM); Thailand (TH); Lao People's Dem
+                                                  //| ocratic Republic (LA),
+                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Myanmar, 6 -> Thailand, 11 -> Lao, 12 -> Peo
+                                                  //| ple, 13 -> name, 14 -> Democratic, 15 -> Republic, 18 -> country, 19 -> and
+                                                  //| , 20 -> name, 21 -> name, 22 -> country, 23 -> country)
+                                                  //| SpanMap:	Map(1 -> (1,2), 6 -> (3,4), 11 -> (5,6), 12 -> (6,7), 13 -> (7,8
+                                                  //| ), 14 -> (8,9), 15 -> (9,10), 18 -> (7,8), 19 -> (7,8), 20 -> (1,2), 21 -> 
+                                                  //| (3,4), 22 -> (2,3), 23 -> (1,2))
+                                                  //| Edges:	Map((0,19) -> ROOT, (6,15) -> dep, (13,11) -> opN, (15,12) -> po
+                                                  //| ss, (15,14) -> amod, (18,13) -> name, (19,18) -> opN, (19,22) -> opN, (19,2
+                                                  //| 3) -> opN, (20,1) -> opN, (21,6) -> opN, (22,21) -> name, (23,20) -> name)
+                                                  //| InsertedNodes:	Map(20 -> 0.0.0, 21 -> 0.1.0, 22 -> 0.1, 18 -> 0.2, 23 -
+                                                  //| > 0.0, 19 -> 0)
+                                                  //| MergedNodes:	Map(22 -> List((3,MM)))
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	List(8, 17),Some(AMRGraph(Map(12 -> People, 19 -> and, 2
+                                                  //| 3 -> country, 15 -> Republic, 11 -> "Lao", 22 -> country, 13 -> name, 21 ->
+                                                  //|  name, 6 -> "Thailand", 1 -> "Myanmar", 14 -> Democratic, 0 -> ROOT, 20 -> 
+                                                  //| name, 18 -> country),Map(12 -> (6,7), 19 -> (7,8), 23 -> (1,2), 15 -> (9,10
+                                                  //| ), 11 -> (5,6), 22 -> (2,3), 13 -> (7,8), 21 -> (3,4), 6 -> (3,4), 1 -> (1,
+                                                  //| 2), 14 -> (8,9), 20 -> (1,2), 18 -> (7,8)),Map((20,1) -> opN, (19,22) -> op
+                                                  //| N, (15,12) -> poss, (21,6) -> opN, (13,11) -> opN, (23,20) -> name, (0,19) 
+                                                  //| -> ROOT, (19,18) -> opN, (18,13) -> name, (15,14) -> amod, (22,21) -> name,
+                                                  //|  (6,15) -> dep, (19,23) -> opN))),Map(0 -> ROOT, 14 -> 14, 20 -> 20, 1 -> 1
+                                                  //| , 6 -> 6, 21 -> 21, 13 -> 13, 22 -> 22, 12 -> 12, 18 -> 18, 11 -> 11, 23 ->
+                                                  //|  23, 19 -> 19, 15 -> 15))
 
 }

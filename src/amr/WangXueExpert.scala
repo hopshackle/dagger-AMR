@@ -9,11 +9,11 @@ class WangXueExpert extends WangXueExpertBasic {
     if (debug) println("Considering current node: " + state.nodesToProcess.head +
       " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
 
-    def getAMRParents(nodeAMR: Option[String]): List[String] = nodeAMR match {
+    def getAMRParents(nodeAMR: Option[String]): Seq[String] = nodeAMR match {
       case None => List[String]()
       case Some(amrKey) => data.amr.get.parentsOf(amrKey)
     }
-    def getAMRChildren(nodeAMR: Option[String]): List[String] = nodeAMR match {
+    def getAMRChildren(nodeAMR: Option[String]): Seq[String] = nodeAMR match {
       case None => List[String]()
       case Some(amrKey) => data.amr.get.childrenOf(amrKey)
     }
@@ -72,18 +72,16 @@ class WangXueExpert extends WangXueExpertBasic {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
           println(state.currentGraph.insertedNodes)
         }
-        // If the node label is exactly what we want, then we use 0 - as this uses the label directly.
-        // This happens when we are processing an inserted node, or are revisiting a node
-        val conceptToUse = if (state.currentGraph.nodes(state.nodesToProcess.head) == concept) 0 else conceptIndex(concept)
-        NextNode(conceptToUse)
+  //      val conceptToUse = if (state.currentGraph.nodes(state.nodesToProcess.head) == concept) 0 else conceptIndex(concept)
+        NextNode(conceptIndex(concept))
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) {
           val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
           val relationRequired = relationIndex(relationText)
-          val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
-          NextEdge(relationToUse)
+  //        val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
+          NextEdge(relationRequired)
         } else if ((sigmaAMRParents contains betaAMR)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
         else if (allNodesAMR contains betaAMRParents.head) {
           val parentIndex = fullMapAMRtoDT(betaAMRParents.head)

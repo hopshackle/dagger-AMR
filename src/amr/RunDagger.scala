@@ -49,9 +49,9 @@ object RunDagger {
   def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)], iterations: Int = 4, attempts: Int = 1000, naive: Boolean = false): List[(String, Double)] = {
     val fScoreFn = if (naive) Smatch.naiveFScore _ else Smatch.fScore _
     val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => fScoreFn(x, y, iterations, attempts) } }
-    val totalTriples = i map {case(x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size)} reduce {(a, b) => (a._1 + b._1, a._2 + b._2)}
+    val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
     val totalMatches = results map (_._5) sum
-    val overallPrecision =  totalMatches / totalTriples._1
+    val overallPrecision = totalMatches / totalTriples._1
     val overallRecall = totalMatches / totalTriples._2
     val overallScore = (2 * overallPrecision * overallRecall) / (overallPrecision + overallRecall)
     List(("F-Score", overallScore), ("Precision", overallPrecision), ("Recall", overallRecall))
@@ -76,25 +76,24 @@ object RunDagger {
     val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WXTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore,
       GraphViz.graphVizOutputFunction)
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
-    if (options.DEBUG) {
 
-      val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
-      for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
-        outputFile.write(j + "\n")
-        var relevantFeatures = List[(Int, Float)]()
-        for (i <- 1 to featureIndex.size) {
-          val weight = classifier.weightOf(j, i)
-          if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
-        }
-        val sortedFeatures = relevantFeatures.sortWith((a, b) => Math.abs(a._2) > Math.abs(b._2))
-        for (i <- 0 to Math.min(sortedFeatures.size - 1, 50)) {
-          val (feat, weight) = sortedFeatures(i)
-          outputFile.write(feat + ", " + featureIndex.elem(feat) + ", " + f"$weight%.3f" + "\n")
-        }
-        outputFile.write("\n")
+    val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
+    for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
+      outputFile.write(j + "\n")
+      var relevantFeatures = List[(Int, Float)]()
+      for (i <- 1 to featureIndex.size) {
+        val weight = classifier.weightOf(j, i)
+        if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
       }
-      outputFile.close()
+      val sortedFeatures = relevantFeatures.sortWith((a, b) => Math.abs(a._2) > Math.abs(b._2))
+      for (i <- 0 to Math.min(sortedFeatures.size - 1, 50)) {
+        val (feat, weight) = sortedFeatures(i)
+        outputFile.write(feat + ", " + featureIndex.elem(feat) + ", " + f"$weight%.3f" + "\n")
+      }
+      outputFile.write("\n")
     }
+    outputFile.close()
+
     classifier
   }
 

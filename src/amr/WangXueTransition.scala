@@ -3,7 +3,18 @@ import dagger.core._
 
 case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree,
   previousActions: List[WangXueAction], originalInput: Option[Sentence],
-  startingDT: DependencyTree) extends TransitionState {
+  startingDT: DependencyTree, processedEdges: Set[(Int, Int)], processedNodes: Set[Int]) extends TransitionState {
+  
+  def fastForward: WangXueTransitionState = {
+    // We skip any Edges or Nodes that have already been processed
+    val sigmaOption = nodesToProcess.headOption
+    val betaOption = childrenToProcess.headOption
+    (sigmaOption, betaOption) match {
+      case (Some(sigma), Some(beta)) => if (processedEdges contains (sigma, beta)) NextEdge(0)(this).fastForward else this
+      case (Some(sigma), None) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
+      case (None, _) => this
+    }
+  }
 
   // At each state in the search trajectory we have a currentGraph, which is initialised from the DependencyTree obtained
   // from our parser du jour. 

@@ -37,6 +37,7 @@ object AlignTest {
   }
 
   def alignWords(stemmedSentence: Array[List[String]], graph: Graph, alignments: Array[Option[Node]], dt: DependencyTree) {
+    import com.rockymadden.stringmetric.similarity.JaroMetric
     def topologicalDissimilarity(wordIndex: Int, amrId: String, dt: DependencyTree, amr: AMRGraph, mapping: scala.collection.mutable.Map[Int, String]): Double = {
       // We take all the neighbours of the node in the DependencyTree, and, where these map to something in the AMR Graph, we calculate
       // the mean distance in the AMR Graph. Hence high values are BAD.
@@ -64,7 +65,8 @@ object AlignTest {
       logger(3, "alignWords: node.concept = " + node.concept)
       for (i <- Range(0, stemmedSentence.size)) {
         for (word <- stemmedSentence(i)) {
-          if (word == concept && alignments(i) == None) {
+          val jaro = JaroMetric.compare(word, concept).getOrElse(0.0)
+          if (jaro > 0.75 && alignments(i) == None) {
             logger(3, "concept: " + node.concept + " word: " + word + " at " + i + "; AMR: " + node.id)
             possibleMatches.put(i + 1, node.id :: possibleMatches.getOrElse(i + 1, List()))
           }
@@ -73,8 +75,8 @@ object AlignTest {
     }
     val reverseMatches = possibleMatches.toList.flatMap { case (k, v) => for { s <- v } yield (s, k) }.groupBy(_._1).mapValues(_.map(_._2))
     // We now have a list of possible matches for each word (in both directions)
-    //    possibleMatches foreach (x => println(x + " " + dt.nodes(x._1)))
-    //    reverseMatches foreach (x => println(x + " " + amrGraph.nodes(x._1)))
+    //     possibleMatches foreach (x => println(x + " " + dt.nodes(x._1)))
+    //     reverseMatches foreach (x => println(x + " " + amrGraph.nodes(x._1)))
     val iterations = 4
     var bestMapping = scala.collection.mutable.Map[Int, String]()
     for (i <- 1 to iterations) {
@@ -83,33 +85,35 @@ object AlignTest {
       val similarities = (for {
         wordIndex <- dtNodes.keys
         if possibleMatches contains wordIndex
-        val word = dtNodes(wordIndex).toLowerCase
+        word <- stemmedSentence(wordIndex -1) ++ Array(dtNodes(wordIndex).toLowerCase)
         amrId <- amrNodes.keys
         if reverseMatches contains amrId
         val amrConcept = amrLemmas(amrId).toLowerCase
         val conceptCount: Double = if (amrConcept == word) (amrNodes.values count (_ == amrConcept)) +
           (dtNodes.values count (_ == amrConcept))
-        else 0.0
-        val similarity = (1.0 + 10.0 / topologicalDissimilarity(wordIndex, amrId, dt, amrGraph, bestMapping)) *
-          (1.0 + (if (amrConcept == word) 10.0 * Math.pow(0.5, conceptCount - 1) else 0.0))
+        else 1.0
+        val jaro = JaroMetric.compare(word, amrConcept).getOrElse(0.0)
+        val s1 = (1.0 + 10.0 / topologicalDissimilarity(wordIndex, amrId, dt, amrGraph, bestMapping))
+        val s2 = (1.0 + 10.0 * Math.pow(jaro, 3) * Math.pow(0.5, conceptCount - 1))
+        val similarity = s1 * s2
         if similarity > 0.001
-      } yield (wordIndex, amrId, similarity)).toSeq.sortWith((x, y) => x._3 > y._3)
+      } yield (wordIndex, amrId, similarity, s1, s2)).toSeq.sortWith((x, y) => x._3 > y._3)
       // We now have a list of all non-zero similarities, sorted in descending order of similarity
 
       var mappings = scala.collection.mutable.Map[Int, String]()
       var dtMapped = scala.collection.mutable.Set[Int]()
       var amrMapped = scala.collection.mutable.Set[String]()
 
-      for ((wordIndex, amrId, similarity) <- similarities) {
+      for ((wordIndex, amrId, similarity, s1, s2) <- similarities) {
         if (!(dtMapped contains wordIndex) && !(amrMapped contains amrId)) {
-          //        println(f"Similarity between ${amrGraph.nodes(amrId)} and ${dt.nodes(wordIndex)} is $similarity%.2f")
+  //        println(f"Similarity between ${amrGraph.nodes(amrId)} and ${dt.nodes(wordIndex)} is $similarity%.2f (topological = $s1%.2f; jaro = $s2%.2f")
           dtMapped.add(wordIndex)
           amrMapped.add(amrId)
           mappings.put(wordIndex, amrId)
         }
       }
       bestMapping = mappings
-      //    bestMapping foreach (x => println(dt.nodes(x._1) + " -> " + amrGraph.nodes(x._2)))
+//      bestMapping foreach (x => println(dt.nodes(x._1) + " -> " + amrGraph.nodes(x._2)))
     }
 
     // bestMapping uses wordPos starting at 1 (the DependencyTree convention)
