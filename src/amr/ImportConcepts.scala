@@ -82,18 +82,24 @@ object ImportConcepts {
         val s = Sentence(sentence, Some(amr))
       } yield (s, RunDagger.sampleTrajectory(s, "", expert))
 
-      val interimConcepts = (for {
-        ((_, s), a) <- expertResults zip allAMR
-        (dt, amr) <- s.dependencyTree.insertedNodes
-        lemma <- s.dependencyTree.nodeLemmas.values filter (_ != "")
-        if !(commonLemmas contains lemma)
-        val name = a.nodes(amr)
-      } yield (lemma -> name))
+      expertResults foreach (x => println(x._2.dependencyTree.insertedNodes))
+      allAMR foreach (x=> println(x.nodes))
+      val interimConcepts = for {
+        ((_, s), a) <- (expertResults zip allAMR)
+        lemma <- (s.dependencyTree.nodeLemmas.values filter (_ != ""))
+        (_, amr) <- s.dependencyTree.insertedNodes
+        name = a.nodes(amr)
+      } yield (lemma, name)
 
+      println(interimConcepts)
       val grouped = interimConcepts.groupBy(_._1)
+      println(grouped)
       val cleaned = grouped.mapValues(_.map(_._2))
+      println(cleaned)
       val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
+      println(test)
       val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).take(20).map(_._1).toSet - "-")) }
+      println(insertableConcepts)
 
       val lemmasToConcepts = (for {
         (original, processed) <- expertResults
