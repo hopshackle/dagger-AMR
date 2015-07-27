@@ -21,7 +21,13 @@ object ImportConcepts {
     (relation, index) <- relationStrings zipWithIndex
   } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
   lazy val relationStringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
-
+  lazy val expertResults = {
+    val expert = new WangXueExpert
+    for {
+      ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
+      val s = Sentence(sentence, Some(amr))
+    } yield (s, RunDagger.sampleTrajectory(s, "", expert))
+  }
   lazy val allSentencesAndAMR = importFile(amrFile)
   lazy val allAMR = allSentencesAndAMR map { case (sentence, amr) => AMRGraph(amr, sentence) }
   lazy val conceptStrings = loadConcepts + "-"
@@ -76,11 +82,6 @@ object ImportConcepts {
     }
 
     if (!conceptFileExists) {
-      val expert = new WangXueExpert
-      val expertResults = for {
-        ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
-        val s = Sentence(sentence, Some(amr))
-      } yield (s, RunDagger.sampleTrajectory(s, "", expert))
 
       val interimConcepts = for {
         ((_, s), a) <- (expertResults zip allAMR)
@@ -93,7 +94,7 @@ object ImportConcepts {
       val cleaned = grouped.mapValues(_.map(_._2))
       val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
       val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).take(20).map(_._1).toSet - "-")) }
-      
+
       val lemmasToConcepts = (for {
         (original, processed) <- expertResults
         val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
@@ -163,10 +164,12 @@ object ImportConcepts {
 
     if (!conceptFileExists) {
       val initial = (for {
-        (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
-        relations = (graph.arcs.values.toSet - "ROOT") map relationIndex
-        lemma <- DependencyTree(sentence).nodeLemmas.values map { x: String => numbers.replaceAllIn(x, "") match { case "" => "##"; case a => a } }
-//        if !(commonLemmas contains lemma)
+        ((_, s), a) <- (expertResults zip allAMR)
+        //    (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
+        relations = (a.arcs.values.toSet - "ROOT") map relationIndex
+        lemma <- (s.dependencyTree.nodeLemmas.values filter (_ != ""))
+        //     lemma <- DependencyTree(s).nodeLemmas.values map { x: String => numbers.replaceAllIn(x, "") match { case "" => "##"; case a => a } }
+        //        if !(commonLemmas contains lemma)
       } yield (lemma, relations)).toList
       val grouped = initial.groupBy(_._1)
       val cleaned = grouped.mapValues(_.map(_._2))
