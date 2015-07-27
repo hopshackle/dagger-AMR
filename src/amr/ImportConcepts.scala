@@ -82,25 +82,18 @@ object ImportConcepts {
         val s = Sentence(sentence, Some(amr))
       } yield (s, RunDagger.sampleTrajectory(s, "", expert))
 
-      expertResults foreach (x => println(x._2.dependencyTree.insertedNodes))
-      allAMR foreach (x=> println(x.nodes))
       val interimConcepts = for {
         ((_, s), a) <- (expertResults zip allAMR)
         lemma <- (s.dependencyTree.nodeLemmas.values filter (_ != ""))
-        (_, amr) <- s.dependencyTree.insertedNodes
+        amr <- s.dependencyTree.insertedNodes.values
         name = a.nodes(amr)
       } yield (lemma, name)
 
-      println(interimConcepts)
       val grouped = interimConcepts.groupBy(_._1)
-      println(grouped)
       val cleaned = grouped.mapValues(_.map(_._2))
-      println(cleaned)
       val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
-      println(test)
       val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).take(20).map(_._1).toSet - "-")) }
-      println(insertableConcepts)
-
+      
       val lemmasToConcepts = (for {
         (original, processed) <- expertResults
         val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
@@ -173,8 +166,8 @@ object ImportConcepts {
         (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
         relations = (graph.arcs.values.toSet - "ROOT") map relationIndex
         lemma <- DependencyTree(sentence).nodeLemmas.values map { x: String => numbers.replaceAllIn(x, "") match { case "" => "##"; case a => a } }
-        if !(commonLemmas contains lemma)
-      } yield (lemma -> relations)).toList
+//        if !(commonLemmas contains lemma)
+      } yield (lemma, relations)).toList
       val grouped = initial.groupBy(_._1)
       val cleaned = grouped.mapValues(_.map(_._2))
       //    val output = cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.toSet) }
