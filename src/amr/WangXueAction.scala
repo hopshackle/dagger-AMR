@@ -161,7 +161,7 @@ object Insert {
       val actualMatches = (unmatchedNodeLabels zip unmatchedNodes) filter { case (label, ref) => label == conceptToMatch }
       actualMatches match {
         case Nil => ""
-        case head :: tail => head._2
+        case head +: tail => head._2
       }
     }
   }

@@ -17,7 +17,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = false
+  val debug = true
   val includeChildren = false
   val includeParents = true
   val random = new Random()
@@ -37,7 +37,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       cachedFeatures
     } else {
 
-      val thisDebug = if (debug && random.nextDouble < 0.01) true else false
+      val thisDebug = if (debug && random.nextDouble < 0.001) true else false
       val quadraticTurbo = options.contains("--quadratic")
 
       val linearOutput = state.childrenToProcess match {
