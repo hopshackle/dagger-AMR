@@ -17,7 +17,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
   import scala.collection.JavaConversions.mapAsScalaMap
 
-  val debug = true
+  val debug = false
   val includeChildren = false
   val includeParents = true
   val random = new Random()

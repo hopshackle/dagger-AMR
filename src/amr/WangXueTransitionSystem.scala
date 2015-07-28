@@ -7,6 +7,7 @@ import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertab
 class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
   val expert = new WangXueExpert
+  val prohibition = true
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++
@@ -30,7 +31,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
       //    possibleNodes filter (state.currentGraph.getDistanceBetween(_, beta.get) < 7) map (i => Reattach(i))
     }).toArray
     val insertNodes = Seq(sigma) filter (state.currentGraph.nodeLemmas contains _)
-    val prohibitedNodes = ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
+    val prohibitedNodes = if (prohibition) ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes else Set[String]()
     val alwaysInsertable = Set("name")
     val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
     val permissibleConcepts = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + 0
