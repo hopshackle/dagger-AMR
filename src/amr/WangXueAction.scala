@@ -247,9 +247,10 @@ case object ReversePolarity extends WangXueAction {
   def apply(state: WangXueTransitionState): WangXueTransitionState = {
     // We simply insert a new child polarity node
     val amrRef = Insert.estimatedAMRRef(state, conceptIndex("-"))
-    val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), amrRef)
+    val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), amrRef, label = "polarity")
     state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess),
-      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions).fastForward
+      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions, 
+      processedEdges = state.processedEdges + ((state.nodesToProcess.head, newNode)), processedNodes = state.processedNodes + newNode).fastForward
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean =

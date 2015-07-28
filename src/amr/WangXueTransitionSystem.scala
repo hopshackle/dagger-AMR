@@ -29,9 +29,10 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
       possibleNodes map (Reattach(_))
       //    possibleNodes filter (state.currentGraph.getDistanceBetween(_, beta.get) < 7) map (i => Reattach(i))
     }).toArray
-    val insertNodes = (sigma +: parents) filter (state.currentGraph.nodeLemmas contains _)
+    val insertNodes = Seq(sigma) filter (state.currentGraph.nodeLemmas contains _)
     val prohibitedNodes = ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
-    val insertable = (insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma, Set()) }).toSet diff prohibitedNodes map conceptIndex 
+    val alwaysInsertable = Set("name")
+    val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
     val permissibleConcepts = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + 0
     val nextNodeActions = permissibleConcepts map (NextNode(_))
     val edgeNodes = (beta match { case Some(index) => List(sigma, index); case None => List(sigma) }) filter (state.currentGraph.nodeLemmas contains _)
@@ -67,7 +68,7 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)
     // and the complete dependency tree
-    WangXueTransitionState(allNodes, Nil, datum.dependencyTree, List(), Some(datum), datum.dependencyTree, Set(), Set())
+    WangXueTransitionState(allNodes, Nil, datum.dependencyTree, List(), Some(datum), datum.dependencyTree, Set(), Set(0))
   }
 
   // helper method - as we don't always have the full Sentence

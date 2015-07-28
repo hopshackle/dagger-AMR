@@ -57,7 +57,6 @@ object ImportConcepts {
       graph <- allAMR
       concept <- filterOutNumbersAndNames(graph.nodes.values.toSeq)
     } yield concept).toSet
-
   }
 
   private def filterOutNumbersAndNames(input: Seq[String]): Seq[String] = {
@@ -85,9 +84,9 @@ object ImportConcepts {
 
       val interimConcepts = for {
         ((_, s), a) <- (expertResults zip allAMR)
-        lemma <- (s.dependencyTree.nodeLemmas.values filter (_ != ""))
-        amr <- s.dependencyTree.insertedNodes.values
+        (node, amr) <- s.dependencyTree.insertedNodes.toList
         name = a.nodes(amr)
+        lemma <- (s.dependencyTree.childrenOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
       } yield (lemma, name)
 
       val grouped = interimConcepts.groupBy(_._1)
@@ -164,22 +163,19 @@ object ImportConcepts {
 
     if (!conceptFileExists) {
       val initial = (for {
-        ((_, s), a) <- (expertResults zip allAMR)
-        //    (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
-        relations = (a.arcs.values.toSet - "ROOT") map relationIndex
-        lemma <- (s.dependencyTree.nodeLemmas.values filter (_ != ""))
-        //     lemma <- DependencyTree(s).nodeLemmas.values map { x: String => numbers.replaceAllIn(x, "") match { case "" => "##"; case a => a } }
-        //        if !(commonLemmas contains lemma)
+        ((original, processed), a) <- (expertResults zip allAMR)
+        (node, lemma) <- processed.dependencyTree.nodeLemmas
+        if lemma != ""
+        relations = processed.dependencyTree.arcs filter (x => (x._1._1 == node || x._1._2 == node)) map ((_._2))
       } yield (lemma, relations)).toList
       val grouped = initial.groupBy(_._1)
       val cleaned = grouped.mapValues(_.map(_._2))
-      //    val output = cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.toSet) }
       val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.groupBy(identity).mapValues(_.size)) }
       val t2 = test map { case (key, m) => (key -> m.toSeq.sortWith(_._2 > _._2).take(30).map(_._1).toSet) }
       val le = new FileWriter(amrFile + "_le")
-      t2 filter (_._2.nonEmpty) foreach (x => le.write(x._1 + ":" + (x._2 map relation).mkString(":") + "\n"))
+      t2 filter (_._2.nonEmpty) foreach (x => le.write(x._1 + ":" + x._2.mkString(":") + "\n"))
       le.close
-      t2
+      t2 map {case(k, v) => (k, v map relationIndex)}
     } else {
       val input = Source.fromFile(amrFile + "_le").getLines
       val lineSplit = input map (_.split(":").toList)
