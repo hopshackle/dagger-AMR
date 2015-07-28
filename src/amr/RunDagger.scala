@@ -51,8 +51,8 @@ object RunDagger {
     val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => fScoreFn(x, y, iterations, attempts) } }
     val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
     val totalMatches = results map (_._5) sum
-    val overallPrecision = totalMatches / totalTriples._1
-    val overallRecall = totalMatches / totalTriples._2
+    val overallRecall = totalMatches / totalTriples._1
+    val overallPrecision = totalMatches / totalTriples._2
     val overallScore = (2 * overallPrecision * overallRecall) / (overallPrecision + overallRecall)
     List(("F-Score", overallScore), ("Precision", overallPrecision), ("Recall", overallRecall))
   }
@@ -78,7 +78,7 @@ object RunDagger {
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
-    for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
+    for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)) ++ Array(Reentrance(0)))) {
       outputFile.write(j + "\n")
       var relevantFeatures = List[(Int, Float)]()
       for (i <- 1 to featureIndex.size) {

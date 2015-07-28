@@ -49,7 +49,7 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
   }
   override def toString: String = "NextNode: " + conceptIndex + " -> " + concept(conceptIndex)
   override def name: String = "NextNode" + concept(conceptIndex)
-  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.isEmpty
+  override def isPermissible(state: WangXueTransitionState): Boolean = !state.phaseTwo && state.childrenToProcess.isEmpty
 }
 
 object NextNode {
@@ -72,7 +72,8 @@ case object DeleteNode extends WangXueAction {
     state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewTopNode.toList, currentGraph = tree, previousActions = this :: state.previousActions).fastForward
   }
   override def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head) &&
+    !state.phaseTwo &&
+      state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && state.currentGraph.isLeafNode(state.nodesToProcess.head) &&
       !state.currentGraph.insertedNodes.contains(state.nodesToProcess.head)
   }
   override def name: String = "DeleteNode"
@@ -88,8 +89,8 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
     // We try a few heuristics to match up AMR node to the newly inserted node
     val amrRef = if (otherRef == "") Insert.estimatedAMRRef(state, conceptIndex) else otherRef
     val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex, amrRef)
-    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree, 
-        previousActions = this :: state.previousActions, processedNodes = state.processedNodes + newNode).fastForward
+    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree,
+      previousActions = this :: state.previousActions, processedNodes = state.processedNodes + newNode).fastForward
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state)
@@ -114,7 +115,8 @@ object Insert {
   // We also apply a restriction that we can only insert a node if this is the first time we are visiting sigma
   // We also hard-code a restriction that the inserted concept cannot be within two arcs of sigma (to avoid one form of pathology)
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.nodesToProcess.size > 1 &&
+    !state.phaseTwo &&
+      state.nodesToProcess.size > 1 &&
       (state.previousActions.isEmpty || (state.previousActions.head match {
         case NextNode(_) => true
         case ReplaceHead => true
@@ -196,11 +198,11 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   }
   override def name: String = "Reattach"
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    !disableReattach &&
+    !disableReattach && !state.phaseTwo &&
       state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
       state.currentGraph.nodes.contains(newNode) &&
-      !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
       !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
+      !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
       (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) < 7)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
     // And also only consider attachment points range in the current graph
@@ -224,7 +226,7 @@ case object Swap extends WangXueAction {
       previousActions = this :: state.previousActions).fastForward
   }
   override def name: String = "Swap"
-  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
+  override def isPermissible(state: WangXueTransitionState): Boolean = !state.phaseTwo && state.childrenToProcess.nonEmpty &&
     !(state.currentGraph.swappedArcs contains ((state.childrenToProcess.head, state.nodesToProcess.head)))
 
 }
@@ -239,7 +241,7 @@ case object ReplaceHead extends WangXueAction {
       childrenToProcess = tree.childrenOf(state.childrenToProcess.head).toList, currentGraph = tree, previousActions = this :: state.previousActions).fastForward
   }
   override def name: String = "ReplaceHead"
-  def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
+  def isPermissible(state: WangXueTransitionState): Boolean = !state.phaseTwo && state.childrenToProcess.nonEmpty &&
     !(state.currentGraph.insertedNodes contains state.nodesToProcess.head)
 }
 
@@ -249,27 +251,49 @@ case object ReversePolarity extends WangXueAction {
     val amrRef = Insert.estimatedAMRRef(state, conceptIndex("-"))
     val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), amrRef, label = "polarity")
     state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess),
-      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions, 
+      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions,
       processedEdges = state.processedEdges + ((state.nodesToProcess.head, newNode)), processedNodes = state.processedNodes + newNode).fastForward
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean =
-    (state.previousActions.isEmpty || (state.previousActions.head match {
-      case NextNode(_) => true
-      case ReplaceHead => true
-      case Swap => true
-      case DeleteNode => true
-      case Insert(_, _) => true
-      case _ => false
-    }))
+    !state.phaseTwo &&
+      (state.previousActions.isEmpty || (state.previousActions.head match {
+        case NextNode(_) => true
+        case ReplaceHead => true
+        case Swap => true
+        case DeleteNode => true
+        case Insert(_, _) => true
+        case _ => false
+      }))
   override def name: String = "ReversePolarity"
   override def toString: String = "ReversePolarity"
 }
 
-case class Reentrance(newNode: Int) extends WangXueAction with hasNodeAsParameter {
-  override val parameterNode = newNode
-  def apply(conf: WangXueTransitionState): WangXueTransitionState = ???
-  def isPermissible(state: WangXueTransitionState): Boolean = false
+case class Reentrance(kappa: Int) extends WangXueAction with hasNodeAsParameter {
+  override val parameterNode = kappa
+  override def getMasterLabel = Reentrance(0)
   override def name: String = "Reentrance"
+  def apply(conf: WangXueTransitionState): WangXueTransitionState = {
+    assert(isPermissible(conf), "Trying to Reenter in inadmissible state.\n" + conf)
+    val newEdgeKey = (conf.nodesToProcess.head, kappa)
+    val tree = conf.currentGraph.copy(arcs = conf.currentGraph.arcs + (newEdgeKey -> "reentrance"))
+    conf.copy(childrenToProcess = List(kappa), currentGraph = tree, previousActions = this :: conf.previousActions).fastForward
+  }
+  def isPermissible(state: WangXueTransitionState): Boolean = state.phaseTwo &&
+    state.nodesToProcess.nonEmpty && state.childrenToProcess.isEmpty &&
+    !(state.currentGraph.subGraph(kappa) contains state.nodesToProcess.head) &&
+    state.currentGraph.getDistanceBetween(kappa, state.nodesToProcess.head) < 5
+
+}
+
+case object DoNothing extends WangXueAction {
+
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
+    state.copy(nodesToProcess = state.nodesToProcess.tail, previousActions = this :: state.previousActions).fastForward
+  }
+  override def isPermissible(state: WangXueTransitionState): Boolean = {
+    state.phaseTwo && state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty
+  }
+  override def name: String = "DoNothing"
 }
 

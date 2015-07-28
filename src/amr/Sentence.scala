@@ -76,6 +76,13 @@ abstract class Graph[K] {
   def subGraph(node: K): Set[K] = {
     subGraph(node, 0)
   }
+  def getAllChildren(parentList: Seq[K]): Seq[K] = {
+    val newChildren = parentList flatMap childrenOf
+    if (newChildren.isEmpty)
+      parentList // we're done
+    else
+      getAllChildren(newChildren.distinct) ++ parentList
+  }
 
 }
 
@@ -138,8 +145,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newNode = nodes.keys.max + 1
     val parentSpan = nodeSpans.getOrElse(node, (0, 0))
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
-    val labelToUse = if (label != "") label else  concept(conceptIndex) + "#" // label made up for use as feature
-    val newEdgeToNode = ((node, newNode), labelToUse) 
+    val labelToUse = if (label != "") label else concept(conceptIndex) + "#" // label made up for use as feature
+    val newEdgeToNode = ((node, newNode), labelToUse)
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
       nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs + newEdgeToNode,
       insertedNodes = newInsertedNodes))
