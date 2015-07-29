@@ -88,8 +88,8 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
     // We try a few heuristics to match up AMR node to the newly inserted node
     val amrRef = if (otherRef == "") Insert.estimatedAMRRef(state, conceptIndex) else otherRef
     val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex, amrRef)
-    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree, 
-        previousActions = this :: state.previousActions, processedNodes = state.processedNodes + newNode).fastForward
+    state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree,
+      previousActions = this :: state.previousActions, processedNodes = state.processedNodes + newNode).fastForward
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state)
@@ -108,7 +108,7 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
 }
 
 object Insert {
-  val transSystem = new WangXueTransitionSystem
+  val transSystem = WangXueTransitionSystem
 
   // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
   // We also apply a restriction that we can only insert a node if this is the first time we are visiting sigma
@@ -199,8 +199,8 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     !disableReattach &&
       state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
       state.currentGraph.nodes.contains(newNode) &&
-      !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
       !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
+      !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
       (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) < 7)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
     // And also only consider attachment points range in the current graph
@@ -249,7 +249,7 @@ case object ReversePolarity extends WangXueAction {
     val amrRef = Insert.estimatedAMRRef(state, conceptIndex("-"))
     val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), amrRef, label = "polarity")
     state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess),
-      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions, 
+      childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions,
       processedEdges = state.processedEdges + ((state.nodesToProcess.head, newNode)), processedNodes = state.processedNodes + newNode).fastForward
   }
 

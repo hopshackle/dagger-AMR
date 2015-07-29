@@ -9,7 +9,7 @@ object RunDagger {
 
   def sampleTrajectory(data: Sentence, logFile: String = "", expert: WangXueExpertBasic = new WangXueExpert): Sentence = {
     val output = if (logFile != "") new FileWriter(logFile) else null
-    val expertSystem = new WangXueTransitionSystem
+    val expertSystem = WangXueTransitionSystem
     var nextState = expertSystem.init(data)
     var finished = false
     while (!finished) {
@@ -62,6 +62,7 @@ object RunDagger {
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     val alignerToUse = options.getString("--aligner", "")
     AMRGraph.setAligner(alignerToUse)
+
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
     //   val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
@@ -72,13 +73,14 @@ object RunDagger {
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
-    val WXTransitionSystem = new WangXueTransitionSystem
-    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WXTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore,
+    val insertProhibition = options.getBoolean("--insertProhibition", true)
+    WangXueTransitionSystem.setProhibition(insertProhibition)
+    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore,
       GraphViz.graphVizOutputFunction)
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
-    for (j <- (WXTransitionSystem.actions ++ Array(Reattach(0)))) {
+    for (j <- (WangXueTransitionSystem.actions ++ Array(Reattach(0)))) {
       outputFile.write(j + "\n")
       var relevantFeatures = List[(Int, Float)]()
       for (i <- 1 to featureIndex.size) {

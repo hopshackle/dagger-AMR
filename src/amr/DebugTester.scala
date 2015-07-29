@@ -4,7 +4,7 @@ object DebugTester {
 
   def main(args: Array[String]): Unit = {
     val expert = new WangXueExpert
-    val expertSystem = new WangXueTransitionSystem
+    val expertSystem = WangXueTransitionSystem
     val testData = AMRGraph.importFile("C:\\AMR\\initialTrainingSetAmended.txt")
     val s1 = Sentence(testData(1)._1, testData(1)._2)
 

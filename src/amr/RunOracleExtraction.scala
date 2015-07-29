@@ -18,7 +18,7 @@ object RunOracleExtraction {
     val lossFunctionFactory = new WangXueLossFunctionFactory("Basic F-Score")
     val featureIndex = new MapIndex
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
-    val WXTransitionSystem = new WangXueTransitionSystem
+    val WXTransitionSystem = WangXueTransitionSystem
     val score = (s: Iterable[(Sentence, Sentence)]) => 1.0
     println("Extracting instances...")
     val classifier = extractor.train(trainData, new WangXueExpert, WXFeatures, lossFunctionFactory, WXTransitionSystem, devData, RunDagger.corpusSmatchScore, options)

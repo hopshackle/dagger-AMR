@@ -4,7 +4,7 @@ import dagger.core._
 case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree,
   previousActions: List[WangXueAction], originalInput: Option[Sentence],
   startingDT: DependencyTree, processedEdges: Set[(Int, Int)], processedNodes: Set[Int]) extends TransitionState {
-  
+
   def fastForward: WangXueTransitionState = {
     // We skip any Edges or Nodes that have already been processed
     val sigmaOption = nodesToProcess.headOption

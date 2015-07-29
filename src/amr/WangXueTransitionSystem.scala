@@ -2,12 +2,14 @@ package amr
 
 import dagger.core.TransitionSystem
 
-import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertableConcepts, conceptIndex }
+import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertableConcepts, conceptIndex, concept }
 
-class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
+object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
   val expert = new WangXueExpert
-  val prohibition = true
+  var prohibition = true
+
+  def setProhibition(flag: Boolean) = prohibition = flag
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++
@@ -17,27 +19,34 @@ class WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
     //   val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
 
+    if (state.nodesToProcess.isEmpty) return Array[WangXueAction]()
+    
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.headOption
-    val parents = state.currentGraph.parentsOf(sigma)
-    val grandParents = parents flatMap state.currentGraph.parentsOf
-    val children = state.currentGraph.childrenOf(sigma)
-    val grandChildren = children flatMap state.currentGraph.childrenOf
-    val reattachActions = (if (state.childrenToProcess.isEmpty) {
+
+    val reattachActions = (if (state.childrenToProcess.isEmpty || (state.currentGraph.reattachedNodes contains beta)) {
       Set[Reattach]()
     } else {
       val possibleNodes = state.currentGraph.getNeighbourhood(sigma, 5) - sigma -- state.currentGraph.subGraph(beta.get)
       possibleNodes map (Reattach(_))
-      //    possibleNodes filter (state.currentGraph.getDistanceBetween(_, beta.get) < 7) map (i => Reattach(i))
     }).toArray
-    val insertNodes = Seq(sigma) filter (state.currentGraph.nodeLemmas contains _)
-    val prohibitedNodes = if (prohibition) ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes else Set[String]()
+    val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
+    val prohibitedNodes = if (prohibition) {
+      val parents = state.currentGraph.parentsOf(sigma)
+      val grandParents = parents flatMap state.currentGraph.parentsOf
+      val children = state.currentGraph.childrenOf(sigma)
+      val grandChildren = children flatMap state.currentGraph.childrenOf
+      ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
+    } else Set[String]()
     val alwaysInsertable = Set("name")
+    val alwaysEdgePossibilities = Set("opN")
     val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
-    val permissibleConcepts = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + 0
+    val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
+    val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
+    val permissibleConcepts = if (wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
     val nextNodeActions = permissibleConcepts map (NextNode(_))
-    val edgeNodes = (beta match { case Some(index) => List(sigma, index); case None => List(sigma) }) filter (state.currentGraph.nodeLemmas contains _)
-    val permissibleEdges = (edgeNodes map state.currentGraph.nodeLemmas flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + relationIndex("ROOT") + 0
+    val edgeNodes = (beta match { case Some(index) => List(sigma, index); case None => List() }) filter (state.currentGraph.nodeLemmas contains _)
+    val permissibleEdges = (edgeNodes map state.currentGraph.nodeLemmas flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + relationIndex("ROOT") + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
     val insertActions = insertable map (Insert(_, ""))
     reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
