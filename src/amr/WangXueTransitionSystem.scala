@@ -39,14 +39,14 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
     } else Set[String]()
     val alwaysInsertable = Set("name")
-    val alwaysEdgePossibilities = Set("opN")
+    val alwaysEdgePossibilities = Set("opN", "ROOT")
     val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
     val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
     val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
     val permissibleConcepts = if (wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
     val nextNodeActions = permissibleConcepts map (NextNode(_))
-    val edgeNodes = (beta match { case Some(index) => List(sigma, index); case None => List() }) filter (state.currentGraph.nodeLemmas contains _)
-    val permissibleEdges = (edgeNodes map state.currentGraph.nodeLemmas flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + relationIndex("ROOT") + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
+    val edgeKeys = (beta match { case Some(index) => state.currentGraph.nodeLemmas.getOrElse(index, "")+"-IN"; case None => "" }) :: List(state.currentGraph.nodeLemmas.getOrElse(sigma, "")+"-OUT")
+    val permissibleEdges = (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
     val insertActions = insertable map (Insert(_, ""))
     reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)

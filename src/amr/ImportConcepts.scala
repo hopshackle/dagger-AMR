@@ -96,7 +96,7 @@ object ImportConcepts {
       val grouped = interimConcepts.groupBy(_._1)
       val cleaned = grouped.mapValues(_.map(_._2))
       val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
-      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).take(20).map(_._1).toSet - "-" - "name")) }
+      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-" - "name")) }
 
       val lemmasToConcepts = (for {
         (original, processed) <- expertResults
@@ -154,16 +154,19 @@ object ImportConcepts {
         ((original, processed), a) <- (expertResults zip allAMR)
         (node, lemma) <- processed.dependencyTree.nodeLemmas
         if lemma != ""
-        relations = processed.dependencyTree.arcs filter (x => (x._1._1 == node || x._1._2 == node)) map ((_._2)) filter (_ != "opN")
-      } yield (lemma, relations)).toList
+        ignorableEdges = Set("opN", "ROOT", "polarity") ++ original.dependencyTree.arcs.values
+        relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
+        relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
+      } yield (lemma, relationsIn, relationsOut)).toList
       val grouped = initial.groupBy(_._1)
-      val cleaned = grouped.mapValues(_.map(_._2))
-      val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.groupBy(identity).mapValues(_.size)) }
-      val t2 = test map { case (key, m) => (key -> m.toSeq.sortWith(_._2 > _._2).take(30).map(_._1).toSet) }
+      val cleanedIn = grouped.mapValues(_.map(_._2)) map { case (k, v) => (k + "-IN" -> v) }
+      val cleanedOut = grouped.mapValues(_.map(_._3)) map { case (k, v) => (k + "-OUT" -> v) }
+      val arcsByName = (cleanedIn ++ cleanedOut) map { case (key, listOfSets) => (key -> listOfSets.flatten.groupBy(identity).mapValues(_.size)) } map
+        { case (key, m) => (key -> m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet) }
       val le = new FileWriter(amrFile + "_le")
-      t2 filter (_._2.nonEmpty) foreach (x => le.write(x._1 + ":" + x._2.mkString(":") + "\n"))
+      arcsByName filter (_._2.nonEmpty) foreach (x => le.write(x._1 + ":" + x._2.mkString(":") + "\n"))
       le.close
-      t2 map { case (k, v) => (k, v map relationIndex) }
+      arcsByName map { case (k, v) => (k, v map relationIndex) }
     } else {
       val input = Source.fromFile(amrFile + "_le").getLines
       val lineSplit = input map (_.split(":").toList)
