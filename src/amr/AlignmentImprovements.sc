@@ -4,7 +4,7 @@ import edu.cmu.lti.nlp.amr._
 object AlignmentImprovements {
 
 // val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\Riyadh-based.txt")(0)
- // val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\CountryList.txt")(0)
+//  val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\CountryList.txt")(0)
 //  val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\Lavrov.txt")(0)
   val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\Medvedev.txt")(0)
                                                   //> rawSentence  : String = Russian Federation President Dmitry Medvedev promise
@@ -56,71 +56,39 @@ object AlignmentImprovements {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.0 sec].
+                                                  //| hPCFG.ser.gz ... done [1.3 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.2 sec].
+                                                  //| im.crf.ser.gz ... done [4.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.1 sec].
+                                                  //| im.crf.ser.gz ... done [3.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [3.8 sec].
+                                                  //| tsim.crf.ser.gz ... done [4.2 sec].
                                                   //| tokenisedSentence  : List[String] = List(Russian, Federation, President, Dmi
                                                   //| try, Medvedev, promised, on, May, 15, 2008, to, provide, funding, for, Russi
                                                   //| a, 's, nuclear, missile, program)
 val wordAlignments = AlignTest.alignWords(tokenisedSentence.toArray, amr)
-                                                  //> Similarity between fund-01 and funding is 202.00 (topological = 2.00; jaro =
-                                                  //|  101.00
-                                                  //| Similarity between "Federation" and Federation is 102.00 (topological = 2.00
-                                                  //| ; jaro = 51.00
-                                                  //| Similarity between 15 and 15 is 102.00 (topological = 2.00; jaro = 51.00
-                                                  //| Similarity between 5 and 5 is 102.00 (topological = 2.00; jaro = 51.00
-                                                  //| Similarity between "Medvedev" and Medvedev is 102.00 (topological = 2.00; ja
-                                                  //| ro = 51.00
-                                                  //| Similarity between 2008 and 2008 is 102.00 (topological = 2.00; jaro = 51.00
-                                                  //| 
-                                                  //| Similarity between provide-01 and provide is 102.00 (topological = 2.00; jar
-                                                  //| o = 51.00
-                                                  //| Similarity between promise-01 and promised is 102.00 (topological = 2.00; ja
-                                                  //| ro = 51.00
-                                                  //| Similarity between "Dmitry" and Dmitry is 102.00 (topological = 2.00; jaro =
-                                                  //|  51.00
-                                                  //| Similarity between "Russian" and Russian is 102.00 (topological = 2.00; jaro
-                                                  //|  = 51.00
-                                                  //| Similarity between program and program is 52.00 (topological = 2.00; jaro = 
-                                                  //| 26.00
-                                                  //| Similarity between president and President is 52.00 (topological = 2.00; jar
-                                                  //| o = 26.00
-                                                  //| Similarity between missile and missile is 52.00 (topological = 2.00; jaro = 
-                                                  //| 26.00
-                                                  //| Similarity between nucleus and nuclear is 12.61 (topological = 2.00; jaro = 
-                                                  //| 6.31
-                                                  //| Similarity between fund-01 and funding is 1111.00 (topological = 11.00; jaro
-                                                  //|  = 101.00
-                                                  //| Similarity between provide-01 and provide is 561.00 (topological = 11.00; ja
-                                                  //| ro = 51.00
-                                                  //| Similarity between 15 and 15 is 306.00 (topological = 6.00; jaro = 51.00
-                                                  //| Similarity between "Dmitry" and Dmitry is 306.00 (topological = 6.00; jaro =
-                                                  //|  51.00
-                                                  //| Similarity between 5 and 5 is 306.00 (topological = 6.00; jaro = 51.00
-                                                  //| Similarity between promise-01 and promised is 306.00 (topological = 6.00; ja
-                                                  //| ro = 51.00
-                                                  //| Similarity between 2008 and 2008 is 306.00 (topological = 6.00; jaro = 51.00
-                                                  //| 
-                                                  //| Similarity between missile and missile is 286.00 (topological = 11.00; jaro 
-                                                  //| = 26.00
-                                                  //| Similarity between program and program is 199.33 (topological = 7.67; jaro =
-                                                  //|  26.00
-                                                  //| Similarity between "Medvedev" and Medvedev is 172.43 (topological = 3.38; ja
-                                                  //| ro = 51.00
-                                                  //| Similarity between "Federation" and Federation is 136.00 (topological = 2.67
-                                                  //| ; jaro = 51.00
-                                                  //| Similarity between "Russian" and Russian is 136.00 (topological = 2.67; jaro
-                                                  //|  = 51.00
-                                                  //| Similarity between president and President is 91.00 (topological = 3.50; jar
-                                                  //| o = 26.00
-                                                  //| Similarity 
-                                                  //| Output exceeds cutoff limit.
+                                                  //> Stemmed sentence List(List(russian, Russian, russian), List(federation, Fede
+                                                  //| ration, federation), List(president, President, president), List(Dmitry, dmi
+                                                  //| try), List(Medvedev, medvedev), List(promise, promised, promised, promise), 
+                                                  //| List(on, on), List(may, May, may, 5), List(15, 15), List(2008), List(to), Li
+                                                  //| st(provide, provide), List(fund, funding, funding, fund), List(for), List(ru
+                                                  //| ssia, Russia, russia), List(', 's, '), List(nuclear, nuclear), List(missile,
+                                                  //|  missile), List(program, program))
+                                                  //| wordAlignments  : Array[Option[edu.cmu.lti.nlp.amr.Node]] = Array(Some("Russ
+                                                  //| ian"), Some("Federation"), Some(president), Some("Dmitry"), Some("Medvedev")
+                                                  //| , Some((promise-01 :ARG0 (person :name (name :op1 "Dmitry" :op2 "Medvedev") 
+                                                  //| :ARG0-of (have-org-role-91 :ARG1 (country :name (name :op1 "Russian" :op2 "F
+                                                  //| ederation")) :ARG2 president)) :ARG1 (provide-01 :ARG1 (fund-01 :ARG1 (progr
+                                                  //| am :mod (missile :mod nucleus) :poss country) :ARG0 person) :ARG0 person) :t
+                                                  //| ime (date-entity :month 5 :day 15 :year 2008))), Some((country :name (name :
+                                                  //| op1 "Russian" :op2 "Federation"))), Some(5), Some(15), Some(2008), None, Som
+                                                  //| e((provide-01 :ARG1 (fund-01 :ARG1 (program :mod (missile :mod nucleus) :pos
+                                                  //| s country) :ARG0 person) :ARG0 person)), Some((fund-01 :ARG1 (program :mod (
+                                                  //| missile :mod nucleus) :poss country) :ARG0 person)), None, None, None, Some(
+                                                  //| nucleus), Some((missile :mod nucleus)), Some((program :mod (missile :mod nuc
+                                                  //| leus) :poss country)))
 wordAlignments foreach println                    //> Some("Russian")
                                                   //| Some("Federation")
                                                   //| Some(president)
@@ -131,7 +99,7 @@ wordAlignments foreach println                    //> Some("Russian")
                                                   //| eration")) :ARG2 president)) :ARG1 (provide-01 :ARG1 (fund-01 :ARG1 (program
                                                   //|  :mod (missile :mod nucleus) :poss country) :ARG0 person) :ARG0 person) :tim
                                                   //| e (date-entity :month 5 :day 15 :year 2008)))
-                                                  //| None
+                                                  //| Some((country :name (name :op1 "Russian" :op2 "Federation")))
                                                   //| Some(5)
                                                   //| Some(15)
                                                   //| Some(2008)
