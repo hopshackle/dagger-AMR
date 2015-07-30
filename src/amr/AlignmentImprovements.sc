@@ -56,26 +56,30 @@ object AlignmentImprovements {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.3 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.4 sec].
+                                                  //| im.crf.ser.gz ... done [4.8 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.4 sec].
+                                                  //| im.crf.ser.gz ... done [2.1 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.2 sec].
+                                                  //| tsim.crf.ser.gz ... done [3.8 sec].
                                                   //| tokenisedSentence  : List[String] = List(Russian, Federation, President, Dmi
                                                   //| try, Medvedev, promised, on, May, 15, 2008, to, provide, funding, for, Russi
                                                   //| a, 's, nuclear, missile, program)
 val wordAlignments = AlignTest.alignWords(tokenisedSentence.toArray, amr)
-                                                  //> Stemmed sentence List(List(russian, Russian, russian), List(federation, Fede
-                                                  //| ration, federation), List(president, President, president), List(Dmitry, dmi
-                                                  //| try), List(Medvedev, medvedev), List(promise, promised, promised, promise), 
-                                                  //| List(on, on), List(may, May, may, 5), List(15, 15), List(2008), List(to), Li
-                                                  //| st(provide, provide), List(fund, funding, funding, fund), List(for), List(ru
-                                                  //| ssia, Russia, russia), List(', 's, '), List(nuclear, nuclear), List(missile,
-                                                  //|  missile), List(program, program))
+                                                  //> Stemmed sentence List(List(Russian, russian, Russian), List(Federation, fede
+                                                  //| ration, confederacy, confederation, federation), List(President, president, 
+                                                  //| President, chair, chairman, chairperson, chairwoman, president, prexy), List
+                                                  //| (Dmitry, dmitry), List(Medvedev, medvedev), List(promised, promise, promised
+                                                  //| ), List(on, along, on), List(May, may, 5, May, may, whitethorn), List(15, 15
+                                                  //| , XV, fifteen, xv), List(2008), List(to), List(provide, allow, cater, furnis
+                                                  //| h, leave, offer, ply, provide, render, supply), List(funding, fund, backing,
+                                                  //|  financing, funding, support), List(for), List(Russia, russia, Russia, USSR)
+                                                  //| , List('s, '), List(nuclear, atomic, nuclear), List(missile, missile, projec
+                                                  //| tile), List(program, broadcast, curriculum, plan, platform, program, program
+                                                  //| me, syllabus))
                                                   //| wordAlignments  : Array[Option[edu.cmu.lti.nlp.amr.Node]] = Array(Some("Russ
                                                   //| ian"), Some("Federation"), Some(president), Some("Dmitry"), Some("Medvedev")
                                                   //| , Some((promise-01 :ARG0 (person :name (name :op1 "Dmitry" :op2 "Medvedev") 

@@ -408,7 +408,7 @@ object DependencyTree {
   }
 
   def extractNumbers(input: String): String = {
-    val regexStr = "^$ | $ | $[,.?!;:]"
+    val regexStr = "^$ | $ | $-| $[,.?!;:]"
     val numbers = List("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve")
     var output = input
     for ((str, number) <- numbers.zipWithIndex) {
@@ -416,6 +416,13 @@ object DependencyTree {
       output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
     }
 
+    val numbersWithHyphen = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))-""".r
+    output = numbersWithHyphen replaceAllIn(output, _ match {
+            case numbersWithHyphen(number) =>
+        val replacement = number.toDouble;
+        f"$replacement%.0f "
+      case other => ""
+    })
     val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
     output = realNumbers replaceAllIn (output, _ match {
       case realNumbers(number, multiple) =>

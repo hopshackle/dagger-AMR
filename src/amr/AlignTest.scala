@@ -26,11 +26,11 @@ object AlignTest {
     val wordAlignments = new Array[Option[Node]](size)
     val stemmedSentence = new Array[List[String]](size)
     for (i <- Range(0, size)) {
-      stemmedSentence(i) = Wordnet.stemmer(sentence(i)) ++ AlignWords.stemmer(sentence(i))
+      stemmedSentence(i) = AlignWords.stemmer(sentence(i))//  ++ Wordnet.synonyms(sentence(i))
       wordAlignments(i) = None
     }
     val dt = DependencyTree(sentence.mkString(" "))
-    logger(1, "Stemmed sentence " + stemmedSentence.toList.toString)
+    logger(2, "Stemmed sentence " + stemmedSentence.toList.toString)
     alignWords(stemmedSentence, graph, wordAlignments, dt)
 //    AlignWords.fuzzyAligner(stemmedSentence, graph.root, wordAlignments)
     return wordAlignments
