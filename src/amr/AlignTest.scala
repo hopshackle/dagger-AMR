@@ -20,13 +20,13 @@ object AlignTest {
   private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
   type Graph = edu.cmu.lti.nlp.amr.Graph
 
-  def alignWords(sentence: Array[String], graph: Graph): Array[Option[Node]] = {
+  def alignWords(sentence: Array[String], graph: Graph, wordnet: Boolean = false): Array[Option[Node]] = {
     val size = sentence.size
     val Relation = """:?(.*)""".r
     val wordAlignments = new Array[Option[Node]](size)
     val stemmedSentence = new Array[List[String]](size)
     for (i <- Range(0, size)) {
-      stemmedSentence(i) = AlignWords.stemmer(sentence(i))//  ++ Wordnet.synonyms(sentence(i))
+      stemmedSentence(i) = AlignWords.stemmer(sentence(i)) ++ (if (wordnet) Wordnet.synonyms(sentence(i)) else List[String]())
       wordAlignments(i) = None
     }
     val dt = DependencyTree(sentence.mkString(" "))

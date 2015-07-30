@@ -78,21 +78,22 @@ object generalPlay {
   // matches foreach println
   val text = matches map (x => x.split(" "))      //> text  : List[Array[String]] = List(Array(2, million), Array(6.02, billion))
                                                   //| 
-  DependencyTree.extractNumbers("A two-week extension until the 30-strong group arrive.")
+  DependencyTree.extractNumbers("A two-week extension until the 30-strong group arrive to test their 3-billion-dollar theory.")
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
-                                                  //| shPCFG.ser.gz ... done [1.2 sec].
+                                                  //| shPCFG.ser.gz ... done [1.1 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
-                                                  //| sim.crf.ser.gz ... done [4.6 sec].
+                                                  //| sim.crf.ser.gz ... done [4.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
-                                                  //| sim.crf.ser.gz ... done [2.3 sec].
+                                                  //| sim.crf.ser.gz ... done [3.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
-                                                  //| stsim.crf.ser.gz ... done [3.6 sec].
-                                                  //| res21: String = A 2 week extension until the 30 strong group arrive.
+                                                  //| stsim.crf.ser.gz ... done [2.6 sec].
+                                                  //| res21: String = A 2 week extension until the 30 strong group arrive to test
+                                                  //|  their 3000000000 dollar theory.
   // val replacements = text map { x => x(0).toDouble * (x(1) match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 }) } map (x => f"${x}%.0f")
   // replacements foreach println
   realNumbers.replaceAllIn(t2, " rep ")           //> res22: String = one billion  rep  once, one,  rep s onet

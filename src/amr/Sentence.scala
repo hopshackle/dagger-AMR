@@ -423,7 +423,7 @@ object DependencyTree {
         f"$replacement%.0f "
       case other => ""
     })
-    val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
+    val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)[ -]""".r
     output = realNumbers replaceAllIn (output, _ match {
       case realNumbers(number, multiple) =>
         val replacement = number.toDouble * (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
@@ -439,8 +439,10 @@ object DependencyTree {
 object AMRGraph {
   // We then use the JAMR functionality here
   var useImprovedAligner = false
+  var useWordNet = false
   def setAligner(code: String): Unit = {
     if (code == "improved") useImprovedAligner = true
+    if (code == "wordnet") {useImprovedAligner = true; useWordNet = true}
   }
   def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
     val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
@@ -465,7 +467,7 @@ object AMRGraph {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
     val amr = Graph.parse(rawAMR)
     val wordAlignments = if (useImprovedAligner)
-      AlignTest.alignWords(tokenisedSentence.toArray, amr)
+      AlignTest.alignWords(tokenisedSentence.toArray, amr, useWordNet)
     else
       AlignWords.alignWords(tokenisedSentence.toArray, amr)
 
