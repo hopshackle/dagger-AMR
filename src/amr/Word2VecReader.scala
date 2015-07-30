@@ -17,7 +17,7 @@ object Word2VecReader {
     println("Read embeddings for " + w2v.size + " words.")
   }
 
-  def load(filename: String, filter: (String => Boolean) = _ => true, normalize: Boolean = true, format: String = "GOOGLE"): Word2Vec = {
+  def load(filename: String, filter: (String => Boolean) = _ => true, normalize: Boolean = true, format: String = "STANFORD"): Word2Vec = {
     val w2v = new Word2Vec
     try {
       w2v.load(filename, filter, normalize, format)

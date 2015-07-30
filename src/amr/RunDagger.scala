@@ -69,6 +69,9 @@ object RunDagger {
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
+    val w2vDict = Word2VecReader.load(options.DAGGER_OUTPUT_PATH + "../Globe.6B.50d.txt", filter = x => ImportConcepts.conceptStrings.contains(x))
+    devData map (s => s.copy())
+     
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex

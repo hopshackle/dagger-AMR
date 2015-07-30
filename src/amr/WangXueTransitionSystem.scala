@@ -8,6 +8,8 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
   val expert = new WangXueExpert
   var prohibition = true
+  val alwaysInsertable = Set("name")
+  val alwaysEdgePossibilities = Set("opN", "ROOT")
 
   def setProhibition(flag: Boolean) = prohibition = flag
 
@@ -20,7 +22,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     //   val reattachActions = ((state.currentGraph.nodes.keySet - state.nodesToProcess.head) map (i => Reattach(i))).toArray
 
     if (state.nodesToProcess.isEmpty) return Array[WangXueAction]()
-    
+
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.headOption
 
@@ -38,14 +40,16 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       val grandChildren = children flatMap state.currentGraph.childrenOf
       ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
     } else Set[String]()
-    val alwaysInsertable = Set("name")
-    val alwaysEdgePossibilities = Set("opN", "ROOT")
     val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
     val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
-    val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
-    val permissibleConcepts = if (wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
+    val permissibleConcepts = beta match {
+      case None => Set()
+      case Some(b) =>
+        val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
+        if (wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
+    }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
-    val edgeKeys = (beta match { case Some(index) => state.currentGraph.nodeLemmas.getOrElse(index, "")+"-IN"; case None => "" }) :: List(state.currentGraph.nodeLemmas.getOrElse(sigma, "")+"-OUT")
+    val edgeKeys = (beta match { case Some(index) => state.currentGraph.nodeLemmas.getOrElse(index, "") + "-IN"  :: List(state.currentGraph.nodeLemmas.getOrElse(sigma, "") + "-OUT"); case None => List() })
     val permissibleEdges = (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
     val insertActions = insertable map (Insert(_, ""))
