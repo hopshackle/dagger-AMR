@@ -56,15 +56,15 @@ object ImportConcepts {
   private def loadConcepts: Set[String] = {
     (for {
       graph <- allAMR
-      concept <- filterOutNumbers(graph.nodes.values.toSeq) map (quote.replaceAllIn(_, ""))
+      concept <- filterOutNumbersAndStripQuotes(graph.nodes.values.toSeq)
     } yield concept).toSet
   }
 
   private def filterOutNumbersAndNames(input: Seq[String]): Seq[String] = {
     input filter (x => (quote findFirstIn x) == None) filter (x => numbers.replaceAllIn(x, "") != "")
   }
-  private def filterOutNumbers(input: Seq[String]): Seq[String] = {
-    input filter (x => numbers.replaceAllIn(x, "") != "")
+  private def filterOutNumbersAndStripQuotes(input: Seq[String]): Seq[String] = {
+    input filter (x => numbers.replaceAllIn(x, "") != "") map (quote.replaceAllIn(_, ""))
   }
 
   private def loadRelations: Set[String] = {
@@ -103,7 +103,7 @@ object ImportConcepts {
         val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
       } yield l).flatten.groupBy(_._1).mapValues(_.map(_._2))
 
-      val filteredLtoC = lemmasToConcepts map { case (k, v) => (k, (filterOutNumbersAndNames(v) map (quote.replaceAllIn(_, "")) toSet) - "opN") }
+      val filteredLtoC = lemmasToConcepts map { case (k, v) => (k, (filterOutNumbersAndStripQuotes(v) toSet)) }
 
       val ic = new FileWriter(amrFile + "_ic")
       insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + ":" + (x._2).mkString(":") + "\n"))
@@ -139,23 +139,6 @@ object ImportConcepts {
     (lineSplit map (x => (x.head, x.tail map conceptIndex toSet))).toMap
   }
 
-  private def loadConceptsPerLemma: Map[String, Set[Int]] = {
-    val initial = (for {
-      (graph, (sentence, _)) <- allAMR zip allSentencesAndAMR
-      concepts = filterOutNumbers(graph.nodes.values.toSeq).toSet map conceptIndex
-      val dt = DependencyTree(sentence)
-      val eligibleNodes = dt.nodes filter { case (i, v) => dt.nodeNER.getOrElse(i, "O") != "PERSON" && numbers.replaceAllIn(v, "") != "" } map (_._1)
-      n <- eligibleNodes
-      lemma = dt.nodeLemmas.getOrElse(n, "")
-      //      if !(commonLemmas contains lemma)
-      if lemma != ""
-    } yield (lemma, concepts)).toList
-
-    val grouped = initial.groupBy(_._1)
-    val cleaned = grouped.mapValues(_.map(_._2))
-    cleaned map { case (key, listOfSets) => (key -> listOfSets.flatten.toSet) }
-  }
-
   private def loadEdgesPerLemma: Map[String, Set[Int]] = {
     val conceptFileExists = {
       try {
@@ -171,7 +154,7 @@ object ImportConcepts {
         ((original, processed), a) <- (expertResults zip allAMR)
         (node, lemma) <- processed.dependencyTree.nodeLemmas
         if lemma != ""
-        relations = processed.dependencyTree.arcs filter (x => (x._1._1 == node || x._1._2 == node)) map ((_._2))
+        relations = processed.dependencyTree.arcs filter (x => (x._1._1 == node || x._1._2 == node)) map ((_._2)) filter (_ != "opN")
       } yield (lemma, relations)).toList
       val grouped = initial.groupBy(_._1)
       val cleaned = grouped.mapValues(_.map(_._2))
