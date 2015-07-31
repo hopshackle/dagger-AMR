@@ -61,7 +61,7 @@ object RunDagger {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     val alignerToUse = options.getString("--aligner", "")
-    val w2vLemmaReplacement = options.getBoolean("--w2vLemmaReplace", false)
+    val lemmaReplacement = options.getString("--lemmaReplace", "None")
     AMRGraph.setAligner(alignerToUse)
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
@@ -76,9 +76,11 @@ object RunDagger {
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
-    val correctedDevData = if (w2vLemmaReplacement)
-      replaceLemmas(devData, options.DAGGER_OUTPUT_PATH + "../Globe.6B.50d.txt")
-    else devData
+    val correctedDevData = lemmaReplacement match {
+      case "glove" => replaceLemmasGlove(devData, options.DAGGER_OUTPUT_PATH + "../Globe.6B.50d.txt")
+      case "wordnet" => replaceLemmasWordnet(devData)
+      case _ => devData
+    }
 
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
@@ -123,7 +125,7 @@ object RunDagger {
     val classifier = testDAGGERrun(options)
   }
 
-  def replaceLemmas(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
+  def replaceLemmasGlove(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
     val w2vDict = Word2VecReader.load(location)
     val lemmasInDict = ImportConcepts.conceptsPerLemma.keys filter (w2vDict.contains(_))
     devData map (s => {
@@ -135,6 +137,23 @@ object RunDagger {
         if (w2vDict.contains(lemma)) // and we have a W2V mapping for it
         val (nearestLemma, distance) = lemmasInDict map (x => (x, w2vDict.euclidean(x, lemma))) minBy (_._2)
       } yield (node, nearestLemma)
+      val newDT = dt.copy(nodeLemmas = lemmas map { case (k, v) => if (replacedLemmas contains k) (k, replacedLemmas(k)) else (k, v) })
+      replacedLemmas foreach { case (k, v) => println(s"New Lemma ${lemmas(k)} replaced with $v") }
+      s.copy(dependencyTree = newDT)
+    })
+  }
+
+  def replaceLemmasWordnet(devData: Iterable[Sentence]): Iterable[Sentence] = {
+    val workInProgress = ImportConcepts.conceptsPerLemma.keys flatMap (x => (Wordnet.synonyms(x) ++ Wordnet.stemmer(x)) map (_ -> x)) groupBy (_._1) 
+    val lemmasBySynonym = workInProgress map { case (key, listOfTuples) => (key -> (listOfTuples map (_._2)).toList.distinct) } 
+    devData map (s => {
+      val dt = s.dependencyTree
+      val lemmas = dt.nodeLemmas
+      val replacedLemmas = for {
+        (node, lemma) <- lemmas
+        if !(ImportConcepts.conceptsPerLemma contains lemma) // A known lemma, so we can skip onwards
+        if lemmasBySynonym contains lemma  // but it does exist in the WordNet dictionary as a synonym of a lemma we know
+      } yield (node, lemmasBySynonym(lemma)(0))
       val newDT = dt.copy(nodeLemmas = lemmas map { case (k, v) => if (replacedLemmas contains k) (k, replacedLemmas(k)) else (k, v) })
       replacedLemmas foreach { case (k, v) => println(s"New Lemma ${lemmas(k)} replaced with $v") }
       s.copy(dependencyTree = newDT)

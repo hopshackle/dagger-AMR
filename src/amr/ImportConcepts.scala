@@ -38,8 +38,6 @@ object ImportConcepts {
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   lazy val conceptsPerLemma = loadConceptsPerLemmaReduced
-  //  lazy val universalConcepts = Set("and", "date-entity", "UNKNOWN", "ROOT", "name", "monetary-quantity") map conceptIndex
-  //  lazy val universalRelations = Set("year", "month", "day", "UNKNOWN", "ROOT", "quant", "poss") map relationIndex
   lazy val edgesPerLemma = loadEdgesPerLemma
 
   lazy val insertableConcepts = loadInsertableConcepts

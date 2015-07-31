@@ -2,17 +2,15 @@
 package amr
 object Word2VecTest {
 
-io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
-                                                  //> res0: Iterator[String] = non-empty iterator
 
-"CPD" contains "C"                                //> res1: Boolean = true
+
     val w2vDict = Word2VecReader.load("C:\\AMR\\glove.6B.50d.txt")
-                                                  //> w2vDict  : amr.Word2Vec = amr.Word2Vec@1936f0f5
+                                                  //> w2vDict  : amr.Word2Vec = amr.Word2Vec@6be46e8f
    
-    w2vDict.size                                  //> res2: Int = 400000
-    w2vDict.euclidean("the", "and")               //> res3: Double = 2.802192346511321
-     w2vDict.euclidean("the", "visitors")         //> res4: Double = 4.879349468322334
-  ImportConcepts.initialise("C:\\AMR\\LargeTrainingSet.txt")
+    w2vDict.size                                  //> res0: Int = 400000
+    w2vDict.euclidean("the", "and")               //> res1: Double = 2.802192346511321
+     w2vDict.euclidean("the", "visitors")         //> res2: Double = 4.879349468322334
+  ImportConcepts.initialise("C:\\AMR\\MediumTrainingSet.txt")
   val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
@@ -22,11 +20,11 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.7 sec].
+                                                  //| im.crf.ser.gz ... done [2.8 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [1.8 sec].
+                                                  //| im.crf.ser.gz ... done [7.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [5.4 sec].
+                                                  //| tsim.crf.ser.gz ... done [1.8 sec].
                                                   //| WARNING: Found duplicate match for concept "for"
                                                   //| WARNING: Found duplicate match for concept "for"
                                                   //| WARNING: Found duplicate match for concept "Arab"
@@ -111,64 +109,66 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| WARNING: Found duplicate match for co
                                                   //| Output exceeds cutoff limit.
  
-  val correctedDevData = RunDagger.replaceLemmas(devData, "C://AMR//Glove.6B.50d.txt")
-                                                  //> New Lemma ir replaced with combate
-                                                  //| New Lemma doctor replaced with boy
-                                                  //| New Lemma th replaced with marks
-                                                  //| New Lemma photo replaced with picture
-                                                  //| New Lemma launching replaced with launch
-                                                  //| New Lemma add replaced with instead
-                                                  //| New Lemma desert replaced with mountainous
-                                                  //| New Lemma non-proliferation replaced with proliferation
-                                                  //| New Lemma photograph replaced with picture
-                                                  //| New Lemma institute replaced with sciences
-                                                  //| New Lemma th replaced with marks
-                                                  //| New Lemma studies replaced with study
-                                                  //| New Lemma london-based replaced with montreal-based
-                                                  //| New Lemma cluster replaced with larger
-                                                  //| New Lemma alter replaced with define
-                                                  //| New Lemma fitzpatrick replaced with jennings
-                                                  //| New Lemma sepah replaced with multi-billion
-                                                  //| New Lemma which replaced with the
-                                                  //| New Lemma revolutionary replaced with struggle
-                                                  //| New Lemma guards replaced with guard
-                                                  //| New Lemma post replaced with office
-                                                  //| New Lemma vehicle replaced with carry
-                                                  //| New Lemma th replaced with marks
-                                                  //| New Lemma grounded replaced with suddenly
-                                                  //| New Lemma nearby replaced with near
-                                                  //| New Lemma appear replaced with yet
-                                                  //| New Lemma same replaced with only
-                                                  //| New Lemma what replaced with think
-                                                  //| New Lemma replace replaced with put
-                                                  //| New Lemma previous replaced with earlier
-                                                  //| New Lemma with replaced with and
-                                                  //| New Lemma photo replaced with picture
-                                                  //| New Lemma absent replaced with yet
-                                                  //| New Lemma with replaced with and
-                                                  //| New Lemma archive replaced with website
-                                                  //| New Lemma sepah replaced with multi-billion
-                                                  //| New Lemma page replaced with read
-                                                  //| New Lemma photo replaced with picture
-                                                  //| New Lemma obscure replaced with describe
-                                                  //| New Lemma fitzpatrick replaced with jennings
-                                                  //| New Lemma impact replaced with significant
-                                                  //| New Lemma probably replaced with actually
-                                                  //| New Lemma demonstration replaced with protest
-                                                  //| New Lemma manipulate replaced with expose
-                                                  //| New Lemma th replaced with marks
-                                                  //| New Lemma photo replaced with picture
-                                                  //| New Lemma maneuver replaced with task
-                                                  //| New Lemma enhanced replaced with availability
-                                                  //| New Lemma version replaced with original
-                                                  //| New Lemma which replaced with the
-                                                  //| New Lemma middle replaced with rest
-                                                  //| New Lemma mile replaced with above
-                                                  //| New Lemma enhanced replaced with availability
-                                                  //| New Lemma could replaced with because
-                                                  //| New Lemma thus replaced with means
-                                                  //| New Lemma israel replaced with syria
-                                                  //| New Lemma sy replaced with tar
+  val correctedDevData = RunDagger.replaceLemmasWordnet(devData)
+                                                  //> New Lemma launching replaced with launch
+                                                  //| New Lemma add replaced with total
+                                                  //| New Lemma institute replaced with bring
+                                                  //| New Lemma former replaced with late
+                                                  //| New Lemma mark replaced with sign
+                                                  //| New Lemma revolutionary replaced with radical
+                                                  //| New Lemma by replaced with past
+                                                  //| New Lemma post replaced with situation
+                                                  //| New Lemma appear replaced with look
+                                                  //| New Lemma place replaced with point
+                                                  //| New Lemma previous replaced with late
+                                                  //| New Lemma absent replaced with remove
+                                                  //| New Lemma main replaced with chief
+                                                  //| New Lemma impact replaced with affect
+                                                  //| New Lemma manipulate replaced with control
+                                                  //| New Lemma immediately replaced with instantly
+                                                  //| New Lemma do replaced with execute
+                                                  //| New Lemma maneuver replaced with point
+                                                  //| New Lemma test replaced with run
+                                                  //| New Lemma middle replaced with center
+                                                  //| New Lemma thus replaced with so
+                                                  //| New Lemma test replaced with run
+                                                  //| New Lemma immediately replaced with instantly
+                                                  //| New Lemma destruction replaced with death
+                                                  //| New Lemma middle replaced with center
+                                                  //| New Lemma agree replaced with hold
+                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma free replaced with release
+                                                  //| New Lemma destruction replaced with death
+                                                  //| New Lemma free replaced with release
+                                                  //| New Lemma agree replaced with hold
+                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma middle replaced with center
+                                                  //| New Lemma pursue replaced with engage
+                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma free replaced with release
+                                                  //| New Lemma destruction replaced with death
+                                                  //| New Lemma declaration replaced with resolve
+                                                  //| New Lemma middle replaced with center
+                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma destruction replaced with death
+                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma delivery replaced with speech
+                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma step replaced with measure
+                                                  //| New Lemma destruction replaced with death
+                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma consider replaced with take
+                                                  //| New Lemma country replaced with state
+                                                  //| New Lemma declaration replaced with resolve
+                                                  //| New Lemma middle replaced with center
+                                                  //| New Lemma prime replaced with ground
+                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma country replaced with state
+                                                  //| New Lemma stockpile replaced with reserve
+                                                  //| New Lemma believe r
                                                   //| Output exceeds cutoff limit.
  
   correctedDevData foreach (s => {
@@ -180,7 +180,7 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| (3,##)
                                                   //| Iran (IR)
                                                   //| (1,iran)
-                                                  //| (3,combate)
+                                                  //| (3,ir)
                                                   //| International; weapons
                                                   //| (1,international)
                                                   //| (3,weapon)
@@ -191,11 +191,11 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| (14,missile)
                                                   //| (1,expert)
                                                   //| (6,launch)
-                                                  //| (9,boy)
-                                                  //| (13,marks)
+                                                  //| (9,doctor)
+                                                  //| (13,th)
                                                   //| (2,state)
                                                   //| (12,fail)
-                                                  //| (7,picture)
+                                                  //| (7,photo)
                                                   //| (3,that)
                                                   //| (11,show)
                                                   //| (8,be)
@@ -207,43 +207,43 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| ile launches from a desert range was altered to add a 4th missile.
                                                   //| (5,of)
                                                   //| (10,for)
-                                                  //| (42,instead)
+                                                  //| (42,total)
                                                   //| (24,state)
-                                                  //| (37,mountainous)
+                                                  //| (37,desert)
                                                   //| (25,that)
-                                                  //| (14,proliferation)
+                                                  //| (14,non-proliferation)
                                                   //| (20,department)
                                                   //| (29,show)
                                                   //| (1,##)
                                                   //| (6,the)
-                                                  //| (28,picture)
+                                                  //| (28,photograph)
                                                   //| (38,range)
                                                   //| (21,official)
                                                   //| (33,missile)
-                                                  //| (9,sciences)
+                                                  //| (9,bring)
                                                   //| (13,'s)
                                                   //| (41,to)
                                                   //| (2,##)
                                                   //| (32,of)
                                                   //| (34,launch)
                                                   //| (45,missile)
-                                                  //| (17,former)
-                                                  //| (22,mark)
-                                                  //| (44,marks)
+                                                  //| (17,late)
+                                                  //| (22,sign)
+                                                  //| (44,th)
                                                   //| (27,iranian)
-                                                  //| (12,study)
-                                                  //| (7,montreal-based)
+                                                  //| (12,studies)
+                                                  //| (7,london-based)
                                                   //| (39,be)
                                                   //| (3,##)
                                                   //| (35,from)
                                                   //| (18,us)
                                                   //| (16,and)
-                                                  //| (31,larger)
+                                                  //| (31,cluster)
                                                   //| (11,strategic)
                                                   //| (43,a)
-                                                  //| (40,define)
+                                                  //| (40,alter)
                                                   //| (26,a)
-                                                  //| (23,jennings)
+                                                  //| (23,fitzpatrick)
                                                   //| (8,international)
                                                   //| (36,a)
                                                   //| (30,a)
@@ -253,15 +253,15 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| The image was posted 20080709 on the Sepah news site, which is run by Iran's
                                                   //|  Revolutionary Guards.
                                                   //| (5,##)
-                                                  //| (10,multi-billion)
-                                                  //| (14,the)
-                                                  //| (20,struggle)
+                                                  //| (10,sepah)
+                                                  //| (14,which)
+                                                  //| (20,radical)
                                                   //| (1,the)
                                                   //| (6,##)
-                                                  //| (21,guard)
+                                                  //| (21,guards)
                                                   //| (9,the)
                                                   //| (2,image)
-                                                  //| (17,by)
+                                                  //| (17,past)
                                                   //| (12,site)
                                                   //| (7,##)
                                                   //| (3,be)
@@ -270,7 +270,7 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| (11,news)
                                                   //| (8,on)
                                                   //| (19,'s)
-                                                  //| (4,office)
+                                                  //| (4,situation)
                                                   //| (15,be)
                                                   //| 20080710 the image was replaced with an image of the same 3 missiles in the 
                                                   //| previous photo but in place of the 4th missile is a grounded missile and wha
@@ -278,29 +278,28 @@ io.Source.fromFile("C:\\AMR\\glove.6B.50d.txt").getLines()
                                                   //| (5,image)
                                                   //| (10,image)
                                                   //| (24,the)
-                                                  //| (37,carry)
-                                                  //| (25,marks)
+                                                  //| (37,vehicle)
+                                                  //| (25,th)
                                                   //| (14,##)
                                                   //| (20,but)
-                                                  //| (29,suddenly)
+                                                  //| (29,grounded)
                                                   //| (1,##)
                                                   //| (6,be)
                                                   //| (28,a)
-                                                  //| (38,near)
+                                                  //| (38,nearby)
                                                   //| (21,in)
-                                                  //| (33,yet)
+                                                  //| (33,look)
                                                   //| (9,a)
-                                                  //| (13,only)
+                                                  //| (13,same)
                                                   //| (2,##)
-                                                  //| (32,think)
+                                                  //| (32,what)
                                                   //| (34,to)
                                                   //| (17,the)
-                                                  //| (22,place)
+                                                  //| (22,point)
                                                   //| (27,be)
                                                   //| (12,the)
-                                                  //| (7,put)
+                                                  //| (7,replace)
                                                   //| (3,##)
-                                                  //| (3
-                                                  //| Output exceeds cutoff limit.
+                                                  //| (35,be)
 
 }

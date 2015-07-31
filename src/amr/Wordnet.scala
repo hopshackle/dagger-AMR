@@ -40,18 +40,18 @@ object Wordnet {
   def synonyms(word: String): List[String] = {
     var synonyms = List[String]()
     for (pos <- POS.values) {
-      try { synonyms ++= ((dict.getIndexWord(word, pos).getWordIDs map dict.getWord flatMap getRelatedWordsExcAntonyms))}
+      try { synonyms ++= ((dict.getIndexWord(word, pos).getWordIDs map dict.getWord flatMap getRelatedWordsExcAntonyms)) }
       catch { case e: Throwable => Unit }
     }
     return synonyms.distinct.sorted
   }
-  
+
+
   def getRelatedWordsExcAntonyms(w: IWord): List[String] = {
     val s = w.getSynset.getWords
- //   s.getRelatedSynsets(Pointer.SIMILAR_TO)
+    //   s.getRelatedSynsets(Pointer.SIMILAR_TO)
     (s map (_.getLemma)).toList filter (a => !(a.contains("_")))
   }
-  
-  
+
 }
 
