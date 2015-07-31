@@ -78,27 +78,12 @@ object generalPlay {
   // matches foreach println
   val text = matches map (x => x.split(" "))      //> text  : List[Array[String]] = List(Array(2, million), Array(6.02, billion))
                                                   //| 
-  DependencyTree.extractNumbers("A two-week extension until the 30-strong group arrive to test their 3-billion-dollar theory.")
-                                                  //> Adding annotator tokenize
-                                                  //| Adding annotator ssplit
-                                                  //| Adding annotator parse
-                                                  //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
-                                                  //| shPCFG.ser.gz ... done [1.1 sec].
-                                                  //| Adding annotator lemma
-                                                  //| Adding annotator ner
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
-                                                  //| sim.crf.ser.gz ... done [4.3 sec].
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
-                                                  //| sim.crf.ser.gz ... done [3.2 sec].
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
-                                                  //| stsim.crf.ser.gz ... done [2.6 sec].
-                                                  //| res21: String = A 2 week extension until the 30 strong group arrive to test
-                                                  //|  their 3000000000 dollar theory.
+  // DependencyTree.extractNumbers("A two-week extension until the 30-strong group arrive to test their 3-billion-dollar theory.")
   // val replacements = text map { x => x(0).toDouble * (x(1) match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 }) } map (x => f"${x}%.0f")
   // replacements foreach println
-  realNumbers.replaceAllIn(t2, " rep ")           //> res22: String = one billion  rep  once, one,  rep s onet
+  realNumbers.replaceAllIn(t2, " rep ")           //> res21: String = one billion  rep  once, one,  rep s onet
   t2 match { case realNumbers(number) => "f"; case other => other }
-                                                  //> res23: String = one billion 2 million once, one, 6.02 billions onet
+                                                  //> res22: String = one billion 2 million once, one, 6.02 billions onet
   val a2 = realNumbers findAllIn t2               //> a2  : scala.util.matching.Regex.MatchIterator = non-empty iterator
   val reformatted = realNumbers replaceAllIn (t2, _ match {
     case realNumbers(number, multiple) =>
@@ -108,7 +93,7 @@ object generalPlay {
   })                                              //> reformatted  : String = one billion 2000000  once, one, 6020000000 s onet
 
 val dollar = """\$""".r                           //> dollar  : scala.util.matching.Regex = \$
-dollar.replaceAllIn("$56", "dollars ")            //> res24: String = dollars 56
+dollar.replaceAllIn("$56", "dollars ")            //> res23: String = dollars 56
   // DependencyTree.extractNumbers(t2)
   val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)   //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
   val (highScore, index) = (t3 zipWithIndex).max  //> highScore  : Double = 9.0073
@@ -124,24 +109,12 @@ val normedCosts = if (tempNormCosts contains 0.0) tempNormCosts.toArray else (te
                                                   //> normedCosts  : Array[Double] = Array(0.36500000000000005, 0.428, 0.423, 0.3
                                                   //| 18, 0.065, 0.298, 0.35300000000000004, 0.25299999999999995, 0.464, 0.192, 0
                                                   //| .09099999999999997, 0.192, 0.0, 0.09599999999999997)
-normedCosts map (_.toFloat)                       //> res25: Array[Float] = Array(0.365, 0.428, 0.423, 0.318, 0.065, 0.298, 0.353
+normedCosts map (_.toFloat)                       //> res24: Array[Float] = Array(0.365, 0.428, 0.423, 0.318, 0.065, 0.298, 0.353
                                                   //| , 0.253, 0.464, 0.192, 0.091, 0.192, 0.0, 0.096)
 var classifier = null.asInstanceOf[dagger.ml.MultiClassClassifier[String]]
                                                   //> classifier  : dagger.ml.MultiClassClassifier[String] = null
-classifier == null                                //> res26: Boolean = true
+classifier == null                                //> res25: Boolean = true
  val clean2 = """[.#'-]""".r                      //> clean2  : scala.util.matching.Regex = [.#'-]
- clean2.replaceAllIn("ba.se-01", "")              //> res27: String = base01
+ clean2.replaceAllIn("ba.se-01", "")              //> res26: String = base01
  
- val g = List(2, 3, 5, 9)                         //> g  : List[Int] = List(2, 3, 5, 9)
- val wibble = for {
- a <- g
- b <- g
- c <- g
- } yield (b, c)                                   //> wibble  : List[(Int, Int)] = List((2,2), (2,3), (2,5), (2,9), (3,2), (3,3),
-                                                  //|  (3,5), (3,9), (5,2), (5,3), (5,5), (5,9), (9,2), (9,3), (9,5), (9,9), (2,2
-                                                  //| ), (2,3), (2,5), (2,9), (3,2), (3,3), (3,5), (3,9), (5,2), (5,3), (5,5), (5
-                                                  //| ,9), (9,2), (9,3), (9,5), (9,9), (2,2), (2,3), (2,5), (2,9), (3,2), (3,3), 
-                                                  //| (3,5), (3,9), (5,2), (5,3), (5,5), (5,9), (9,2), (9,3), (9,5), (9,9), (2,2)
-                                                  //| , (2,3), (2,5), (2,9), (3,2), (3,3), (3,5), (3,9), (5,2), (5,3), (5,5), (5,
-                                                  //| 9), (9,2), (9,3), (9,5), (9,9))
 }

@@ -67,6 +67,8 @@ object RunDagger {
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
     WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
     WangXueFeatures.includeShenanigans = (options.getString("--WXfeatures", "") contains "S")
+    WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
+    WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
 
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))

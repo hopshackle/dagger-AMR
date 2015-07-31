@@ -16,15 +16,17 @@ class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) 
 object WangXueFeatures {
   var debug = false
   var includeChildren = false
-  var includeParents = true
+  var includeParents = false
   var includeShenanigans = false
+  var includeActionHistory = false
+  var includeWords = false
 }
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
   import scala.collection.JavaConversions.mapAsScalaMap
   import WangXueFeatures._
-  
+
   val random = new Random()
   val numeric = "[0-9,.]".r
   var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
@@ -80,12 +82,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     add(hmap, "BIAS")
     if (includeShenanigans) add(hmap, "SHENANIGAN=" + System.currentTimeMillis().toString)
-    //    if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
-    //    if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
-    //    if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
-    if (!quadraticTurbo) {
-      //      if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
-      //      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+    if (includeActionHistory) {
+      if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
+      if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
+      if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
+      if (state.previousActions.size > 2) add(hmap, "LAST-B3-ACTION=" + state.previousActions.tail.tail.tail.head.name)
+      if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
+      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     }
 
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
@@ -93,7 +96,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     if (sigmaPOS != "") add(hmap, "SIGMA-POS=" + sigmaPOS)
     if (sigmaLemma != "") add(hmap, "SIGMA-LEMMA=" + sigmaLemma)
-    if (sigmaWord != sigmaLemma) add(hmap, "SIGMA-WORD=" + sigmaWord)
+    if (sigmaWord != sigmaLemma && includeWords) add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (sigmaNER != "") add(hmap, "SIGMA-NER=" + sigmaNER)
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
     val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
@@ -101,7 +104,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (includeParents) {
       val sigmaParents = state.currentGraph.parentsOf(sigma)
-      //    val sigmaGrandparents = (sigmaParents flatMap state.currentGraph.parentsOf).distinct
+      val sigmaGrandparents = (sigmaParents flatMap state.currentGraph.parentsOf).distinct
       if (sigmaParents.nonEmpty) {
 
         val parentLabelCombos = for {
@@ -123,18 +126,19 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
               if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
             }
 
-            //            sigmaGrandparents foreach { gp =>
-            //             add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodes(gp) + "-" + parentWord + "-" + sigmaWord)
-            //            }
+            sigmaGrandparents foreach { gp =>
+              add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodeLemmas(gp) + "-" + parentLemma + "-" + sigmaLemma)
+            }
 
             if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
             if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)
-            if (parentLemma != parentWord) add(hmap, "PARENT-WORD=" + parentWord)
+            if (parentLemma != parentWord && includeWords) add(hmap, "PARENT-WORD=" + parentWord)
             if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
             if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
             for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
             if (!quadraticTurbo) {
-              add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+              if (includeWords) add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
+              add(hmap, "PARENT-SIGMA-LEMMAS=" + parentLemma + "-" + sigmaLemma)
               if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
               if (parentPOS != "" && sigmaLemma != "") add(hmap, "PARENT-POS-SIGMA-LEMMA=" + parentPOS + "-" + sigmaLemma)
               if (parentDL.nonEmpty && sigmaLemma != "") for (pdl <- parentDL) add(hmap, "PARENT-DL-SIGMA-LEMMA=" + pdl + "-" + sigmaLemma)
@@ -160,13 +164,16 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         childrenLabelCombos foreach {
           case (child, label) =>
             val childWord = state.currentGraph.nodes(child)
+            val childLemma = state.currentGraph.nodeLemmas(child)
             if (state.currentGraph.insertedNodes contains child) {
               add(hmap, "CHILD-INSERTED=" + childWord)
               if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
             }
             add(hmap, "CHILD-SIGMA-LABEL=" + label)
-            add(hmap, "CHILD-WORD=" + childWord)
-            if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-WORDS=" + child + "-" + sigmaWord)
+            add(hmap, "CHILD-LEMMA-LABEL=" + childLemma + "-" + label)
+            if (includeWords) add(hmap, "CHILD-WORD=" + childWord)
+            add(hmap, "CHILD-LEMMA=" + childLemma)
+            if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-LEMMA=" + sigmaLemma + "-" + childLemma)
         }
       }
     }

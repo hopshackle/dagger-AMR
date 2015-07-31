@@ -175,6 +175,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
   // way to do this is to add it back into the list of nodesToProcess...although this will also re-visit all the
   // other edges...
   val disableReattach = false;
+  var attachConcept = ""
   override val parameterNode = newNode
   override def getMasterLabel = Reattach(0)
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
@@ -182,6 +183,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     assert(isPermissible(conf))
     // then just pop out edge, and update currentGraph
     val currentEdgeKey = (conf.nodesToProcess.head, conf.childrenToProcess.head)
+    attachConcept = conf.currentGraph.nodeLemmas.getOrElse(newNode, "")
     val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
     val newEdgeKey = (newNode, conf.childrenToProcess.head)
     val reattachmentNodeHasBeenProcessed = !conf.nodesToProcess.contains(parameterNode)
@@ -194,7 +196,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions).fastForward
     }
   }
-  override def name: String = "Reattach"
+  override def name: String = "Reattach" + attachConcept
   def isPermissible(state: WangXueTransitionState): Boolean = {
     !disableReattach &&
       state.childrenToProcess.nonEmpty && newNode != state.nodesToProcess.head &&
