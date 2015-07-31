@@ -77,7 +77,7 @@ object RunDagger {
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
     val correctedDevData = lemmaReplacement match {
-      case "glove" => replaceLemmasGlove(devData, options.DAGGER_OUTPUT_PATH + "../Globe.6B.50d.txt")
+      case "glove" => replaceLemmasGlove(devData, options.DAGGER_OUTPUT_PATH + "../glove.6B.50d.txt")
       case "wordnet" => replaceLemmasWordnet(devData)
       case _ => devData
     }

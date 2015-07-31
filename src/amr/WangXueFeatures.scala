@@ -86,7 +86,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
       if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
       if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
-      if (state.previousActions.size > 2) add(hmap, "LAST-B3-ACTION=" + state.previousActions.tail.tail.tail.head.name)
+      if (state.previousActions.size > 3) add(hmap, "LAST-B3-ACTION=" + state.previousActions.tail.tail.tail.head.name)
       if (state.previousActions.size > 1) add(hmap, "LAST-TWO-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name)
       if (state.previousActions.size > 2) add(hmap, "LAST-THREE-ACTIONS=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     }
@@ -127,7 +127,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             }
 
             sigmaGrandparents foreach { gp =>
-              add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodeLemmas(gp) + "-" + parentLemma + "-" + sigmaLemma)
+              if (state.currentGraph.nodeLemmas contains gp)
+                add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodeLemmas(gp) + "-" + parentLemma + "-" + sigmaLemma)
             }
 
             if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
