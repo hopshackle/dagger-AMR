@@ -2,8 +2,8 @@ package amr
 
 object WangXueStatetest {;import org.scalaide.worksheet.runtime.library.WorksheetSupport._; def main(args: Array[String])=$execute{;$skip(86); 
 
-val testSentence = Sentence("This is a test.");System.out.println("""testSentence  : amr.Sentence = """ + $show(testSentence ));$skip(43); 
-val WXSystem = new WangXueTransitionSystem;System.out.println("""WXSystem  : amr.WangXueTransitionSystem = """ + $show(WXSystem ));$skip(48); 
+val testSentence = Sentence("This is a test.");System.out.println("""testSentence  : amr.Sentence = """ + $show(testSentence ));$skip(39); 
+val WXSystem = WangXueTransitionSystem;System.out.println("""WXSystem  : amr.WangXueTransitionSystem.type = """ + $show(WXSystem ));$skip(48); 
 
 val initialState = WXSystem.init(testSentence);System.out.println("""initialState  : amr.WangXueTransitionState = """ + $show(initialState ));$skip(84); 
 val testSentence2 = Sentence("The police want to arrest Michael Karras in London.");System.out.println("""testSentence2  : amr.Sentence = """ + $show(testSentence2 ));$skip(50); 

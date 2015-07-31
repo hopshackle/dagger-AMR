@@ -78,6 +78,7 @@ object generalPlay {
   // matches foreach println
   val text = matches map (x => x.split(" "))      //> text  : List[Array[String]] = List(Array(2, million), Array(6.02, billion))
                                                   //| 
+  // DependencyTree.extractNumbers("A two-week extension until the 30-strong group arrive to test their 3-billion-dollar theory.")
   // val replacements = text map { x => x(0).toDouble * (x(1) match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 }) } map (x => f"${x}%.0f")
   // replacements foreach println
   realNumbers.replaceAllIn(t2, " rep ")           //> res21: String = one billion  rep  once, one,  rep s onet
@@ -116,16 +117,4 @@ classifier == null                                //> res25: Boolean = true
  val clean2 = """[.#'-]""".r                      //> clean2  : scala.util.matching.Regex = [.#'-]
  clean2.replaceAllIn("ba.se-01", "")              //> res26: String = base01
  
- val g = List(2, 3, 5, 9)                         //> g  : List[Int] = List(2, 3, 5, 9)
- val wibble = for {
- a <- g
- b <- g
- c <- g
- } yield (b, c)                                   //> wibble  : List[(Int, Int)] = List((2,2), (2,3), (2,5), (2,9), (3,2), (3,3),
-                                                  //|  (3,5), (3,9), (5,2), (5,3), (5,5), (5,9), (9,2), (9,3), (9,5), (9,9), (2,2
-                                                  //| ), (2,3), (2,5), (2,9), (3,2), (3,3), (3,5), (3,9), (5,2), (5,3), (5,5), (5
-                                                  //| ,9), (9,2), (9,3), (9,5), (9,9), (2,2), (2,3), (2,5), (2,9), (3,2), (3,3), 
-                                                  //| (3,5), (3,9), (5,2), (5,3), (5,5), (5,9), (9,2), (9,3), (9,5), (9,9), (2,2)
-                                                  //| , (2,3), (2,5), (2,9), (3,2), (3,3), (3,5), (3,9), (5,2), (5,3), (5,5), (5,
-                                                  //| 9), (9,2), (9,3), (9,5), (9,9))
 }
