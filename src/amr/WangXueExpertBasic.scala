@@ -62,7 +62,7 @@ object WangXueExpertCheck {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     AMRGraph.setAligner("improved")
-    WangXueTransitionSystem.setProhibition(false)
+    WangXueTransitionSystem.prohibition = false
     ImportConcepts.initialise(fileName)
     val rawData = ImportConcepts.expertResults
     val timer = new Timer()

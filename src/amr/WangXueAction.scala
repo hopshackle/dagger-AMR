@@ -15,8 +15,6 @@ trait hasNodeAsParameter {
 case class NextEdge(relIndex: Int) extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
-    // label current arc
-    // pop current arc from arc stack
     val tree = conf.currentGraph.labelArc(conf.nodesToProcess.head, conf.childrenToProcess.head, relation(relIndex))
     conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions,
       processedEdges = conf.processedEdges + ((conf.nodesToProcess.head, conf.childrenToProcess.head))).fastForward
@@ -283,6 +281,7 @@ case class Reentrance(kappa: Int) extends WangXueAction with hasNodeAsParameter 
   }
   def isPermissible(state: WangXueTransitionState): Boolean = state.phaseTwo &&
     state.nodesToProcess.nonEmpty && state.childrenToProcess.isEmpty &&
+    state.currentGraph.nodes.contains(kappa) &&
     !(state.currentGraph.subGraph(kappa) contains state.nodesToProcess.head) &&
     state.currentGraph.getDistanceBetween(kappa, state.nodesToProcess.head) < 5
 

@@ -172,16 +172,19 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         childrenLabelCombos foreach {
           case (child, label) =>
             val childWord = state.currentGraph.nodes(child)
-            val childLemma = state.currentGraph.nodeLemmas(child)
+            val childLemma = state.currentGraph.nodeLemmas.getOrElse(child, "")
             if (state.currentGraph.insertedNodes contains child) {
               add(hmap, "CHILD-INSERTED=" + childWord)
               if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
             }
             add(hmap, "CHILD-SIGMA-LABEL=" + label)
-            add(hmap, "CHILD-LEMMA-LABEL=" + childLemma + "-" + label)
+            if (childLemma != "") {
+              add(hmap, "CHILD-LEMMA-LABEL=" + childLemma + "-" + label)
+              add(hmap, "CHILD-LEMMA=" + childLemma)
+              if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-LEMMA=" + sigmaLemma + "-" + childLemma)
+            }
             if (includeWords) add(hmap, "CHILD-WORD=" + childWord)
-            add(hmap, "CHILD-LEMMA=" + childLemma)
-            if (!quadraticTurbo) add(hmap, "SIGMA-CHILD-LEMMA=" + sigmaLemma + "-" + childLemma)
+
         }
       }
     }

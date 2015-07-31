@@ -59,6 +59,8 @@ object RunDagger {
 
   def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
 
+    WangXueTransitionSystem.prohibition = false // temp value for lemma / concept extraction
+    WangXueTransitionSystem.reentrance = true // temp value for lemma / concept extraction
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     val alignerToUse = options.getString("--aligner", "")
     val lemmaReplacement = options.getString("--lemmaReplace", "None")
@@ -87,7 +89,9 @@ object RunDagger {
     val featureIndex = new MapIndex
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
     val insertProhibition = options.getBoolean("--insertProhibition", true)
-    WangXueTransitionSystem.setProhibition(insertProhibition)
+    val useReentrance = options.getBoolean("--reentrance", false)
+    WangXueTransitionSystem.prohibition = insertProhibition
+    WangXueTransitionSystem.reentrance = useReentrance
     val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore,
       GraphViz.graphVizOutputFunction)
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")

@@ -5,6 +5,8 @@ import ImportConcepts.{ conceptIndex, relationIndex }
  */
 class WangXueExpert extends WangXueExpertBasic {
 
+  val quote = """"""".r
+
   override def chooseTransition(data: Sentence, state: WangXueTransitionState): WangXueAction = {
     if (debug) println("Considering current node: " + state.nodesToProcess.head +
       " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
@@ -35,9 +37,9 @@ class WangXueExpert extends WangXueExpertBasic {
 
     val sigmaChildren = state.currentGraph.childrenOf(sigma)
     val sigmaChildrenAMR = sigmaChildren map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "") toSet
-    
+
     val unlinkedAMRChildren = sigmaAMRChildren filter (fullMapAMRtoDT contains _) diff sigmaChildrenAMR
-    
+
     if (debug) println(sigmaAMRParents)
     val betaAMRParents = getAMRParents(BETAAMR)
     val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
@@ -69,20 +71,20 @@ class WangXueExpert extends WangXueExpertBasic {
       case (Some(sigmaAMR), false, _, _, _, false) if (Insert.isPermissible(state)) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
       case (Some(sigmaAMR), _, _, _, _, false) if (unmatchedPolarityChild) => ReversePolarity
       case (Some(sigmaAMR), _, -1, _, _, false) =>
-        val concept = data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN")
+        val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
         if (concept == "UNKNOWN") {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
           println(state.currentGraph.insertedNodes)
         }
-  //      val conceptToUse = if (state.currentGraph.nodes(state.nodesToProcess.head) == concept) 0 else conceptIndex(concept)
+        //      val conceptToUse = if (state.currentGraph.nodes(state.nodesToProcess.head) == concept) 0 else conceptIndex(concept)
         NextNode(conceptIndex(concept))
       case (None, _, -1, _, _, false) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _, false) if (ReplaceHead.isPermissible(state)) => ReplaceHead
-      case (Some(sigmaAMR), _, beta, Some(betaAMR), false, _) if (sigmaAMR != "") =>
+      case (Some(sigmaAMR), _, beta, Some(betaAMR), _, _) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) {
           val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
           val relationRequired = relationIndex(relationText)
-  //        val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
+          //        val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
           NextEdge(relationRequired)
         } else if ((sigmaAMRParents contains betaAMR) && Swap.isPermissible(state)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
         else if (allNodesAMR contains betaAMRParents.head) {
@@ -95,9 +97,9 @@ class WangXueExpert extends WangXueExpertBasic {
       //         Reattach(state.nodesToProcess.tail.head) else NextEdge(0)
       case (_, _, beta, _, _, _) if beta > -1 => NextEdge(0)
       case (_, _, _, _, _, false) => NextNode(0)
-      case (_, _, _, _, _, true) if unlinkedAMRChildren.nonEmpty => 
-        val kappa = fullMapAMRtoDT(unlinkedAMRChildren.toList(0))
-        if (Reentrance(kappa).isPermissible(state)) Reentrance(kappa) else DoNothing
+      case (_, _, _, _, _, true) if unlinkedAMRChildren.nonEmpty =>
+        val kappa = unlinkedAMRChildren.toList map fullMapAMRtoDT filter state.currentGraph.nodes.contains filter (Reentrance(_).isPermissible(state))
+        if (kappa.nonEmpty) Reentrance(kappa(0)) else DoNothing
       case (_, _, _, _, _, true) => DoNothing
 
     }

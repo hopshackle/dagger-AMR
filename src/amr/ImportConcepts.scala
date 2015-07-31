@@ -22,6 +22,7 @@ object ImportConcepts {
   } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
   lazy val relationStringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
   lazy val expertResults = {
+    println("Now calculating expert results")
     val expert = new WangXueExpert
     val output = for {
       ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
@@ -58,14 +59,15 @@ object ImportConcepts {
     } yield concept).toSet
   }
 
-  private def filterOutNumbersAndNames(input: Seq[String]): Seq[String] = {
+  def filterOutNumbersAndNames(input: Seq[String]): Seq[String] = {
     input filter (x => (quote findFirstIn x) == None) filter (x => numbers.replaceAllIn(x, "") != "")
   }
-  private def filterOutNumbersAndStripQuotes(input: Seq[String]): Seq[String] = {
+  def filterOutNumbersAndStripQuotes(input: Seq[String]): Seq[String] = {
     input filter (x => numbers.replaceAllIn(x, "") != "") map (quote.replaceAllIn(_, ""))
   }
 
   private def loadRelations: Set[String] = {
+    println("Loading Relations")
     (for {
       graph <- allAMR
       relation <- graph.arcs.values
@@ -152,7 +154,7 @@ object ImportConcepts {
         ((original, processed), a) <- (expertResults zip allAMR)
         (node, lemma) <- processed.dependencyTree.nodeLemmas
         if lemma != ""
-        ignorableEdges = Set("opN", "ROOT", "polarity") ++ original.dependencyTree.arcs.values
+        ignorableEdges = Set("opN", "ROOT", "polarity", "UNKNOWN") // ++ original.dependencyTree.arcs.values
         relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
         relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
       } yield (lemma, relationsIn, relationsOut)).toList
