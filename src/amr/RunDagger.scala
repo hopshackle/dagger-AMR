@@ -144,7 +144,7 @@ object RunDagger {
   }
 
   def replaceLemmasWordnet(devData: Iterable[Sentence]): Iterable[Sentence] = {
-    val workInProgress = ImportConcepts.conceptsPerLemma.keys flatMap (x => (Wordnet.synonyms(x) ++ Wordnet.stemmer(x)) map (_ -> x)) groupBy (_._1) 
+    val workInProgress = ImportConcepts.conceptsPerLemma.keys flatMap (x => Wordnet.synonyms(x) map (_ -> x)) groupBy (_._1) 
     val lemmasBySynonym = workInProgress map { case (key, listOfTuples) => (key -> (listOfTuples map (_._2)).toList.distinct) } 
     devData map (s => {
       val dt = s.dependencyTree

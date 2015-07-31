@@ -16,15 +16,15 @@ object Word2VecTest {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.2 sec].
+                                                  //| hPCFG.ser.gz ... done [1.4 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [2.8 sec].
+                                                  //| im.crf.ser.gz ... done [2.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [7.7 sec].
+                                                  //| im.crf.ser.gz ... done [4.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [1.8 sec].
+                                                  //| tsim.crf.ser.gz ... done [1.9 sec].
                                                   //| WARNING: Found duplicate match for concept "for"
                                                   //| WARNING: Found duplicate match for concept "for"
                                                   //| WARNING: Found duplicate match for concept "Arab"
@@ -112,63 +112,62 @@ object Word2VecTest {
   val correctedDevData = RunDagger.replaceLemmasWordnet(devData)
                                                   //> New Lemma launching replaced with launch
                                                   //| New Lemma add replaced with total
-                                                  //| New Lemma institute replaced with bring
+                                                  //| New Lemma institute replaced with institute
                                                   //| New Lemma former replaced with late
                                                   //| New Lemma mark replaced with sign
-                                                  //| New Lemma revolutionary replaced with radical
-                                                  //| New Lemma by replaced with past
-                                                  //| New Lemma post replaced with situation
-                                                  //| New Lemma appear replaced with look
+                                                  //| New Lemma revolutionary replaced with revolutionary
+                                                  //| New Lemma by replaced with by
+                                                  //| New Lemma post replaced with post
+                                                  //| New Lemma appear replaced with appear
                                                   //| New Lemma place replaced with point
-                                                  //| New Lemma previous replaced with late
-                                                  //| New Lemma absent replaced with remove
+                                                  //| New Lemma previous replaced with previou
+                                                  //| New Lemma absent replaced with absent
                                                   //| New Lemma main replaced with chief
-                                                  //| New Lemma impact replaced with affect
-                                                  //| New Lemma manipulate replaced with control
+                                                  //| New Lemma impact replaced with impact
+                                                  //| New Lemma manipulate replaced with manipulate
                                                   //| New Lemma immediately replaced with instantly
                                                   //| New Lemma do replaced with execute
                                                   //| New Lemma maneuver replaced with point
-                                                  //| New Lemma test replaced with run
+                                                  //| New Lemma test replaced with test
                                                   //| New Lemma middle replaced with center
                                                   //| New Lemma thus replaced with so
-                                                  //| New Lemma test replaced with run
+                                                  //| New Lemma test replaced with test
                                                   //| New Lemma immediately replaced with instantly
                                                   //| New Lemma destruction replaced with death
                                                   //| New Lemma middle replaced with center
-                                                  //| New Lemma agree replaced with hold
-                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma agree replaced with agree
+                                                  //| New Lemma mass replaced with mass
                                                   //| New Lemma free replaced with release
                                                   //| New Lemma destruction replaced with death
                                                   //| New Lemma free replaced with release
-                                                  //| New Lemma agree replaced with hold
-                                                  //| New Lemma mass replaced with deal
+                                                  //| New Lemma agree replaced with agree
+                                                  //| New Lemma mass replaced with mass
                                                   //| New Lemma middle replaced with center
                                                   //| New Lemma pursue replaced with engage
-                                                  //| New Lemma mass replaced with deal
-                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma mass replaced with mass
+                                                  //| New Lemma union replaced with union
                                                   //| New Lemma free replaced with release
                                                   //| New Lemma destruction replaced with death
-                                                  //| New Lemma declaration replaced with resolve
+                                                  //| New Lemma declaration replaced with declaration
                                                   //| New Lemma middle replaced with center
-                                                  //| New Lemma union replaced with join
-                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma union replaced with union
+                                                  //| New Lemma union replaced with union
                                                   //| New Lemma destruction replaced with death
-                                                  //| New Lemma mass replaced with deal
-                                                  //| New Lemma delivery replaced with speech
-                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma mass replaced with mass
+                                                  //| New Lemma delivery replaced with delivery
+                                                  //| New Lemma union replaced with union
                                                   //| New Lemma step replaced with measure
                                                   //| New Lemma destruction replaced with death
-                                                  //| New Lemma mass replaced with deal
-                                                  //| New Lemma union replaced with join
-                                                  //| New Lemma consider replaced with take
+                                                  //| New Lemma mass replaced with mass
+                                                  //| New Lemma union replaced with union
+                                                  //| New Lemma consider replaced with consider
                                                   //| New Lemma country replaced with state
-                                                  //| New Lemma declaration replaced with resolve
+                                                  //| New Lemma declaration replaced with declaration
                                                   //| New Lemma middle replaced with center
                                                   //| New Lemma prime replaced with ground
-                                                  //| New Lemma union replaced with join
+                                                  //| New Lemma union replaced with union
                                                   //| New Lemma country replaced with state
-                                                  //| New Lemma stockpile replaced with reserve
-                                                  //| New Lemma believe r
+                                                  //| New Lemma stockpile replaced wi
                                                   //| Output exceeds cutoff limit.
  
   correctedDevData foreach (s => {
@@ -220,7 +219,7 @@ object Word2VecTest {
                                                   //| (38,range)
                                                   //| (21,official)
                                                   //| (33,missile)
-                                                  //| (9,bring)
+                                                  //| (9,institute)
                                                   //| (13,'s)
                                                   //| (41,to)
                                                   //| (2,##)
@@ -255,13 +254,13 @@ object Word2VecTest {
                                                   //| (5,##)
                                                   //| (10,sepah)
                                                   //| (14,which)
-                                                  //| (20,radical)
+                                                  //| (20,revolutionary)
                                                   //| (1,the)
                                                   //| (6,##)
                                                   //| (21,guards)
                                                   //| (9,the)
                                                   //| (2,image)
-                                                  //| (17,past)
+                                                  //| (17,by)
                                                   //| (12,site)
                                                   //| (7,##)
                                                   //| (3,be)
@@ -270,7 +269,7 @@ object Word2VecTest {
                                                   //| (11,news)
                                                   //| (8,on)
                                                   //| (19,'s)
-                                                  //| (4,situation)
+                                                  //| (4,post)
                                                   //| (15,be)
                                                   //| 20080710 the image was replaced with an image of the same 3 missiles in the 
                                                   //| previous photo but in place of the 4th missile is a grounded missile and wha
@@ -288,7 +287,7 @@ object Word2VecTest {
                                                   //| (28,a)
                                                   //| (38,nearby)
                                                   //| (21,in)
-                                                  //| (33,look)
+                                                  //| (33,appear)
                                                   //| (9,a)
                                                   //| (13,same)
                                                   //| (2,##)
@@ -300,6 +299,7 @@ object Word2VecTest {
                                                   //| (12,the)
                                                   //| (7,replace)
                                                   //| (3,##)
-                                                  //| (35,be)
+                                                  //| (35,b
+                                                  //| Output exceeds cutoff limit.
 
 }
