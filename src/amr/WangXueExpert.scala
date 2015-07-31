@@ -80,7 +80,7 @@ class WangXueExpert extends WangXueExpertBasic {
         NextNode(conceptIndex(concept))
       case (None, _, -1, _, _, false) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _, false) if (ReplaceHead.isPermissible(state)) => ReplaceHead
-      case (Some(sigmaAMR), _, beta, Some(betaAMR), _, _) if (sigmaAMR != "") =>
+      case (Some(sigmaAMR), _, beta, Some(betaAMR), false, _) if (sigmaAMR != "") =>
         if (betaAMRParents contains sigmaAMR) {
           val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
           val relationRequired = relationIndex(relationText)
