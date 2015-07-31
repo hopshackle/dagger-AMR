@@ -61,7 +61,12 @@ object RunDagger {
 
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     val alignerToUse = options.getString("--aligner", "")
+    val w2vLemmaReplacement = options.getBoolean("--w2vLemmaReplace", false)
     AMRGraph.setAligner(alignerToUse)
+    WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
+    WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
+    WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
+    WangXueFeatures.includeShenanigans = (options.getString("--WXfeatures", "") contains "S")
 
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
@@ -69,9 +74,10 @@ object RunDagger {
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
-    val w2vDict = Word2VecReader.load(options.DAGGER_OUTPUT_PATH + "../Globe.6B.50d.txt", filter = x => ImportConcepts.conceptStrings.contains(x))
-    devData map (s => s.copy())
-     
+    val correctedDevData = if (w2vLemmaReplacement)
+      replaceLemmas(devData, options.DAGGER_OUTPUT_PATH + "../Globe.6B.50d.txt")
+    else devData
+
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex
@@ -115,4 +121,21 @@ object RunDagger {
     val classifier = testDAGGERrun(options)
   }
 
+  def replaceLemmas(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
+    val w2vDict = Word2VecReader.load(location)
+    val lemmasInDict = ImportConcepts.conceptsPerLemma.keys filter (w2vDict.contains(_))
+    devData map (s => {
+      val dt = s.dependencyTree
+      val lemmas = dt.nodeLemmas
+      val replacedLemmas = for {
+        (node, lemma) <- lemmas
+        if !(ImportConcepts.conceptsPerLemma contains lemma) // A known lemma, so we can skip onwards
+        if (w2vDict.contains(lemma)) // and we have a W2V mapping for it
+        val (nearestLemma, distance) = lemmasInDict map (x => (x, w2vDict.euclidean(x, lemma))) minBy (_._2)
+      } yield (node, nearestLemma)
+      val newDT = dt.copy(nodeLemmas = lemmas map { case (k, v) => if (replacedLemmas contains k) (k, replacedLemmas(k)) else (k, v) })
+      replacedLemmas foreach { case (k, v) => println(s"New Lemma ${lemmas(k)} replaced with $v") }
+      s.copy(dependencyTree = newDT)
+    })
+  }
 }

@@ -24,6 +24,8 @@ object Word2VecReader {
     }
     catch {
       case e: Exception => {
+        println(e.getCause)
+        println(e.getMessage)
         println(e.getStackTrace.mkString("\n"))
       }
     }
@@ -97,7 +99,7 @@ class Word2Vec {
   }
 
   def loadStanfordFormat(path: String, filter: (String => Boolean) = _ => true, normalize: Boolean = true) = {
-    for (line <- io.Source.fromFile(path).getLines()) {
+    for (line <- io.Source.fromFile(path)("UTF-8").getLines()) {
       val cols = line.split(" ")
       if (filter(cols(0))) put(cols(0), cols.slice(1, cols.size).map(_.toFloat))
     }

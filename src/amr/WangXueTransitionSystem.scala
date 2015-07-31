@@ -43,8 +43,8 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
     val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
     val permissibleConcepts = beta match {
-      case None => Set()
-      case Some(b) =>
+      case Some(b) => Set()
+      case None =>
         val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
         if (wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
     }

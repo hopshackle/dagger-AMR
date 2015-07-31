@@ -13,13 +13,18 @@ class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) 
   }
 }
 
+object WangXueFeatures {
+  var debug = false
+  var includeChildren = false
+  var includeParents = true
+  var includeShenanigans = false
+}
+
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
   import scala.collection.JavaConversions.mapAsScalaMap
-
-  val debug = false
-  val includeChildren = false
-  val includeParents = true
+  import WangXueFeatures._
+  
   val random = new Random()
   val numeric = "[0-9,.]".r
   var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
@@ -74,6 +79,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     //    conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     add(hmap, "BIAS")
+    if (includeShenanigans) add(hmap, "SHENANIGAN=" + System.currentTimeMillis().toString)
     //    if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
     //    if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
     //    if (state.previousActions.size > 2) add(hmap, "LAST-B2-ACTION=" + state.previousActions.tail.tail.head.name)
@@ -95,7 +101,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (includeParents) {
       val sigmaParents = state.currentGraph.parentsOf(sigma)
-  //    val sigmaGrandparents = (sigmaParents flatMap state.currentGraph.parentsOf).distinct
+      //    val sigmaGrandparents = (sigmaParents flatMap state.currentGraph.parentsOf).distinct
       if (sigmaParents.nonEmpty) {
 
         val parentLabelCombos = for {
@@ -117,9 +123,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
               if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
             }
 
-//            sigmaGrandparents foreach { gp =>
- //             add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodes(gp) + "-" + parentWord + "-" + sigmaWord)
-//            }
+            //            sigmaGrandparents foreach { gp =>
+            //             add(hmap, "GP-PARENT-SIGMA=" + state.currentGraph.nodes(gp) + "-" + parentWord + "-" + sigmaWord)
+            //            }
 
             if (!(sigmaDL contains label)) add(hmap, "PARENT-SIGMA-LABEL=" + label)
             if (parentLemma != "") add(hmap, "PARENT-LEMMA=" + parentLemma)
