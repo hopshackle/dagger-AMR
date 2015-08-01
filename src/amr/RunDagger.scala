@@ -65,6 +65,7 @@ object RunDagger {
     val alignerToUse = options.getString("--aligner", "")
     val lemmaReplacement = options.getString("--lemmaReplace", "None")
     Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
+    DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)
     AMRGraph.setAligner(alignerToUse)
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
@@ -72,6 +73,7 @@ object RunDagger {
     WangXueFeatures.includeShenanigans = (options.getString("--WXfeatures", "") contains "S")
     WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
     WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
+    WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
 
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))

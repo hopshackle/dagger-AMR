@@ -97,7 +97,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
   nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
-  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: List[Int]) extends Graph[Int] {
+  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def toOutputFormat: String = {
@@ -108,8 +108,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
-  //  val oldValue = arcs.getOrElse((parent, child), "UNKNOWN")
-  //  val newLabel = if (label == "UNKNOWN") oldValue else label
+    //  val oldValue = arcs.getOrElse((parent, child), "UNKNOWN")
+    //  val newLabel = if (label == "UNKNOWN") oldValue else label
     this.copy(arcs = arcs + ((parent, child) -> label))
   }
 
@@ -125,7 +125,11 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
     val edgesToRemove = edgesToParents(node)
-    this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove, deletedNodes = node :: this.deletedNodes)
+    val parent = parentsOf(node)(0)
+    val alreadyDeletedNodes = this.deletedNodes.get(parent) match { case None => List(); case Some(deletedNodes) => deletedNodes }
+    val newDeletedNodes = (node, this.nodes(node)) :: alreadyDeletedNodes
+    this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove,
+      deletedNodes = this.deletedNodes + (parent -> newDeletedNodes))
   }
 
   def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
@@ -334,12 +338,13 @@ object Sentence {
 
 object DependencyTree {
 
+  var excludePunctuation = false
   val processor = new StanfordProcessor
   val numbers = "[0-9.,]".r
 
   def preProcess(sentence: String): List[String] = {
     val parsedForDates = extractNumbers(extractDates(sentence))
-    val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
+    val stanfordTree = (processor.parse(parsedForDates).head) filter (if (excludePunctuation) (x => x.deprel.getOrElse("") != "punct") else (_ => true))
     stanfordTree map {
       case ConllToken(_, form, _, _, _, _, _, _, _, _) => form.getOrElse("")
     }
@@ -348,7 +353,7 @@ object DependencyTree {
   def apply(sentence: String): DependencyTree = {
 
     val parsedForDates = extractNumbers(extractDates(sentence))
-    val stanfordTree = (processor.parse(parsedForDates).head) filter (x => x.deprel.getOrElse("") != "punct")
+    val stanfordTree = (processor.parse(parsedForDates).head) filter (if (excludePunctuation) (x => x.deprel.getOrElse("") != "punct") else (_ => true))
     val monthFiddledTree = stanfordTree map {
       case full @ ConllToken(_, form, _, _, _, _, _, _, _, ner) if (ner.getOrElse("") == "DATE") => { full.copy(form = convertMonth(form)) }
       case full => full
@@ -370,7 +375,7 @@ object DependencyTree {
 
     val nodeLemmas = (for {
       (ConllToken(Some(index), _, _, _, _, Some(lemma), _, _, _, _), wordCount) <- parseTree
-    } yield (index -> (numbers.replaceAllIn(lemma, "") match { case "" => "##"; case a => a.toLowerCase }))).toMap
+    } yield (index -> (numbers.replaceAllIn(lemma, "") match { case "" if !(".,".contains(lemma)) => "##"; case "" if (".,".contains(lemma)) => lemma; case a => a.toLowerCase }))).toMap
 
     val nodePOS = (for {
       (ConllToken(Some(index), _, _, Some(pos), cpos, feats, _, deprel, phead, ner), wordCount) <- parseTree
@@ -380,7 +385,7 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set(), List())
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set(), Map())
   }
 
   def convertMonth(input: Option[String]): Option[String] = {
@@ -424,8 +429,8 @@ object DependencyTree {
     }
 
     val numbersWithHyphen = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))-""".r
-    output = numbersWithHyphen replaceAllIn(output, _ match {
-            case numbersWithHyphen(number) =>
+    output = numbersWithHyphen replaceAllIn (output, _ match {
+      case numbersWithHyphen(number) =>
         val replacement = number.toDouble;
         f"$replacement%.0f "
       case other => ""
@@ -449,7 +454,7 @@ object AMRGraph {
   var useWordNet = false
   def setAligner(code: String): Unit = {
     if (code == "improved") useImprovedAligner = true
-    if (code == "wordnet") {useImprovedAligner = true; useWordNet = true}
+    if (code == "wordnet") { useImprovedAligner = true; useWordNet = true }
   }
   def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
     val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")

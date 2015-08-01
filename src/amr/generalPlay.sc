@@ -116,5 +116,8 @@ var classifier = null.asInstanceOf[dagger.ml.MultiClassClassifier[String]]
 classifier == null                                //> res25: Boolean = true
  val clean2 = """[.#'-]""".r                      //> clean2  : scala.util.matching.Regex = [.#'-]
  clean2.replaceAllIn("ba.se-01", "")              //> res26: String = base01
- 
+   val numbers = "([0-9*][.,][0-9])".r            //> numbers  : scala.util.matching.Regex = ([0-9*][.,][0-9])
+   numbers.replaceAllIn("100", "")                //> res27: String = 100
+   numbers.replaceAllIn(".", "")                  //> res28: String = .
+   numbers.replaceAllIn("100.00", "")             //> res29: String = 100
 }

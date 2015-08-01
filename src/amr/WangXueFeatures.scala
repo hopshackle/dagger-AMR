@@ -20,6 +20,7 @@ object WangXueFeatures {
   var includeShenanigans = false
   var includeActionHistory = false
   var includeWords = false
+  var includeDeletions = false
 }
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
@@ -107,6 +108,19 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     for (sdl <- sigmaDL) add(hmap, "SIGMA-DL=" + sdl)
 
+    val mergedNodes = state.currentGraph.mergedNodes.get(sigma) match {
+      case None => Nil
+      case Some(mergedNodes) => mergedNodes
+    }
+    mergedNodes foreach { case (n, label) => add(hmap, "SIGMA-REPH=" + label) }
+
+    if (includeDeletions) {
+      val deletedNodes = state.currentGraph.deletedNodes.get(sigma) match {
+        case None => Nil
+        case Some(deletedNodes) => deletedNodes
+      }
+      deletedNodes foreach { case (n, label) => add(hmap, "SIGMA-DEL=" + label) }
+    }
     if (includeParents) {
       val sigmaParents = state.currentGraph.parentsOf(sigma)
 
@@ -258,6 +272,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     }
     mergedNodes foreach { case (n, label) => add(hmap, "BETA-REPH=" + label) }
 
+    if (includeDeletions) {
+      val deletedNodes = state.currentGraph.deletedNodes.get(beta) match {
+        case None => Nil
+        case Some(deletedNodes) => deletedNodes
+      }
+      deletedNodes foreach { case (n, label) => add(hmap, "BETA-DEL=" + label) }
+    }
     hmap
   }
 
