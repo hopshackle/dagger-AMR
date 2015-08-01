@@ -35,7 +35,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       val reattachActions = (if (state.childrenToProcess.isEmpty || (state.currentGraph.reattachedNodes contains beta)) {
         Set[Reattach]()
       } else {
-        val possibleNodes = state.currentGraph.getNeighbourhood(sigma, 5) - sigma -- state.currentGraph.subGraph(beta.get)
+        val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE) - sigma -- state.currentGraph.subGraph(beta.get)
         possibleNodes map (Reattach(_))
       }).toArray
       val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()

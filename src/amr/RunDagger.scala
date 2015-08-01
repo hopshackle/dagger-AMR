@@ -64,6 +64,7 @@ object RunDagger {
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     val alignerToUse = options.getString("--aligner", "")
     val lemmaReplacement = options.getString("--lemmaReplace", "None")
+    Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
     AMRGraph.setAligner(alignerToUse)
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")

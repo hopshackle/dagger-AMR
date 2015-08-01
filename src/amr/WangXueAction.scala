@@ -15,7 +15,9 @@ trait hasNodeAsParameter {
 case class NextEdge(relIndex: Int) extends WangXueAction {
 
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
-    val tree = conf.currentGraph.labelArc(conf.nodesToProcess.head, conf.childrenToProcess.head, relation(relIndex))
+    val edge = (conf.nodesToProcess.head, conf.childrenToProcess.head)
+    val relationToUse = if (conf.processedEdges contains edge) relationIndex(conf.currentGraph.arcs(edge)) else relIndex
+    val tree = conf.currentGraph.labelArc(conf.nodesToProcess.head, conf.childrenToProcess.head, relation(relationToUse))
     conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions,
       processedEdges = conf.processedEdges + ((conf.nodesToProcess.head, conf.childrenToProcess.head))).fastForward
   }
@@ -203,10 +205,14 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       state.currentGraph.nodes.contains(newNode) &&
       !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
       !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
-      (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) < 7)
+      (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) <= Reattach.REATTACH_RANGE)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
     // And also only consider attachment points range in the current graph
   }
+}
+
+case object Reattach {
+  var REATTACH_RANGE = 6
 }
 
 case object Swap extends WangXueAction {

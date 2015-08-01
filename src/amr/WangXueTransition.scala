@@ -1,5 +1,6 @@
 package amr
 import dagger.core._
+import ImportConcepts.relationIndex
 
 case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree,
   previousActions: List[WangXueAction], originalInput: Option[Sentence],
@@ -12,7 +13,7 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
       val sigmaOption = nodesToProcess.headOption
       val betaOption = childrenToProcess.headOption
       val ffState = (sigmaOption, betaOption) match {
-        case (Some(sigma), Some(beta)) => if (processedEdges contains (sigma, beta)) NextEdge(0)(this).fastForward else this
+        case (Some(sigma), Some(beta)) => if (processedEdges contains (sigma, beta)) NextEdge(relationIndex(currentGraph.arcs((sigma, beta))))(this).fastForward else this
         case (Some(sigma), None) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
         case (None, _) => this
       }

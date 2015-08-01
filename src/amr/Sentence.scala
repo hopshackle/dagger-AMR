@@ -108,9 +108,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
-    val oldValue = arcs.getOrElse((parent, child), "UNKNOWN")
-    val newLabel = if (label == "UNKNOWN") oldValue else label
-    this.copy(arcs = arcs + ((parent, child) -> newLabel))
+  //  val oldValue = arcs.getOrElse((parent, child), "UNKNOWN")
+  //  val newLabel = if (label == "UNKNOWN") oldValue else label
+    this.copy(arcs = arcs + ((parent, child) -> label))
   }
 
   def labelNode(node: Int, label: String): DependencyTree = {
