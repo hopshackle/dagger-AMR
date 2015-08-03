@@ -95,12 +95,12 @@ object RunDagger {
     val useReentrance = options.getBoolean("--reentrance", false)
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
-    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore,
+    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore,
       GraphViz.graphVizOutputFunction)
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
-    for (j <- (WangXueTransitionSystem.actions ++ Array(Reattach(0)) ++ Array(Reentrance(0)))) {
+    for (j <- (WangXueTransitionSystem.actions ++ Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))) {
       outputFile.write(j + "\n")
       var relevantFeatures = List[(Int, Float)]()
       for (i <- 1 to featureIndex.size) {
