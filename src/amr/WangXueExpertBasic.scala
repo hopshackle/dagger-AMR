@@ -63,6 +63,8 @@ object WangXueExpertCheck {
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     AMRGraph.setAligner("improved")
     WangXueTransitionSystem.prohibition = false
+    WangXueTransitionSystem.reentrance = true
+    Reattach.REATTACH_RANGE = 20
     ImportConcepts.initialise(fileName)
     val rawData = ImportConcepts.expertResults
     val timer = new Timer()
