@@ -64,7 +64,7 @@ object WangXueExpertCheck {
     AMRGraph.setAligner("improved")
     WangXueTransitionSystem.prohibition = false
     WangXueTransitionSystem.reentrance = true
-    Reattach.REATTACH_RANGE = 20
+    //    Reattach.REATTACH_RANGE = 20
     ImportConcepts.initialise(fileName)
     val rawData = ImportConcepts.expertResults
     val timer = new Timer()
@@ -80,9 +80,53 @@ object WangXueExpertCheck {
 
     val meanScore = (allScores reduce (_ + _)) / allScores.size
     println(f"Average f-Score of $meanScore%.3f in $timer")
-    val scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, movesToConsider)
-    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer")
-    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer")
-    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer")
+    timer.stop
+    val timer2 = new Timer()
+    timer2.start
+    // All improvements
+    var scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, movesToConsider)
+    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer2")
+    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer2")
+    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer2")
+    timer2.stop
+    val timer3 = new Timer()
+    timer3.start
+    // satisficing only
+    Smatch.useImprovedMapping = false
+    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, 1000000)
+    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer3")
+    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer3")
+    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer3")
+    timer3.stop
+    val timer4 = new Timer()
+    timer4.start
+    // improved mapping only
+    Smatch.useImprovedMapping = true
+    Smatch.useSatisficing = false
+    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, 1000000)
+    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer4")
+    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer4")
+    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer4")
+    timer4.stop
+    val timer5 = new Timer()
+    timer5.start
+    // movesToConsider only
+    Smatch.useImprovedMapping = false
+    Smatch.useSatisficing = false
+    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, movesToConsider)
+    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer5")
+    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer5")
+    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer5")
+    timer5.stop
+        val timer6 = new Timer()
+    timer6.start
+    // vanilla Smatch
+    Smatch.useImprovedMapping = false
+    Smatch.useSatisficing = false
+    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, 10000000)
+    println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer6")
+    println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer6")
+    println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer6")
+    timer6.stop
   }
 }

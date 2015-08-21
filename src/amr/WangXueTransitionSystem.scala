@@ -9,6 +9,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   val expert = new WangXueExpert
   var prohibition = true
   var reentrance = false
+  var preferKnown = true
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN", "ROOT")
 
@@ -53,7 +54,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
         case Some(b) => Set()
         case None =>
           val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
-          if (wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
+          if (preferKnown && wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
       }
       val nextNodeActions = permissibleConcepts map (NextNode(_))
 

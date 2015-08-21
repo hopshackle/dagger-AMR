@@ -5,6 +5,8 @@ import scala.util.control._
 object Smatch {
 
   val debug = false
+  var useImprovedMapping = true
+  var useSatisficing = true
 
   def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Double) = {
     val smallGraph = if (AMR1.nodes.size < AMR2.nodes.size) AMR1 else AMR2
@@ -19,7 +21,7 @@ object Smatch {
   }
 
   def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double, Double) = {
-    var currentBestMap = initialMap2(AMR1, AMR2)
+    var currentBestMap = if (useImprovedMapping) initialMap2(AMR1, AMR2) else initialMap(AMR1, AMR2)
     var improvement = true
     var lastBestScore = (0.0, 0.0, 0.0, 0.0, 0.0)
     do {
@@ -139,19 +141,24 @@ object Smatch {
 
     val allMoves = Random.shuffle(allVacantMoves ++ allSwapMoves).take(movesToConsider)
     val startScore = fScoreWithMap(AMR1, AMR2, currentMap)
-    var satisficingMove = currentMap
+    var bestMove = currentMap
 
     val loop = new Breaks;
+    var bestScore = startScore._1
     loop.breakable {
       for (move <- allMoves) {
         val score = fScoreWithMap(AMR1, AMR2, move)
-        if (score._1 > startScore._1) {
-          satisficingMove = move
+        if (useSatisficing && score._1 > startScore._1) {
+          bestMove = move
           loop.break
+        }
+        if (!useSatisficing && score._1 > bestScore) {
+          bestScore = score._1
+          bestMove = move
         }
       }
     }
-    satisficingMove
+    bestMove
   }
 
   def fScoreWithMap(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double, Double) = {
