@@ -4,7 +4,7 @@ import scala.util.control._
 
 object Smatch {
 
-  val debug = false
+  val debug = true
   var useImprovedMapping = true
   var useSatisficing = true
 

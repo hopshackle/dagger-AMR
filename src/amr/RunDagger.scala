@@ -49,6 +49,16 @@ object RunDagger {
   def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)], iterations: Int = 4, attempts: Int = 1000, naive: Boolean = false): List[(String, Double)] = {
     val fScoreFn = if (naive) Smatch.naiveFScore _ else Smatch.fScore _
     val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => fScoreFn(x, y, iterations, attempts) } }
+    val naiveResults = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.naiveFScore(x, y, iterations, attempts) } }
+
+    if (true) {
+      val outputFile = new FileWriter("C:\\AMR\\SmatchScoreComparison.txt", true)
+      for (all <- results zip naiveResults) {
+        outputFile.write(all._1._1 + "\t" + all._2._1 + "\n")
+      }
+      outputFile.close()
+    }
+
     val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
     val totalMatches = results map (_._5) sum
     val overallRecall = totalMatches / totalTriples._1

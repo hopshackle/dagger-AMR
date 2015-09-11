@@ -9,6 +9,8 @@ class WangXueLossFunctionFactory(lossToUse: String) extends LossFunctionFactory[
     case "Abs" => new WangXueLossFunctionAbs
     case "Hamming" => new WXHammingLoss
     case "NaivePenaltyAbs" => new WXNaiveAbsSmatchWithPenalty
+    case "NaiveAbs" => new WXNaiveAbsSmatch    
+    case "Naive" => new WXNaiveSmatch    
     case "None" => new WXConstantLoss
     case _ => new WangXueLossFunction
   }
