@@ -120,4 +120,8 @@ classifier == null                                //> res25: Boolean = true
    numbers.replaceAllIn("100", "")                //> res27: String = 100
    numbers.replaceAllIn(".", "")                  //> res28: String = .
    numbers.replaceAllIn("100.00", "")             //> res29: String = 100
+   
+ val arrayTest = Array(0, 1, 2, 3, -7,89)         //> arrayTest  : Array[Int] = Array(0, 1, 2, 3, -7, 89)
+ arrayTest.toList                                 //> res30: List[Int] = List(0, 1, 2, 3, -7, 89)
+
 }

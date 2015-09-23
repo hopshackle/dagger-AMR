@@ -107,7 +107,9 @@ object RunDagger {
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore,
-      GraphViz.graphVizOutputFunction)
+      actionToString = (x => x.name),
+      stringToAction = (y => WangXueAction.construct(y)),
+      utilityFunction = GraphViz.graphVizOutputFunction)
     //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
