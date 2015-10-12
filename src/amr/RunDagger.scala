@@ -103,13 +103,16 @@ object RunDagger {
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
     val insertProhibition = options.getBoolean("--insertProhibition", true)
     val useReentrance = options.getBoolean("--reentrance", false)
+    val fileCache = options.getBoolean("--fileCache", true)
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore,
+      actionToString = if (fileCache) (x => x.name) else null,
+      stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
         AMROutput.AMROutputFunction) 
     //  GraphViz.graphVizOutputFunction)
-    //   if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
+    if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
     for (j <- (WangXueTransitionSystem.actions ++ Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))) {
@@ -131,18 +134,18 @@ object RunDagger {
     classifier
   }
 
-  def main(args: Array[String]): Unit = {
+	def main(args: Array[String]): Unit = {
 
-    //   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
-    //    "--dagger.iterations", "3",
-    //     "--debug", "true",
-    //     "--dagger.print.interval", "1",
-    //     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
-    //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
+			//   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
+			//    "--dagger.iterations", "3",
+			//     "--debug", "true",
+			//     "--dagger.print.interval", "1",
+			//     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
+			//     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
 
-    val options = new DAGGEROptions(args)
-    val classifier = testDAGGERrun(options)
-  }
+			val options = new DAGGEROptions(args)
+			val classifier = testDAGGERrun(options)
+	}
 
   def replaceLemmasGlove(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
     val w2vDict = Word2VecReader.load(location)

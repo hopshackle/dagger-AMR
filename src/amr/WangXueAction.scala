@@ -1,11 +1,43 @@
 package amr
 import dagger.core._
-
+import java.util.concurrent.atomic._
 import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, relationIndex, conceptIndex, insertableConcepts, conceptsPerLemma, edgesPerLemma }
 
 abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
   def isPermissible(state: WangXueTransitionState): Boolean
   def name: String
+}
+
+object WangXueAction {
+  
+  private val idFountain = new AtomicInteger(1)
+  
+  def construct(name: String): WangXueAction = {
+    name match {
+      case x if x startsWith "NextEdge" =>
+        val index = relationIndex(x.replaceAll("NextEdge", ""))
+        NextEdge(index)
+      case x if x startsWith "NextNode" =>
+        val index = conceptIndex(x.replaceAll("NextNode", ""))
+        NextNode(index)
+      case "DeleteNode" => DeleteNode
+      case x if x startsWith "Insert" =>
+        val index = conceptIndex(x.replaceAll("Insert", ""))
+        Insert(index)
+      case x if x startsWith "Reattach" => 
+        val concept = x.replaceAll("Reattach", "")
+        val action = if (concept == "") Reattach(0) else Reattach(idFountain.getAndIncrement)
+        if (idFountain.get > 20000) idFountain.set(1)
+        action.attachConcept = concept
+        action
+      case "Swap" => Swap
+      case "ReplaceHead" => ReplaceHead
+      case "ReversePolarity" => ReversePolarity
+      case x if x startsWith "Reentrance" => 
+        Reentrance(0)
+      case "DoNothing" => DoNothing
+    }
+  }
 }
 
 trait hasNodeAsParameter {
