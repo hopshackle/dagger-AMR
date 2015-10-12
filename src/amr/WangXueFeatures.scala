@@ -5,6 +5,7 @@ import java.io._
 import scala.util.Random
 import gnu.trove.map.hash.THashMap
 import dagger.ml.Instance
+import java.util.concurrent.atomic._
 import dagger.core._
 
 class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
@@ -21,6 +22,8 @@ object WangXueFeatures {
   var includeActionHistory = false
   var includeWords = false
   var includeDeletions = false
+  val idFountain = new AtomicLong(1)
+  
 }
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
@@ -87,7 +90,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     //    conceptSet foreach (c => add(hmap, "INSERT-COUNT-" + c, insertedConcepts.count { x => x == c }))
 
     add(hmap, "BIAS")
-    if (includeShenanigans) add(hmap, "SHENANIGAN=" + System.currentTimeMillis().toString)
+    if (includeShenanigans) add(hmap, "SHENANIGAN=" + idFountain.getAndIncrement)
     if (includeActionHistory) {
       if (state.previousActions.size > 0) add(hmap, "LAST-ACTION=" + state.previousActions.head.name)
       if (state.previousActions.size > 1) add(hmap, "LAST-B1-ACTION=" + state.previousActions.tail.head.name)
