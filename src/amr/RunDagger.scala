@@ -103,7 +103,7 @@ object RunDagger {
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
     val insertProhibition = options.getBoolean("--insertProhibition", true)
     val useReentrance = options.getBoolean("--reentrance", false)
-    val fileCache = options.getBoolean("--fileCache", true)
+    val fileCache = options.getBoolean("--fileCache", false)
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
