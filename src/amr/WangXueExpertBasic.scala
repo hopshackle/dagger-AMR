@@ -61,6 +61,7 @@ object WangXueExpertCheck {
     val movesToConsider = 1000
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
+    val options = new DAGGEROptions(Array("--dagger.output.path", "C:\\AMR\\"))
     AMRGraph.setAligner("improved")
     WangXueTransitionSystem.prohibition = false
     WangXueTransitionSystem.reentrance = true
@@ -84,7 +85,7 @@ object WangXueExpertCheck {
     val timer2 = new Timer()
     timer2.start
     // All improvements
-    var scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, movesToConsider)
+    var scores = RunDagger.corpusSmatchScoreAMR(options)(allAMR, iterations, movesToConsider)
     println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer2")
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer2")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer2")
@@ -93,7 +94,7 @@ object WangXueExpertCheck {
     timer3.start
     // satisficing only
     Smatch.useImprovedMapping = false
-    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, 1000000)
+    scores = RunDagger.corpusSmatchScoreAMR(options)(allAMR, iterations, 1000000)
     println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer3")
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer3")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer3")
@@ -103,7 +104,7 @@ object WangXueExpertCheck {
     // improved mapping only
     Smatch.useImprovedMapping = true
     Smatch.useSatisficing = false
-    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, 1000000)
+    scores = RunDagger.corpusSmatchScoreAMR(options)(allAMR, iterations, 1000000)
     println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer4")
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer4")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer4")
@@ -113,7 +114,7 @@ object WangXueExpertCheck {
     // movesToConsider only
     Smatch.useImprovedMapping = false
     Smatch.useSatisficing = false
-    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, movesToConsider)
+    scores = RunDagger.corpusSmatchScoreAMR(options)(allAMR, iterations, movesToConsider)
     println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer5")
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer5")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer5")
@@ -123,7 +124,7 @@ object WangXueExpertCheck {
     // vanilla Smatch
     Smatch.useImprovedMapping = false
     Smatch.useSatisficing = false
-    scores = RunDagger.corpusSmatchScoreAMR(allAMR, iterations, 10000000)
+    scores = RunDagger.corpusSmatchScoreAMR(options)(allAMR, iterations, 10000000)
     println(f"Corpus level f-Score of ${scores(0)._2}%.3f in $timer6")
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer6")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer6")

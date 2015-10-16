@@ -28,7 +28,7 @@ object RunDagger {
     expertSystem.construct(nextState, data)
   }
 
-  def corpusSmatchScore(i: Iterable[(Sentence, Sentence)]): List[(String, Double)] = {
+  def corpusSmatchScore(options: DAGGEROptions)(i: Iterable[(Sentence, Sentence)]): List[(String, Double)] = {
     val amrToCompare = i map {
       case (s1, s2) =>
         val amr1 = s1.amr match {
@@ -41,28 +41,30 @@ object RunDagger {
         }
         (amr1, amr2)
     }
-    corpusSmatchScoreAMR(amrToCompare)
+    corpusSmatchScoreAMR(options)(amrToCompare)
     //  the commented out line is the mean F-Score - rather than the corpus-level F-Score that we need
     //      (amrToCompare map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.fScore(x, y, 1)._1 } }).sum / i.size
   }
 
-  def corpusSmatchScoreAMR(i: Iterable[(AMRGraph, AMRGraph)], iterations: Int = 4, attempts: Int = 1000, naive: Boolean = false): List[(String, Double)] = {
+  def corpusSmatchScoreAMR(options: DAGGEROptions)(i: Iterable[(AMRGraph, AMRGraph)], iterations: Int = 4, attempts: Int = 1000, naive: Boolean = false): List[(String, Double)] = {
     val fScoreFn = if (naive) Smatch.naiveFScore _ else Smatch.fScore _
     val results = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => fScoreFn(x, y, iterations, attempts) } }
-    val naiveResults = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.naiveFScore(x, y, iterations, attempts) } }
 
-    if (true) {
-      val outputFile = new FileWriter("C:\\AMR\\SmatchScoreComparison.txt", true)
+    if (false) {
+      val naiveResults = i map { a: (AMRGraph, AMRGraph) => a match { case (x, y) => Smatch.naiveFScore(x, y, iterations, attempts) } }
+      val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "SmatchScoreComparison.txt", true)
       for (all <- results zip naiveResults) {
-        outputFile.write(all._1._1 + "\t" + all._2._1 + "\n")
+        outputFile.write(f"${all._1._1}%.3f \t ${all._2._1}%.3f \n")
       }
       outputFile.close()
     }
 
-    val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
+ //   val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
+    val totalTriples1 = (results map (_._6) sum)
+    val totalTriples2 = (results map (_._7) sum)
     val totalMatches = results map (_._5) sum
-    val overallRecall = totalMatches / totalTriples._1
-    val overallPrecision = totalMatches / totalTriples._2
+    val overallRecall =  totalMatches.toDouble / totalTriples1.toDouble
+    val overallPrecision = totalMatches.toDouble / totalTriples2.toDouble
     val overallScore = (2 * overallPrecision * overallRecall) / (overallPrecision + overallRecall)
     List(("F-Score", overallScore), ("Precision", overallPrecision), ("Recall", overallRecall))
   }
@@ -107,10 +109,10 @@ object RunDagger {
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore,
+    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
       actionToString = if (fileCache) (x => x.name) else null,
       stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
-        AMROutput.AMROutputFunction) 
+      AMROutput.AMROutputFunction)
     //  GraphViz.graphVizOutputFunction)
     if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
@@ -134,18 +136,18 @@ object RunDagger {
     classifier
   }
 
-	def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
 
-			//   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
-			//    "--dagger.iterations", "3",
-			//     "--debug", "true",
-			//     "--dagger.print.interval", "1",
-			//     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
-			//     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
+    //   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
+    //    "--dagger.iterations", "3",
+    //     "--debug", "true",
+    //     "--dagger.print.interval", "1",
+    //     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
+    //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
 
-			val options = new DAGGEROptions(args)
-			val classifier = testDAGGERrun(options)
-	}
+    val options = new DAGGEROptions(args)
+    val classifier = testDAGGERrun(options)
+  }
 
   def replaceLemmasGlove(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
     val w2vDict = Word2VecReader.load(location)

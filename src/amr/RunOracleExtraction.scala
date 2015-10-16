@@ -21,6 +21,6 @@ object RunOracleExtraction {
     val WXTransitionSystem = WangXueTransitionSystem
     val score = (s: Iterable[(Sentence, Sentence)]) => 1.0
     println("Extracting instances...")
-    val classifier = extractor.train(trainData, new WangXueExpert, WXFeatures, lossFunctionFactory, WXTransitionSystem, devData, RunDagger.corpusSmatchScore, options)
+    val classifier = extractor.train(trainData, new WangXueExpert, WXFeatures, lossFunctionFactory, WXTransitionSystem, devData, RunDagger.corpusSmatchScore(options), options)
   }
 }
