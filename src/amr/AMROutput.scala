@@ -7,32 +7,40 @@ object AMROutput {
           val quote = """""""
 
   def AMROutputFunction(options: DAGGEROptions, text: String, i: Integer, prediction: Sentence, target: Sentence): Unit = {
-    val outputFile = options.DAGGER_OUTPUT_PATH + "AMR_" + text + ".txt"
+    val outputFileP = options.DAGGER_OUTPUT_PATH + "AMR_prediction_" + text + ".txt"
+    val outputFileT = options.DAGGER_OUTPUT_PATH + "AMR_target_" + text + ".txt"
     val summaryFile = options.DAGGER_OUTPUT_PATH + "SmatchScores_" + text + ".txt"
-    val asString = prediction.amr match {
+    val asStringP = prediction.amr match {
+      case Some(p) => convertToString(p)
+      case None => ""
+    }
+    val asStringT = target.amr match {
       case Some(t) => convertToString(t)
       case None => ""
     }
     val smatchScore = (prediction.amr, target.amr) match {
-      case (Some(p), Some(t)) => Smatch.fScore(p, t, 4, 10000)._1
-      case _ => 0.0
+      case (Some(p), Some(t)) => Smatch.fScore(p, t, 4, 10000)
+      case _ => (0.0, 0.0, 0.0, 0.0, 0, 0, 0)
     }
-    val file = new FileWriter(outputFile, true)
-    file.write(asString + "\n\n")
-    file.close()
+    val fileP = new FileWriter(outputFileP, true)
+    fileP.write(asStringP + "\n\n")
+    fileP.close()
+    val fileT = new FileWriter(outputFileT, true)
+    fileT.write(asStringT + "\n\n")
+    fileT.close()
     val smatchFile = new FileWriter(summaryFile, true)
-    smatchFile.write(f"$smatchScore%.3f \t ${target.rawText}\n")
+    smatchFile.write(f"${smatchScore._1}%.3f \t ${smatchScore._2}%.3f \t ${smatchScore._3}%.3f \t ${target.rawText}\n")
     smatchFile.close
   }
   
   def convertToString(sample: AMRGraph): String = {
-    val processedNodes: Seq[String] = Seq.empty[String]
+    val processedNodes: Set[String] = Set.empty[String]
     val root = sample.getRoots.head
     val output = sample.childrenOf(root) map {c => printNode(c, sample, processedNodes, 0)._1}
     output.mkString("\n")
   }
 
-  def printNode(node: String, sample: AMRGraph, processedNodes: Seq[String], tab: Integer): (StringBuffer, Seq[String]) = {
+  def printNode(node: String, sample: AMRGraph, processedNodes: Set[String], tab: Integer): (StringBuffer, Set[String]) = {
     val isNumeric = numbers.replaceAllIn(sample.nodes(node), "") == ""
     val isQuoted = sample.nodes(node).contains(quote)
     val isLeaf = sample.isLeafNode(node)
@@ -55,7 +63,7 @@ object AMROutput {
         }
         output.append("\n")
         for (i <- 0 to tab) output.append("\t")
-        val (prettyStuff, nodesUsed) = printNode(child, sample, processedNodes :+ node, tab + 1)
+        val (prettyStuff, nodesUsed) = printNode(child, sample, processedNodes ++ newlyProcessedNodes, tab + 1)
         output.append(":" + relation + " " + prettyStuff.toString)
         newlyProcessedNodes = newlyProcessedNodes ++ nodesUsed
       }

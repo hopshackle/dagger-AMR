@@ -5,10 +5,11 @@ import scala.util.control._
 object Smatch {
 
   val debug = false
-  var useImprovedMapping = true
+  var useImprovedMapping = false
   var useSatisficing = true
   val quote = """"""".r
   val numbers = "[0-9.,]".r
+  val op = "^op[0-9]+$".r
 
   def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Int, Int, Int) = {
     val reduced1 = reduceAMR(AMR1)
@@ -40,17 +41,19 @@ object Smatch {
     } while (improvement)
 
     if (debug) {
-      val amr1 = stringSeq(AMR1)
+/*      val amr1 = stringSeq(AMR1)
       val amr2 = stringSeq(AMR2, currentBestMap)
       val amr2raw = stringSeq(AMR2)
-      println
+            println
       amr1 foreach println
       println
       amr2 foreach println
       println
-      amr2raw foreach println
-      println
-      currentBestMap foreach { case (i, v) => println(i + " -> " + v) }
+ //     amr2raw foreach println
+//      println  */
+      currentBestMap foreach { case (i, v) => println(s"$i [${AMR2.nodes(i)}] -> $v [${AMR1.nodes(v)}] ") }
+      println()
+      // mappings are keyed on 2
     }
     lastBestScore
   }
@@ -138,26 +141,30 @@ object Smatch {
 
   def getBestMove(AMR1: AMRGraph, AMR2: AMRGraph, currentMap: Map[String, String], movesToConsider: Int): Map[String, String] = {
     // We know that AMR1 is the larger of the two graphs (defined by number of nodes)
+    val startScore = fScoreWithMap(AMR1, AMR2, currentMap)
+
     val allVacantMoves = for {
       (i, name) <- AMR2.nodes
       j <- (AMR1.nodes.keySet -- currentMap.values)
-    } yield currentMap + (i -> j)
+    } yield Map(i -> j)
+    
+  //  if (debug) allVacantMoves foreach println
 
     val allSwapMoves = for {
       (i, iPointer) <- currentMap
       (j, jPointer) <- currentMap
       if i != j
-    } yield currentMap + (i -> jPointer) + (j -> iPointer)
+    } yield Map((i -> jPointer), (j -> iPointer))
 
     val allMoves = Random.shuffle(allVacantMoves ++ allSwapMoves).take(movesToConsider)
-    val startScore = fScoreWithMap(AMR1, AMR2, currentMap)
-    var bestMove = currentMap
+    var bestMove = Map[String, String]()
 
     val loop = new Breaks;
     var bestScore = startScore._1
     loop.breakable {
       for (move <- allMoves) {
-        val score = fScoreWithMap(AMR1, AMR2, move)
+        val score = fScoreWithMap(AMR1, AMR2, currentMap ++ move)
+   //     if (debug) println(f"$move gives score of ${score._1}%.3f")
         if (useSatisficing && score._1 > startScore._1) {
           bestMove = move
           loop.break
@@ -168,7 +175,8 @@ object Smatch {
         }
       }
     }
-    bestMove
+    if (debug) println("Best Move: " + bestMove)
+    currentMap ++ bestMove
   }
 
   def fScoreWithMap(AMR1: AMRGraph, AMR2: AMRGraph, nodeMap: Map[String, String]): (Double, Double, Double, Double, Int, Int, Int) = {
@@ -267,12 +275,14 @@ object Smatch {
         ((source, dest), "op" + (opEdges((source, dest)) + 1))
     }
 
+    //    val arcsWithOpN = input.arcs
+
     val attributeNodes = input.nodes filter {
       case (node, value) => !newNodes.contains(node)
     }
     val newArcs = arcsWithOpN filter {
-      case ((_, _), relation) if relation == "ROOT" => false
-      case ((source, dest), relation) => !attributeNodes.contains(dest)
+      //    case ((_, _), relation) if relation == "ROOT" => false
+      case ((source, dest), relation) => !(attributeNodes.contains(dest) || attributeNodes.contains(source))
     }
 
     val attributes = attributeNodes map {
