@@ -286,7 +286,7 @@ object Sentence {
         val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
       } yield (allAMRWithSameSpan(amrKey, amr), allDTIndices.toSeq)
     }
-    (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap + (0 -> "ROOT")
+    (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }
 
   def allAMRWithSameSpan(amrKey: String, amr: Option[AMRGraph]): Seq[String] = {
@@ -364,7 +364,7 @@ object DependencyTree {
 
     val nodes = (for {
       (ConllToken(Some(index), Some(form), _, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
-    } yield (index -> form)).toMap + (0 -> "ROOT")
+    } yield (index -> form)).toMap
 
     val arcs = (for {
       (ConllToken(Some(index), _, _, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
@@ -458,7 +458,7 @@ object AMRGraph {
     if (code == "wordnet") { useImprovedAligner = true; useWordNet = true }
   }
   def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
-    val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap + ("ROOT" -> "ROOT")
+    val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap
     val nodeSpans = (for {
       span <- jamrGraph.spans
       nodeId <- span.nodeIds
@@ -471,7 +471,7 @@ object AMRGraph {
       (label, node2) <- node1.relations
       Relation(relation) = label // label includes the ":"
       relation2 = if (relation.size == 3 && relation.startsWith("op")) "opN" else relation
-    } yield ((node1.id, node2.id) -> relation2)).toMap + (("ROOT", jamrGraph.root.id) -> "ROOT")
+    } yield ((node1.id, node2.id) -> relation2)).toMap
 
     AMRGraph(nodes, nodeSpans, arcs)
   }

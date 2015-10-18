@@ -154,7 +154,7 @@ object ImportConcepts {
         ((original, processed), a) <- (expertResults zip allAMR)
         (node, lemma) <- processed.dependencyTree.nodeLemmas
         if lemma != ""
-        ignorableEdges = Set("opN", "ROOT", "polarity", "UNKNOWN") // ++ original.dependencyTree.arcs.values
+        ignorableEdges = Set("opN", "polarity", "UNKNOWN") // ++ original.dependencyTree.arcs.values
         relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
         relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
       } yield (lemma, relationsIn, relationsOut)).toList

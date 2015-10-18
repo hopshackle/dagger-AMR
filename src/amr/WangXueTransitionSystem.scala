@@ -11,7 +11,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var reentrance = false
   var preferKnown = true
   val alwaysInsertable = Set("name")
-  val alwaysEdgePossibilities = Set("opN", "ROOT")
+  val alwaysEdgePossibilities = Set("opN")
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++

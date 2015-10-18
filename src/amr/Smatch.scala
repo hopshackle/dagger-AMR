@@ -264,7 +264,7 @@ object Smatch {
 
     val newNodes = input.nodes filter {
       case (node, value) =>
-        !(value == "ROOT" || (input.isLeafNode(node) && (numbers.replaceAllIn(value, "") == "" || quote.findFirstIn(value) != None || value == "-")))
+        !(input.isLeafNode(node) && (numbers.replaceAllIn(value, "") == "" || quote.findFirstIn(value) != None || value == "-"))
     }
 
     val arcsWithOpN = input.arcs map {
@@ -281,19 +281,13 @@ object Smatch {
       case (node, value) => !newNodes.contains(node)
     }
     val newArcs = arcsWithOpN filter {
-      //    case ((_, _), relation) if relation == "ROOT" => false
       case ((source, dest), relation) => !(attributeNodes.contains(dest) || attributeNodes.contains(source))
     }
 
     val attributes = attributeNodes map {
       case (node, value) =>
-        if (value == "ROOT") {
-          val c = input.childrenOf(node).head
-          (c, value, input.nodes(c))
-        } else {
           val p = input.parentsOf(node).head
-          (p, arcsWithOpN((p, node)), value)
-        }
+          (p, arcsWithOpN((p, node)), value) 
     }
     input.copy(nodes = newNodes, arcs = newArcs, attributes = attributes.toList)
   }

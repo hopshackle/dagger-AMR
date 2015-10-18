@@ -32,7 +32,6 @@ class WangXueExpertBasic extends HeuristicPolicy[Sentence, WangXueAction, WangXu
   }
 
   def conceptForCurrentNode(data: Sentence, state: WangXueTransitionState): Int = {
-    if (state.nodesToProcess.head == 0) return conceptIndex("ROOT") // special hard-code for the ROOT node  
     val conceptKey = data.positionToAMR.getOrElse(state.nodesToProcess.head, "NONE")
     val conceptString = data.amr.get.nodes.getOrElse(conceptKey, "NONE")
     if (debug) {
