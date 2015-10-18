@@ -76,12 +76,19 @@ abstract class Graph[K] {
   def subGraph(node: K): Set[K] = {
     subGraph(node, 0)
   }
-  def getAllChildren(parentList: Seq[K]): Seq[K] = {
+  def getDescendants(parentList: Seq[K]): Seq[K] = {
     val newChildren = parentList flatMap childrenOf
     if (newChildren.isEmpty)
       parentList // we're done
     else
-      getAllChildren(newChildren.distinct) ++ parentList
+      getDescendants(newChildren.distinct) ++ parentList
+  }
+    def getAncestors(list: Seq[K]): Seq[K] = {
+    val parents = list flatMap parentsOf
+    if (parents.isEmpty)
+      list // we're done
+    else
+      getAncestors(parents.distinct) ++ list
   }
 
 }
@@ -109,8 +116,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
-    //  val oldValue = arcs.getOrElse((parent, child), "UNKNOWN")
-    //  val newLabel = if (label == "UNKNOWN") oldValue else label
     this.copy(arcs = arcs + ((parent, child) -> label))
   }
 
@@ -339,7 +344,7 @@ object Sentence {
 
 object DependencyTree {
 
-  var excludePunctuation = false
+  var excludePunctuation = true
   val processor = new StanfordProcessor
   val numbers = "[0-9.,]".r
 
@@ -368,6 +373,7 @@ object DependencyTree {
 
     val arcs = (for {
       (ConllToken(Some(index), _, _, pos, cpos, feats, Some(parentIndex), deprel, phead, ner), wordCount) <- parseTree
+      if (parentIndex != 0)
     } yield ((parentIndex, index) -> deprel.getOrElse("UNK"))).toMap
 
     val nodeSpans = (for {

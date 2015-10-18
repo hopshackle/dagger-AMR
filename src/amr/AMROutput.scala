@@ -35,8 +35,7 @@ object AMROutput {
   
   def convertToString(sample: AMRGraph): String = {
     val processedNodes: Set[String] = Set.empty[String]
-    val root = sample.getRoots.head
-    val output = sample.childrenOf(root) map {c => printNode(c, sample, processedNodes, 0)._1}
+    val output = sample.getRoots map {c => printNode(c, sample, processedNodes, 0)._1}
     output.mkString("\n")
   }
 

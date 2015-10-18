@@ -143,12 +143,11 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
 object Insert {
   val transSystem = WangXueTransitionSystem
 
-  // we can Insert a node as long as we have no edges, and are not processing the root node (always the last node processed)
+  // we can Insert a node as long as we have no edges
   // We also apply a restriction that we can only insert a node if this is the first time we are visiting sigma
   // We also hard-code a restriction that the inserted concept cannot be within two arcs of sigma (to avoid one form of pathology)
   def isPermissible(state: WangXueTransitionState): Boolean = {
     !state.phaseTwo &&
-      state.nodesToProcess.size > 1 &&
       (state.previousActions.isEmpty || (state.previousActions.head match {
         case NextNode(_) => true
         case ReplaceHead => true

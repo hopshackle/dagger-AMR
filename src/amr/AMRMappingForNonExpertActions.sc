@@ -31,155 +31,253 @@ val s1 = Sentence(testData(1)._1, testData(1)._2) //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.5 sec].
+                                                  //| hPCFG.ser.gz ... done [2.0 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.1 sec].
+                                                  //| im.crf.ser.gz ... done [10.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.3 sec].
+                                                  //| im.crf.ser.gz ... done [3.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [5.3 sec].
+                                                  //| tsim.crf.ser.gz ... done [9.9 sec].
+                                                  //| WARNING: Found duplicate match for concept and
                                                   //| s1  : amr.Sentence = Sentence(Estonia (EE); Latvia (LV); Lithuania (LT),
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
-                                                  //| > Lithuania, 13 -> LT)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
-                                                  //|  13 -> (6,7))
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
-                                                  //| ,11) -> dep, (11,13) -> appos),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> na
-                                                  //| me, 0.1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.
-                                                  //| 0.0 -> "Latvia", 0 -> and, 0.2 -> country, ROOT -> ROOT, 0.2.0.0 -> "Lithuan
-                                                  //| ia"),Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.0
-                                                  //|  -> (1,2), 0.2.0 -> (5,6), 0.1.0.0 -> (3,4), 0.2 -> (5,6), 0.2.0.0 -> (5,6))
-                                                  //| ,Map((0.0,0.0.0) -> name, (ROOT,0) -> ROOT, (0.0.0,0.0.0.0) -> opN, (0.1,0.1
-                                                  //| .0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.
-                                                  //| 2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN))),Map(11 -> 0.2.0.0, 1
-                                                  //|  -> 0.0.0.0, 6 -> 0.1.0.0, 0 -> ROOT))
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 12 -> (, 13 -> LT, 14 -> 
+                                                  //| ))
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
+                                                  //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> punc
+                                                  //| t, (8,9) -> punct, (11,13) -> appos, (13,12) -> punct, (13,14) -> punct)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(),Some(AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 0
+                                                  //| .1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.0.0 -
+                                                  //| > "Latvia", 0 -> and, 0.2 -> country, 0.2.0.0 -> "Lithuania"),Map(0.1 -> (6,
+                                                  //| 7), 0.0.0 -> (1,2), 0.1.0 -> (6,7), 0.0 -> (1,2), 0.0.0.0 -> (1,2), 0.2.0 ->
+                                                  //|  (11,12), 0.1.0.0 -> (6,7), 0 -> (5,6), 0.2 -> (11,12), 0.2.0.0 -> (11,12)),
+                                                  //| Map((0.0,0.0.0) -> name, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> name, (0.1.0
+                                                  //| ,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.2.0) -> name, (0,0.
+                                                  //| 0) -> opN, (0.2.0,0.2.0.0) -> opN),List())),Map(11 -> 0.2.0.0, 6 -> 0.1.0.0,
+                                                  //|  1 -> 0.0.0.0, 5 -> 0))
+                                                 
+s1.amr.get                                        //> res0: amr.AMRGraph = AMRGraph(Map(0.1 -> country, 0.0.0 -> name, 0.1.0 -> na
+                                                  //| me, 0.0 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.1.0.0 -> "Latvia"
+                                                  //| , 0 -> and, 0.2 -> country, 0.2.0.0 -> "Lithuania"),Map(0.1 -> (6,7), 0.0.0 
+                                                  //| -> (1,2), 0.1.0 -> (6,7), 0.0 -> (1,2), 0.0.0.0 -> (1,2), 0.2.0 -> (11,12), 
+                                                  //| 0.1.0.0 -> (6,7), 0 -> (5,6), 0.2 -> (11,12), 0.2.0.0 -> (11,12)),Map((0.0,0
+                                                  //| .0.0) -> name, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> name, (0.1.0,0.1.0.0) 
+                                                  //| -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.2.0) -> name, (0,0.0) -> opN,
+                                                  //|  (0.2.0,0.2.0.0) -> opN),List())
+s1.dependencyTree                                 //> res1: amr.DependencyTree = 
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 12 -> (, 13 -> LT, 14 -> 
+                                                  //| ))
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
+                                                  //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> punc
+                                                  //| t, (8,9) -> punct, (11,13) -> appos, (13,12) -> punct, (13,14) -> punct)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map()
+                  
 val a1 = DeleteNode                               //> a1  : amr.DeleteNode.type = DeleteNode
 val a2 = DeleteNode                               //> a2  : amr.DeleteNode.type = DeleteNode
-val a3 = Insert(conceptIndex("name"))             //> WARNING: Found duplicate match for concept attack-01
-                                                  //| WARNING: Found duplicate match for concept cyber
+val a3 = Insert(conceptIndex("name"))             //> WARNING: Found duplicate match for concept and
+                                                  //| WARNING: Found duplicate match for concept and
+                                                  //| WARNING: Found duplicate match for concept and
+                                                  //| WARNING: Found duplicate match for concept and
                                                   //| WARNING: Found duplicate match for concept attack-01
                                                   //| WARNING: Found duplicate match for concept cyber
                                                   //| a3  : amr.Insert = InsertNode: name (Ref: )
-val a4 = NextNode(conceptIndex(""""Lithuania""""))//> a4  : amr.NextNode = NextNode: 20 -> "Lithuania"
+val a4 = NextNode(conceptIndex(""""Lithuania""""))//> a4  : amr.NextNode = NextNode: 0 -> UNKNOWN
 val a5 = Insert(conceptIndex("country"))          //> a5  : amr.Insert = InsertNode: country (Ref: )
 // These being the first five actions undertaken by the Expert policy
 // We now check two things. Firstly that the state picks up the correct AMR ref labels (0.2.0 and 0.2 respectively)
 // and secondly that If we now call the Expert policy, it uses this information, and does not
 // try and insert a node
-val trans = new WangXueTransitionSystem           //> trans  : amr.WangXueTransitionSystem = amr.WangXueTransitionSystem@52af26ee
-                                                  //| 
+val trans = WangXueTransitionSystem               //> trans  : amr.WangXueTransitionSystem.type = amr.WangXueTransitionSystem$@275
+                                                  //| 08c5d
+s1.amr.get.getRoots                               //> res2: Set[String] = Set(0)
 val startState = trans.init(s1)                   //> startState  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(13, 8, 11, 1, 6, 3, 0)
+                                                  //| NodesToGo:	List(12, 14, 9, 7, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
-                                                  //| > Lithuania, 13 -> LT)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
-                                                  //|  13 -> (6,7))
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
-                                                  //| ,11) -> dep, (11,13) -> appos)
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 12 -> (, 13 -> LT, 14 -> 
+                                                  //| ))
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
+                                                  //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> punc
+                                                  //| t, (8,9) -> punct, (11,13) -> appos, (13,12) -> punct, (13,14) -> punct)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map()
                                                   //| Mappings:	11 -> 0.2.0.0
-                                                  //| 1 -> 0.0.0.0
                                                   //| 6 -> 0.1.0.0
-                                                  //| 0 -> ROOT
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 5 -> 0
                                                   //| 
 val state1 = a1(startState)                       //> state1  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(8, 11, 1, 6, 3, 0)
+                                                  //| NodesToGo:	List(14, 9, 7, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 8 -> LV, 11 -
-                                                  //| > Lithuania)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6))
-                                                  //| 
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6
-                                                  //| ,11) -> dep)
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 13 -> LT, 14 -> ))
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
+                                                  //| ), 13 -> (13,14), 14 -> (14,15))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> punc
+                                                  //| t, (8,9) -> punct, (11,13) -> appos, (13,14) -> punct)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(13 -> List((12,()))
                                                   //| Mappings:	11 -> 0.2.0.0
-                                                  //| 1 -> 0.0.0.0
                                                   //| 6 -> 0.1.0.0
-                                                  //| 0 -> ROOT
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 5 -> 0
+                                                  //| DeleteNode
                                                   //| 
 val state2 = a2(state1)                           //> state2  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(11, 1, 6, 3, 0)
+                                                  //| NodesToGo:	List(9, 7, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 11 -> Lithuan
-                                                  //| ia)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 11 -> (5,6))
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,11) -> dep)
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 13 -> LT)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
+                                                  //| ), 13 -> (13,14))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> punc
+                                                  //| t, (8,9) -> punct, (11,13) -> appos)
+                                                  //| InsertedNodes:	Map()
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(13 -> List((14,)), (12,()))
                                                   //| Mappings:	11 -> 0.2.0.0
-                                                  //| 1 -> 0.0.0.0
                                                   //| 6 -> 0.1.0.0
-                                                  //| 0 -> ROOT
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 5 -> 0
+                                                  //| DeleteNode
+                                                  //| DeleteNode
                                                   //| 
 val state3 = a3(state2)                           //> state3  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(11, 12, 1, 6, 3, 0)
+                                                  //| NodesToGo:	List(9, 7, 14, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 11 -> Lithuan
-                                                  //| ia, 12 -> name)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 11 -> (5,6), 12 -> (5,6)
-                                                  //| )
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,12) -> dep, (12
-                                                  //| ,11) -> name#)
-                                                  //| Mappings:	0 -> ROOT
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 13 -> LT, 14 -> name)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
+                                                  //| ), 13 -> (13,14), 14 -> (9,10))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> punc
+                                                  //| t, (8,14) -> punct, (11,13) -> appos, (14,9) -> name#)
+                                                  //| InsertedNodes:	Map(14 -> )
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(13 -> List((14,)), (12,()))
+                                                  //| Mappings:	5 -> 0
+                                                  //| 14 -> 
                                                   //| 1 -> 0.0.0.0
                                                   //| 6 -> 0.1.0.0
-                                                  //| 12 -> 0.2.0
                                                   //| 11 -> 0.2.0.0
+                                                  //| InsertNode: name (Ref: )
+                                                  //| DeleteNode
+                                                  //| DeleteNode
                                                   //| 
 val state4 = a4(state3)                           //> state4  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(12, 1, 6, 3, 0)
-                                                  //| Children:	List(11)
-                                                  //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 11 -> "Lithua
-                                                  //| nia", 12 -> name)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 11 -> (5,6), 12 -> (5,6)
-                                                  //| )
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,12) -> dep, (12
-                                                  //| ,11) -> name#)
-                                                  //| Mappings:	0 -> ROOT
-                                                  //| 1 -> 0.0.0.0
-                                                  //| 6 -> 0.1.0.0
-                                                  //| 12 -> 0.2.0
-                                                  //| 11 -> 0.2.0.0
-                                                  //| 
-val state5 = a5(state4)                           //> state5  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(12, 13, 1, 6, 3, 0)
-                                                  //| Children:	List(11)
-                                                  //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 11 -> "Lithua
-                                                  //| nia", 12 -> name, 13 -> country)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 11 -> (5,6), 12 -> (5,6)
-                                                  //| , 13 -> (5,6))
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,13) -> dep, (12
-                                                  //| ,11) -> name#, (13,12) -> country#)
-                                                  //| Mappings:	0 -> ROOT
-                                                  //| 1 -> 0.0.0.0
-                                                  //| 6 -> 0.1.0.0
-                                                  //| 13 -> 0.2
-                                                  //| 12 -> 0.2.0
-                                                  //| 11 -> 0.2.0.0
-                                                  //| 
-val expert = new WangXueExpert                    //> expert  : amr.WangXueExpert = amr.WangXueExpert@6392827e
-val expertAction = expert.chooseTransition(s1, state5)
-                                                  //> expertAction  : amr.WangXueAction = NextEdge: 9 -> opN
-val state6 = expertAction(state5)                 //> state6  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(12, 13, 1, 6, 3, 0)
+                                                  //| NodesToGo:	List(7, 14, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(0 -> ROOT, 1 -> Estonia, 3 -> EE, 6 -> Latvia, 11 -> "Lithua
-                                                  //| nia", 12 -> name, 13 -> country)
-                                                  //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 11 -> (5,6), 12 -> (5,6)
-                                                  //| , 13 -> (5,6))
-                                                  //| Edges:	Map((0,3) -> root, (3,1) -> nn, (3,6) -> dep, (6,13) -> dep, (12
-                                                  //| ,11) -> opN, (13,12) -> country#)
-                                                  //| Mappings:	0 -> ROOT
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 13 -> LT, 14 -> name)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,1
+                                                  //| 2), 13 -> (13,14), 14 -> (9,10))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,7) -> pun
+                                                  //| ct, (8,14) -> punct, (11,13) -> appos, (14,9) -> name#)
+                                                  //| InsertedNodes:	Map(14 -> )
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(13 -> List((14,)), (12,()))
+                                                  //| Mappings:	5 -> 0
+                                                  //| 14 -> 
                                                   //| 1 -> 0.0.0.0
                                                   //| 6 -> 0.1.0.0
-                                                  //| 13 -> 0.2
-                                                  //| 12 -> 0.2.0
                                                   //| 11 -> 0.2.0.0
+                                                  //| NextNode: 0 -> UNKNOWN
+                                                  //| InsertNode: name (Ref: )
+                                                  //| DeleteNode
+                                                  //| 
+val state5 = a5(state4)                           //> state5  : amr.WangXueTransitionState = 
+                                                  //| NodesToGo:	List(7, 15, 14, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
+                                                  //| Children:	List()
+                                                  //| PartialGraph:	
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 7 -> (, 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 13 -> LT, 14 -> name, 15
+                                                  //|  -> country)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,1
+                                                  //| 2), 13 -> (13,14), 14 -> (9,10), 15 -> (7,8))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,14) -> pu
+                                                  //| nct, (8,15) -> punct, (11,13) -> appos, (14,9) -> name#, (15,7) -> country#
+                                                  //| )
+                                                  //| InsertedNodes:	Map(14 -> , 15 -> )
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(13 -> List((14,)), (12,()))
+                                                  //| Mappings:	5 -> 0
+                                                  //| 14 -> 
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 6 -> 0.1.0.0
+                                                  //| 11 -> 0.2.0.0
+                                                  //| 15 -> 
+                                                  //| InsertNode: country (Ref: )
+                                                  //| NextNode: 0 -> UNKNOWN
+                                                  //| InsertNode: name (Ref: )
+                                                  //| 
+val expert = new WangXueExpert                    //> expert  : amr.WangXueExpert = amr.WangXueExpert@6e01f9b0
+val expertAction = expert.chooseTransition(s1, state5)
+                                                  //> expertAction  : amr.WangXueAction = DeleteNode
+val state6 = expertAction(state5)                 //> state6  : amr.WangXueTransitionState = 
+                                                  //| NodesToGo:	List(14, 13, 10, 8, 11, 4, 1, 6, 5, 2, 3)
+                                                  //| Children:	List(9)
+                                                  //| PartialGraph:	
+                                                  //| NodeMap:	Map(1 -> Estonia, 2 -> (, 3 -> EE, 4 -> ), 5 -> ;, 6 -> Latvia, 
+                                                  //| 8 -> LV, 9 -> ), 10 -> ;, 11 -> Lithuania, 13 -> LT, 14 -> name, 15 -> coun
+                                                  //| try)
+                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
+                                                  //| 6 -> (6,7), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12), 13 -> (1
+                                                  //| 3,14), 14 -> (9,10), 15 -> (7,8))
+                                                  //| Edges:	Map((3,1) -> nn, (3,2) -> punct, (3,4) -> punct, (3,5) -> punct,
+                                                  //|  (3,6) -> dep, (6,8) -> appos, (6,10) -> punct, (6,11) -> dep, (8,14) -> pu
+                                                  //| nct, (8,15) -> punct, (11,13) -> appos, (14,9) -> name#)
+                                                  //| InsertedNodes:	Map(14 -> , 15 -> )
+                                                  //| MergedNodes:	Map()
+                                                  //| SwappedArcs:	Set()
+                                                  //| DeletedNodes:	Map(13 -> List((14,)), (12,()), 15 -> List((7,()))
+                                                  //| Mappings:	5 -> 0
+                                                  //| 14 -> 
+                                                  //| 1 -> 0.0.0.0
+                                                  //| 6 -> 0.1.0.0
+                                                  //| 11 -> 0.2.0.0
+                                                  //| 15 -> 
+                                                  //| NextNode: 0 -> UNKNOWN
+                                                  //| DeleteNode
+                                                  //| InsertNode: country (Ref: )
                                                   //| 
 }

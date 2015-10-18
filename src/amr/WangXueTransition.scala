@@ -19,7 +19,7 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
       }
       if (ffState.nodesToProcess.isEmpty && !phaseTwo) {
         val rootNode = currentGraph.getRoots.head
-        ffState.copy(nodesToProcess = currentGraph.getAllChildren(Seq(rootNode)).toList,
+        ffState.copy(nodesToProcess = currentGraph.getDescendants(Seq(rootNode)).toList,
             childrenToProcess = List(), processedNodes = Set(), phaseTwo = true)
       } else {
         ffState

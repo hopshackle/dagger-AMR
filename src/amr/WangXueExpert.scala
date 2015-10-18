@@ -35,17 +35,28 @@ class WangXueExpert extends WangXueExpertBasic {
     val sigmaAMRParents = getAMRParents(SIGMAAMR)
     val sigmaAMRChildren = getAMRChildren(SIGMAAMR).toSet
 
+    val sigmaAMRAncestors = SIGMAAMR match {
+      case Some(sigma) => data.amr.get.getAncestors(Seq(sigma)).toSet
+      case None => Set[String]()
+    }
+
+    if (debug) println(sigmaAMRAncestors)
+    
     val sigmaChildren = state.currentGraph.childrenOf(sigma)
     val sigmaChildrenAMR = sigmaChildren map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "") toSet
 
     val unlinkedAMRChildren = sigmaAMRChildren filter (fullMapAMRtoDT contains _) diff sigmaChildrenAMR
 
-    if (debug) println(sigmaAMRParents)
+    if (debug) println(s"sigmaAMRParents = ${sigmaAMRParents.toString}")
     val betaAMRParents = getAMRParents(BETAAMR)
+    if (debug) println(s"betaAMR = ${BETAAMR}")
+ //   if (debug) println(s"betaAMRParents = ${betaAMRParents.toString}")
+//    if (debug) println(s"Swap permissible ${Swap.isPermissible(state)}")
     val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
     val allNodesAMR = fullMapDTtoAMR.values.toSet
 
     val unmatchedParents = sigmaAMRParents filter { x => !fullMapAMRtoDT.contains(x) }
+
     val unmatchedChildren = sigmaAMRChildren filter { x => !fullMapAMRtoDT.contains(x) }
     //    if (debug) println(unmatchedParents)
     val unmatchedParentLabels = unmatchedParents map (data.amr.get.nodes(_))
@@ -68,6 +79,7 @@ class WangXueExpert extends WangXueExpertBasic {
       //      happen if Classifier policy has been making some decisions, even if it would never happen with only this expert policy.
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
+      case (Some(sigmaAMR), _, beta, Some(betaAMR), true, _) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (Some(sigmaAMR), false, _, _, _, false) if (Insert.isPermissible(state)) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
       case (Some(sigmaAMR), _, _, _, _, false) if (unmatchedPolarityChild) => ReversePolarity
       case (Some(sigmaAMR), _, -1, _, _, false) =>
@@ -86,8 +98,7 @@ class WangXueExpert extends WangXueExpertBasic {
           val relationRequired = relationIndex(relationText)
           //        val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
           NextEdge(relationRequired)
-        } else if ((sigmaAMRParents contains betaAMR) && Swap.isPermissible(state)) Swap //  || (sigmaParentsAMR contains betaAMR) for consideration
-        else if (allNodesAMR contains betaAMRParents.head) {
+        } else if (allNodesAMR contains betaAMRParents.head) {
           val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
         } else NextEdge(0)

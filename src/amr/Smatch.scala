@@ -286,8 +286,13 @@ object Smatch {
 
     val attributes = attributeNodes map {
       case (node, value) =>
-          val p = input.parentsOf(node).head
+          val allP = input.parentsOf(node)
+          if (allP.nonEmpty) {
+            val p = allP.head
           (p, arcsWithOpN((p, node)), value) 
+          } else {
+            ("R", "R", value)
+          }
     }
     input.copy(nodes = newNodes, arcs = newArcs, attributes = attributes.toList)
   }

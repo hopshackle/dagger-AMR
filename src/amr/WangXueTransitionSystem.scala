@@ -74,7 +74,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   def init(datum: Sentence): WangXueTransitionState = {
 
     val rootNode = datum.dependencyTree.getRoots.head
-    val allNodes = datum.dependencyTree.getAllChildren(List(rootNode)) // we start with the root node, which is usually 0
+    val allNodes = datum.dependencyTree.getDescendants(List(rootNode)) // we start with the root node, which is usually 0
 
     // all Nodes with leaves first, so we finish with the root
     // the children of the top node (which will always be Nil at initialisation)
