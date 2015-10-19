@@ -77,23 +77,24 @@ abstract class Graph[K] {
     subGraph(node, 0)
   }
   def getDescendants(parentList: Seq[K]): Seq[K] = {
-    val newChildren = parentList flatMap childrenOf
-    if (newChildren.isEmpty)
+    val allChildren = (parentList flatMap childrenOf) ++ parentList
+    if (allChildren.distinct.size == parentList.distinct.size)
       parentList // we're done
     else
-      getDescendants(newChildren.distinct) ++ parentList
+      getDescendants(allChildren.distinct)
   }
     def getAncestors(list: Seq[K]): Seq[K] = {
-    val parents = list flatMap parentsOf
-    if (parents.isEmpty)
+    val allParents = list ++ (list flatMap parentsOf) 
+    if (allParents.distinct.size == list.distinct.size)
       list // we're done
     else
-      getAncestors(parents.distinct) ++ list
+      getAncestors(allParents.distinct)
   }
 
 }
 
 case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String], 
+    originalArcs:  Map[(String, String), String] = Map(),
     attributes: List[(String, String, String)] = List()) extends Graph[String] {
   def toOutputFormat: String = {
     val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\n")
@@ -131,7 +132,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // only valid for a leaf node with no children
     assert(isLeafNode(node))
     val edgesToRemove = edgesToParents(node)
-    val parent = parentsOf(node)(0)
+    val parent = parentsOf(node).getOrElse(0, -1)
     val alreadyDeletedNodes = this.deletedNodes.get(parent) match { case None => List(); case Some(deletedNodes) => deletedNodes }
     val newDeletedNodes = (node, this.nodes(node)) :: alreadyDeletedNodes
     this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove,
@@ -457,6 +458,7 @@ object DependencyTree {
 
 object AMRGraph {
   // We then use the JAMR functionality here
+    val opN = "^op[0-9]+$".r
   var useImprovedAligner = false
   var useWordNet = false
   def setAligner(code: String): Unit = {
@@ -472,14 +474,20 @@ object AMRGraph {
     // Note our convention is that the first word in a sentence is at index 1
 
     val Relation = """:?(.*)""".r
-    val arcs = (for {
+    
+
+    val originalArcs = (for {
       node1 <- jamrGraph.nodes
       (label, node2) <- node1.relations
       Relation(relation) = label // label includes the ":"
-      relation2 = if (relation.size == 3 && relation.startsWith("op")) "opN" else relation
-    } yield ((node1.id, node2.id) -> relation2)).toMap
+    } yield ((node1.id, node2.id) -> relation)).toMap
 
-    AMRGraph(nodes, nodeSpans, arcs)
+    val arcs = originalArcs map { case (k, v) => opN.findFirstIn(v) match {
+      case None => (k, v)
+      case Some(_) => (k, "opN")
+    }}
+    
+    AMRGraph(nodes, nodeSpans, arcs, originalArcs)
   }
 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
@@ -489,6 +497,9 @@ object AMRGraph {
       AlignTest.alignWords(tokenisedSentence.toArray, amr, useWordNet)
     else
       AlignWords.alignWords(tokenisedSentence.toArray, amr)
+      
+    // wordAlignments from JAMR aligns to spans of words
+    // We now wish to fine-tune this
 
     val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
 

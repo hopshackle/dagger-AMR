@@ -17,7 +17,7 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
         case (Some(sigma), None) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
         case (None, _) => this
       }
-      if (ffState.nodesToProcess.isEmpty && !phaseTwo) {
+      if (ffState.nodesToProcess.isEmpty && !phaseTwo && currentGraph.getRoots.nonEmpty) {
         val rootNode = currentGraph.getRoots.head
         ffState.copy(nodesToProcess = currentGraph.getDescendants(Seq(rootNode)).toList,
             childrenToProcess = List(), processedNodes = Set(), phaseTwo = true)

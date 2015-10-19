@@ -10,6 +10,7 @@ object Smatch {
   val quote = """"""".r
   val numbers = "[0-9.,]".r
   val op = "^op[0-9]+$".r
+  val ARGof = "-of$".r
 
   def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Int, Int, Int) = {
     val reduced1 = reduceAMR(AMR1)
@@ -41,14 +42,14 @@ object Smatch {
     } while (improvement)
 
     if (debug) {
-/*      val amr1 = stringSeq(AMR1)
+      val amr1 = stringSeq(AMR1)
       val amr2 = stringSeq(AMR2, currentBestMap)
       val amr2raw = stringSeq(AMR2)
-            println
-      amr1 foreach println
-      println
-      amr2 foreach println
-      println
+ //           println
+ //     amr1 foreach println
+ //     println
+ //     amr2 foreach println
+ //     println
  //     amr2raw foreach println
 //      println  */
       currentBestMap foreach { case (i, v) => println(s"$i [${AMR2.nodes(i)}] -> $v [${AMR1.nodes(v)}] ") }
@@ -130,8 +131,9 @@ object Smatch {
       }
     }
 
-    val remainingNodes1 = AMR1.nodes.keySet -- coincidentMappings.values
-    val remainingNodes2 = Random.shuffle(AMR2.nodes.keySet -- coincidentMappings.keys)
+    val remainingNodes1 = Random.shuffle((AMR1.nodes.keySet -- coincidentMappings.values).toSeq)
+    val remainingNodes2 = Random.shuffle((AMR2.nodes.keySet -- coincidentMappings.keys).toSeq)
+    if (debug) print(s"AMR1 remaining: ${remainingNodes1.size}, AMR2: ${remainingNodes2.size}\n")
 
     // then the remainder get allocated entirely at random
     val remainder = (remainingNodes2 zip remainingNodes1).toMap
@@ -188,8 +190,8 @@ object Smatch {
     val amr2 = stringSeq(AMR2, nodeMap)
 
     val matches: Double = if (amr1.size > amr2.size) (amr2 map (a => if (amr1 contains a) 1 else 0)).sum else (amr1 map (a => if (amr2 contains a) 1 else 0)).sum
-    val precision = matches / amr2.size
-    val recall = matches / amr1.size
+    val precision = if (amr2.size == 0) 0.0 else matches / amr2.size
+    val recall = if (amr1.size == 0) 0.0 else matches / amr1.size
     val incorrect = amr2.size - matches + amr1.size - matches
     val fScore = if (precision + recall > 0.00)
       (2 * precision * recall) / (precision + recall)
@@ -203,8 +205,8 @@ object Smatch {
     val oneNotTwo = triples1 diff triples2 size
     val twoNotOne = triples2 diff triples1 size
     val matches = Math.min(triples1.size - oneNotTwo, triples2.size - twoNotOne)
-    val precision = matches / triples2.size
-    val recall = matches / triples1.size
+    val precision = if (triples2.size == 0) 0.00 else matches.toDouble / triples2.size
+    val recall = if (triples1.size == 0) 0.00 else matches.toDouble / triples1.size
     val incorrect = triples2.size - matches + triples1.size - matches
     val fScore = if (precision + recall > 0.00)
       (2 * precision * recall) / (precision + recall)
@@ -214,9 +216,18 @@ object Smatch {
 
   def stringSeq(AMR: AMRGraph): Seq[String] = {
     val nodes = AMR.nodes map (node => node._1 + ":" + node._2)
+    val arcs = for {
+      ((s, d), relation) <- AMR.arcs
+      val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
+        case None => (s, d, relation)
+        case Some(_) => (d, s, relation.substring(0, relation.size - 3))
+      }
+    } yield (source + ":" + arcName + ":" + dest)
+ /*   
     val arcs = AMR.arcs map {
       case ((source, dest), arcName) => source + ":" + arcName + ":" + dest
     }
+ */   
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => node + ":" + attrType + ":" + attrValue
     }
@@ -225,9 +236,15 @@ object Smatch {
 
   def stringSeq(AMR: AMRGraph, nodeMap: Map[String, String]): Seq[String] = {
     val nodes = AMR.nodes map (node => alias(node._1, nodeMap) + ":" + node._2)
-    val arcs = AMR.arcs map {
-      case ((source, dest), arcName) => alias(source, nodeMap) + ":" + arcName + ":" + alias(dest, nodeMap)
-    }
+    
+    val arcs = for {
+      ((s, d), relation) <- AMR.arcs
+      val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
+        case None => (alias(s, nodeMap), alias(d, nodeMap), relation)
+        case Some(_) => (alias(d, nodeMap), alias(s, nodeMap), relation.substring(0, relation.size - 3))
+      }
+    } yield (source + ":" + arcName + ":" + dest)
+    
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => alias(node, nodeMap) + ":" + attrType + ":" + attrValue
     }
@@ -236,9 +253,14 @@ object Smatch {
 
   def naiveStringSeq(AMR: AMRGraph): Seq[String] = {
     val nodes = AMR.nodes map (_._2)
-    val arcs = AMR.arcs map {
-      case ((source, dest), arcName) => AMR.nodes(source) + ":" + arcName + ":" + AMR.nodes(dest)
-    }
+    val arcs = for {
+      ((s, d), relation) <- AMR.arcs
+      val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
+        case None => (s, d, relation)
+        case Some(_) => (d, s, relation.substring(0, relation.size - 3))
+      }
+    } yield (source + ":" + arcName + ":" + dest)
+    
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => AMR.nodes(node) + ":" + attrType + ":" + attrValue
     }
@@ -261,21 +283,21 @@ object Smatch {
     // (if it's not a leaf node, then we can't do this, and have to leave it as an incorrect node)
 
     // So what we do here, is remove any leaf nodes from the graph, and store their values in an attribute list for the node
+    
+    val newNodes = for {
+      (n, v) <- input.nodes
+      if !(input.isLeafNode(n) && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
+    } yield (n, quote.replaceAllIn(v, ""))
 
-    val newNodes = input.nodes filter {
-      case (node, value) =>
-        !(input.isLeafNode(node) && (numbers.replaceAllIn(value, "") == "" || quote.findFirstIn(value) != None || value == "-"))
-    }
-
-    val arcsWithOpN = input.arcs map {
+    val arcsToUse = if (input.originalArcs.isEmpty) input.arcs else input.originalArcs
+    
+    val arcsWithOpN = arcsToUse map {
       case ((source, dest), relation) if relation != "opN" => ((source, dest), relation)
       case ((source, dest), relation) =>
         val opEdges = input.edgesToChildren(source).filter(e => input.arcs(e) == "opN").
           sortWith(AMROutput.sortByPositionInSentence(input)).zipWithIndex.toMap
         ((source, dest), "op" + (opEdges((source, dest)) + 1))
     }
-
-    //    val arcsWithOpN = input.arcs
 
     val attributeNodes = input.nodes filter {
       case (node, value) => !newNodes.contains(node)
@@ -284,7 +306,7 @@ object Smatch {
       case ((source, dest), relation) => !(attributeNodes.contains(dest) || attributeNodes.contains(source))
     }
 
-    val attributes = attributeNodes map {
+    val attributes = (attributeNodes map {
       case (node, value) =>
           val allP = input.parentsOf(node)
           if (allP.nonEmpty) {
@@ -293,7 +315,8 @@ object Smatch {
           } else {
             ("R", "R", value)
           }
-    }
-    input.copy(nodes = newNodes, arcs = newArcs, attributes = attributes.toList)
+    }).toList ++ (input.getRoots map {r => (r, "ROOT", input.nodes(r))})
+    
+    input.copy(nodes = newNodes, arcs = newArcs, attributes = attributes)
   }
 }
