@@ -23,7 +23,7 @@ object WangXueFeatures {
   var includeWords = false
   var includeDeletions = false
   val idFountain = new AtomicLong(1)
-  
+
 }
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
@@ -33,6 +33,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
   val random = new Random()
   val numeric = "[0-9,.]".r
+  val hyphen = "-".r
   var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
   var cachedState: WangXueTransitionState = null
 
@@ -101,6 +102,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     }
 
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
+    val prefix = hyphen.split(sigmaLemma)
+    if (prefix.nonEmpty) {
+      add(hmap, "PREFIX=" + prefix(0))
+    }
     val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     if (sigmaPOS != "") add(hmap, "SIGMA-POS=" + sigmaPOS)
@@ -266,6 +271,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (betaNER != "") add(hmap, "BETA-NER=" + betaNER)
     for (bdl <- betaDL) add(hmap, "BETA-DL=" + bdl)
     if (!(betaDL contains label)) add(hmap, "SIGMA-BETA-LABEL=" + label)
+
+    val prefix = hyphen.split(betaLemma)
+    if (prefix.nonEmpty) {
+      add(hmap, "BETAPREFIX=" + prefix(0))
+    }
 
     if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")
 

@@ -66,10 +66,10 @@ object generalPlay {
   val tallinn = """"Tallinn""""                   //> tallinn  : String = "Tallinn"
   val test = " [label = " + tallinn + "]"         //> test  : String = " [label = "Tallinn"]"
 
-  val t2 = "one billion 2 million once, one, 6.02 billions onet"
-                                                  //> t2  : String = one billion 2 million once, one, 6.02 billions onet
-  val one = """^one | one | one[,.?!;:]""".r      //> one  : scala.util.matching.Regex = ^one | one | one[,.?!;:]
-  one.replaceAllIn(t2, " 1 ")                     //> res20: String = " 1 billion 2 million once, 1  6.02 billions onet"
+  val t2 = "one billion 2 million once, one, 6.02 billions onet One "
+                                                  //> t2  : String = "one billion 2 million once, one, 6.02 billions onet One "
+  val one = """(?i)(^one | one | one[,.?!;:])""".r//> one  : scala.util.matching.Regex = (?i)(^one | one | one[,.?!;:])
+  one.replaceAllIn(t2, " 1 ")                     //> res20: String = " 1 billion 2 million once, 1  6.02 billions onet 1 "
   val old = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))"""
                                                   //> old  : String = ((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))
   val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)""".r
@@ -82,16 +82,18 @@ object generalPlay {
   // DependencyTree.extractNumbers("A two-week extension until the 30-strong group arrive to test their 3-billion-dollar theory.")
   // val replacements = text map { x => x(0).toDouble * (x(1) match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 }) } map (x => f"${x}%.0f")
   // replacements foreach println
-  realNumbers.replaceAllIn(t2, " rep ")           //> res21: String = one billion  rep  once, one,  rep s onet
+  realNumbers.replaceAllIn(t2, " rep ")           //> res21: String = "one billion  rep  once, one,  rep s onet One "
   t2 match { case realNumbers(number) => "f"; case other => other }
-                                                  //> res22: String = one billion 2 million once, one, 6.02 billions onet
+                                                  //> res22: String = "one billion 2 million once, one, 6.02 billions onet One "
+                                                  //| 
   val a2 = realNumbers findAllIn t2               //> a2  : scala.util.matching.Regex.MatchIterator = non-empty iterator
   val reformatted = realNumbers replaceAllIn (t2, _ match {
     case realNumbers(number, multiple) =>
       val replacement = number.toDouble *  (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
       f"$replacement%.0f "
     case other => ""
-  })                                              //> reformatted  : String = one billion 2000000  once, one, 6020000000 s onet
+  })                                              //> reformatted  : String = "one billion 2000000  once, one, 6020000000 s onet 
+                                                  //| One "
 
 val dollar = """\$""".r                           //> dollar  : scala.util.matching.Regex = \$
 dollar.replaceAllIn("$56", "dollars ")            //> res23: String = dollars 56
@@ -126,5 +128,7 @@ classifier == null                                //> res25: Boolean = true
  arrayTest.toList                                 //> res30: List[Int] = List(0, 1, 2, 3, -7, 89)
 "ARG0-of".substring(0, 4)                         //> res31: String = ARG0
 
-
+val hyphen = "-".r                                //> hyphen  : scala.util.matching.Regex = -
+hyphen.split("anti-terrorism")                    //> res32: Array[String] = Array(anti, terrorism)
+hyphen.split("--")                                //> res33: Array[String] = Array()
 }

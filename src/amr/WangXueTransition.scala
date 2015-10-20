@@ -4,12 +4,10 @@ import ImportConcepts.relationIndex
 
 case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree,
   previousActions: List[WangXueAction], originalInput: Option[Sentence],
-  startingDT: DependencyTree, processedEdges: Set[(Int, Int)], processedNodes: Set[Int],
-  phaseTwo: Boolean = false) extends TransitionState {
+  startingDT: DependencyTree, processedEdges: Set[(Int, Int)], processedNodes: Set[Int]) extends TransitionState {
 
   def fastForward: WangXueTransitionState = {
     // We skip any Edges or Nodes that have already been processed
-    if (!phaseTwo) {
       val sigmaOption = nodesToProcess.headOption
       val betaOption = childrenToProcess.headOption
       val ffState = (sigmaOption, betaOption) match {
@@ -17,16 +15,7 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
         case (Some(sigma), None) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
         case (None, _) => this
       }
-      if (ffState.nodesToProcess.isEmpty && !phaseTwo && currentGraph.getRoots.nonEmpty) {
-        val rootNode = currentGraph.getRoots.head
-        ffState.copy(nodesToProcess = currentGraph.getDescendants(Seq(rootNode)).toList,
-            childrenToProcess = List(), processedNodes = Set(), phaseTwo = true)
-      } else {
-        ffState
-      }
-    } else {
-      this
-    }
+      ffState
   }
 
   // At each state in the search trajectory we have a currentGraph, which is initialised from the DependencyTree obtained

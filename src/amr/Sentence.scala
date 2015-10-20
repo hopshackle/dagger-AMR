@@ -428,7 +428,7 @@ object DependencyTree {
   }
 
   def extractNumbers(input: String): String = {
-    val regexStr = "^$ | $ | $-| $[,.?!;:]"
+    val regexStr = "(?i)(^$ | $ | $-| $[,.?!;:])"
     val numbers = List("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve")
     var output = input
     for ((str, number) <- numbers.zipWithIndex) {

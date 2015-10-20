@@ -24,10 +24,10 @@ object AMROutput {
     }
     val fileP = new FileWriter(outputFileP, true)
     fileP.write(asStringP + "\n\n")
-    fileP.close()
+    fileP.close
     val fileT = new FileWriter(outputFileT, true)
     fileT.write(asStringT + "\n\n")
-    fileT.close()
+    fileT.close
     val smatchFile = new FileWriter(summaryFile, true)
     smatchFile.write(f"${smatchScore._1}%.3f \t ${smatchScore._2}%.3f \t ${smatchScore._3}%.3f \t ${target.rawText}\n")
     smatchFile.close
@@ -44,15 +44,14 @@ object AMROutput {
     val isNumeric = numbers.replaceAllIn(amr.nodes(node), "") == ""
     val isQuoted = amr.nodes(node).contains(quote)
     val isLeaf = amr.isLeafNode(node)
-    if (isLeaf && (isNumeric || isQuoted))
+    val isPolarity = amr.nodes(node) == "-"
+    if (isLeaf && (isNumeric || isQuoted || isPolarity))
       return (new StringBuffer(amr.nodes(node)), processedNodes)
 
     val arcsToUse = if (sample.originalArcs.isEmpty) amr.arcs else amr.originalArcs
-    val output = new StringBuffer("( " + nodeCode(node))
     var newlyProcessedNodes = Seq(node)
-    if (processedNodes contains node)
-      output.append(")")
-    else {
+    val outString = if (processedNodes contains node) new StringBuffer(" " + nodeCode(node) + " ") else {
+      val output = new StringBuffer("( " + nodeCode(node))
       output.append(" / " + amr.nodes(node))
       var opCount = 0
       for ((_, child) <- amr.edgesToChildren(node).sortWith(sortByPositionInSentence(sample))) {
@@ -70,7 +69,7 @@ object AMROutput {
       }
       output.append(")")
     }
-    (output, processedNodes ++ newlyProcessedNodes)
+    (outString, processedNodes ++ newlyProcessedNodes)
   }
 
   def sortByPositionInSentence(amr: AMRGraph)(a: (String, String), b: (String, String)): Boolean = {
