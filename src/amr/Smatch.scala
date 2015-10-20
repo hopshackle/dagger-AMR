@@ -97,8 +97,8 @@ object Smatch {
       bestMapping = mappings
     }
 
-    val remainingNodes1 = AMR1.nodes.keySet -- bestMapping.values
-    val remainingNodes2 = Random.shuffle(AMR2.nodes.keySet -- bestMapping.keys)
+    val remainingNodes1 = Random.shuffle(AMR1.nodes.keySet -- bestMapping.values)
+    val remainingNodes2 = AMR2.nodes.keySet -- bestMapping.keys
 
     // then the remainder get allocated entirely at random
     val remainder = (remainingNodes2 zip remainingNodes1).toMap
