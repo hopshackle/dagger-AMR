@@ -128,7 +128,17 @@ classifier == null                                //> res25: Boolean = true
  arrayTest.toList                                 //> res30: List[Int] = List(0, 1, 2, 3, -7, 89)
 "ARG0-of".substring(0, 4)                         //> res31: String = ARG0
 
-val hyphen = "-".r                                //> hyphen  : scala.util.matching.Regex = -
-hyphen.split("anti-terrorism")                    //> res32: Array[String] = Array(anti, terrorism)
-hyphen.split("--")                                //> res33: Array[String] = Array()
+  val hyphen = "-".r                              //> hyphen  : scala.util.matching.Regex = -
+  hyphen.split("anti-terrorism")                  //> res32: Array[String] = Array(anti, terrorism)
+  "anti-terrorism".split("-")                     //> res33: Array[String] = Array(anti, terrorism)
+  hyphen.split("--")                              //> res34: Array[String] = Array()
+  val negation = "^(un.*|in.*|il.*|anti.*)".r     //> negation  : scala.util.matching.Regex = ^(un.*|in.*|il.*|anti.*)
+  negation.findFirstIn("illegal")                 //> res35: Option[String] = Some(illegal)
+  negation.findFirstIn("Illegal")                 //> res36: Option[String] = None
+  negation.findFirstIn("toil")                    //> res37: Option[String] = None
+  val comparator = "(er|est)$".r                  //> comparator  : scala.util.matching.Regex = (er|est)$
+  comparator.findFirstIn("best")                  //> res38: Option[String] = Some(est)
+  comparator.findFirstIn("nester")                //> res39: Option[String] = Some(er)
+  comparator.findFirstIn("estevan")               //> res40: Option[String] = None
+        
 }

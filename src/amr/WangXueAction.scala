@@ -69,6 +69,12 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
     // label current node
     // pop current node from node stack
+    val conceptToUse = conceptIndex match {
+      case -2 => conf.currentGraph.nodeLemmas(conf.nodesToProcess.head) + "-01"  // VERB-FORM
+      case -1 => conf.currentGraph.nodeLemmas(conf.nodesToProcess.head)          // LEMMA
+      case 0 => conf.currentGraph.nodes(conf.nodesToProcess.head)                // WORD
+      case i => concept(i)
+    }
     val tree = conf.currentGraph.labelNode(conf.nodesToProcess.head, concept(conceptIndex))
     val newNodesToProcess = conf.nodesToProcess.tail
     val childrenOfNewNode = newNodesToProcess match {

@@ -13,8 +13,6 @@ object ImportConcepts {
   var amrFile: String = "C:\\AMR\\AMR2.txt"
   val quote = """"""".r
   val numbers = "[0-9.,]".r
-  val commonLemmas = List("the", "and", "a", "in", "of", "to")
-  // val commonLemmas: List[String] = List()
 
   lazy val relationStrings = loadRelations
   lazy val relationMaster = (for {
@@ -35,7 +33,7 @@ object ImportConcepts {
   lazy val conceptStrings = loadConcepts
   lazy val conceptMaster = (for {
     (concept, index) <- conceptStrings zipWithIndex
-  } yield ((index + 1) -> concept)).toMap + (0 -> "UNKNOWN")
+  } yield ((index + 1) -> concept)).toMap + (0 -> "WORD") + (-1 -> "LEMMA") + (-2 -> "VERB-FORM")
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   lazy val conceptsPerLemma = loadConceptsPerLemmaReduced

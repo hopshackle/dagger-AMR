@@ -32,8 +32,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   import WangXueFeatures._
 
   val random = new Random()
-  val numeric = "[0-9,.]".r
-  val hyphen = "-".r
   var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
   var cachedState: WangXueTransitionState = null
 
@@ -102,10 +100,15 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     }
 
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
-    val prefix = hyphen.split(sigmaLemma)
+    
+    if (sigmaWord.endsWith("er") || sigmaWord.endsWith("est")) add(hmap, "COMPARATOR")
+    if (sigmaWord.startsWith("un") || sigmaWord.startsWith("in") || sigmaWord.startsWith("il") || sigmaWord.startsWith("anti")) add(hmap, "NEGATION")
+
+    val prefix = sigmaWord.split("-")
     if (prefix.nonEmpty) {
       add(hmap, "PREFIX=" + prefix(0))
     }
+ 
     val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     if (sigmaPOS != "") add(hmap, "SIGMA-POS=" + sigmaPOS)
@@ -272,7 +275,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     for (bdl <- betaDL) add(hmap, "BETA-DL=" + bdl)
     if (!(betaDL contains label)) add(hmap, "SIGMA-BETA-LABEL=" + label)
 
-    val prefix = hyphen.split(betaLemma)
+    val prefix = betaLemma.split("-")
     if (prefix.nonEmpty) {
       add(hmap, "BETAPREFIX=" + prefix(0))
     }
