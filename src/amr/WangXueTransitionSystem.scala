@@ -54,7 +54,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       case Some(b) => Set()
       case None =>
         val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
-        if (preferKnown && wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
+        if (preferKnown && wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 ++ Set(0, -1, -2)
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 

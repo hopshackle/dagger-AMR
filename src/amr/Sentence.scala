@@ -121,10 +121,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def labelNode(node: Int, label: String): DependencyTree = {
-    // We account for the fact that if we have no idea of the concept, then using the actual word might just work
-    val oldValue = nodes.getOrElse(node, "UNKNOWN")
-    val newLabel = if (label == "UNKNOWN") oldValue else label
-    val newNodes = nodes + (node -> newLabel)
+    val newNodes = nodes + (node -> label)
     this.copy(nodes = newNodes)
   }
 

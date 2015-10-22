@@ -100,15 +100,16 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     }
 
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
-    
+
     if (sigmaWord.endsWith("er") || sigmaWord.endsWith("est")) add(hmap, "COMPARATOR")
     if (sigmaWord.startsWith("un") || sigmaWord.startsWith("in") || sigmaWord.startsWith("il") || sigmaWord.startsWith("anti")) add(hmap, "NEGATION")
 
     val prefix = sigmaWord.split("-")
-    if (prefix.nonEmpty) {
+    if (prefix.size > 1) {
       add(hmap, "PREFIX=" + prefix(0))
+      add(hmap, "SUFFIX=" + prefix(1))
     }
- 
+
     val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     if (sigmaPOS != "") add(hmap, "SIGMA-POS=" + sigmaPOS)
@@ -276,8 +277,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (!(betaDL contains label)) add(hmap, "SIGMA-BETA-LABEL=" + label)
 
     val prefix = betaLemma.split("-")
-    if (prefix.nonEmpty) {
+    if (prefix.size > 1) {
       add(hmap, "BETAPREFIX=" + prefix(0))
+      add(hmap, "BETASUFFIX=" + prefix(1))
     }
 
     if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")

@@ -83,6 +83,7 @@ class WangXueExpert extends WangXueExpertBasic {
       case (Some(sigmaAMR), _, beta, Some(betaAMR), true) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
       case (Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
+      case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
       case (Some(sigmaAMR), _, -1, _, _) =>
         val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
@@ -90,7 +91,18 @@ class WangXueExpert extends WangXueExpertBasic {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
           println(state.currentGraph.insertedNodes)
         }
-        val conceptToUse = if (!WangXueTransitionSystem.preferKnown && state.currentGraph.nodes(state.nodesToProcess.head) == concept) 0 else conceptIndex(concept)
+        val conceptToUse = if (!WangXueTransitionSystem.preferKnown) {
+          if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head))
+            -1
+          else if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head) + "-01")
+            -2
+          else if (concept == state.currentGraph.nodes(state.nodesToProcess.head))
+            0
+          else
+            conceptIndex(concept)
+        } else {
+          conceptIndex(concept)
+        }
         NextNode(conceptToUse)
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
