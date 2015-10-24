@@ -2,94 +2,101 @@ package amr
 
 object problematicAMR {
 
-val testData = AMRGraph.importFile("C:\\AMR\\TargetIAEA.txt")
-                                                  //> testData  : IndexedSeq[(String, String)] = Vector((IAEA accepted North Korea
-                                                  //| 's proposal last month but cautioned that the proposal is not a breakthrough
-                                                  //| .,(c / contrast-01 :ARG1 (a / accept-01 :ARG0 (o / organization :name (n / n
-                                                  //| ame :op1 "IAEA")) :ARG1 (t / thing :ARG1-of (p / propose-01 :ARG0 (c2 / coun
-                                                  //| try :name (n2 / name :op1 "North" :op2 "Korea")))) :time (m / month :mod (l 
-                                                  //| / last))) :ARG2 (c3 / caution-01 :ARG0 o :ARG1 (b / breakthrough-01 :domain 
-                                                  //| t :polarity -)))))
-  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@675d3402
+val testData = AMRGraph.importFile("C:\\AMR\\TargetBell.txt")
+                                                  //> testData  : IndexedSeq[(String, String)] = Vector((Bell Canada spokesman And
+                                                  //| rew Cole stated that Bell Canada is prepared and remains prepared for variou
+                                                  //| s potential situations and scenarios.,(s / state-01 :ARG0 (p3 / person :name
+                                                  //|  (n / name :op1 "Andrew" :op2 "Cole") :ARG0-of (h / have-org-role-91 :ARG1 (
+                                                  //| c / company :name (n2 / name :op1 "Bell" :op2 "Canada")) :ARG2 (s2 / spokesm
+                                                  //| an))) :ARG1 (a / and :op1 (p / prepare-02 :ARG1 c :ARG2 (a2 / and :op1 (s3 /
+                                                  //|  situation) :op2 (s4 / scenario) :mod (p2 / potential) :quant (v / various))
+                                                  //| ) :op2 (r / remain-01 :ARG1 c :ARG3 p)))))
+  val expert = new WangXueExpert                  //> expert  : amr.WangXueExpert = amr.WangXueExpert@2a5ca609
   val expertSystem = WangXueTransitionSystem      //> expertSystem  : amr.WangXueTransitionSystem.type = amr.WangXueTransitionSyst
-                                                  //| em$@d8355a8
+                                                  //| em$@4c70fda8
   AMRGraph.setAligner("improved")
   expertSystem.reentrance = true
-  ImportConcepts.initialise("C:\\AMR\\TargetIAEA.txt")
+  ImportConcepts.initialise("C:\\AMR\\TargetBell.txt")
 // ImportConcepts.relationString
   val s1 = Sentence(testData(0)._1, testData(0)._2)
                                                   //> Adding annotator tokenize
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.1 sec].
+                                                  //| hPCFG.ser.gz ... done [1.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
                                                   //| im.crf.ser.gz ... done [4.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.2 sec].
+                                                  //| im.crf.ser.gz ... done [3.7 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.0 sec].
-                                                  //| s1  : amr.Sentence = Sentence(IAEA accepted North Korea's proposal last mont
-                                                  //| h but cautioned that the proposal is not a breakthrough.,
-                                                  //| NodeMap:	Map(1 -> IAEA, 2 -> accepted, 3 -> North, 4 -> Korea, 5 -> 's, 6
-                                                  //|  -> proposal, 7 -> last, 8 -> month, 9 -> but, 10 -> cautioned, 11 -> that, 
-                                                  //| 12 -> the, 13 -> proposal, 14 -> is, 15 -> not, 16 -> a, 17 -> breakthrough)
-                                                  //| 
+                                                  //| tsim.crf.ser.gz ... done [2.7 sec].
+                                                  //| s1  : amr.Sentence = Sentence(Bell Canada spokesman Andrew Cole stated that 
+                                                  //| Bell Canada is prepared and remains prepared for various potential situation
+                                                  //| s and scenarios.,
+                                                  //| NodeMap:	Map(1 -> Bell, 2 -> Canada, 3 -> spokesman, 4 -> Andrew, 5 -> Co
+                                                  //| le, 6 -> stated, 7 -> that, 8 -> Bell, 9 -> Canada, 10 -> is, 11 -> prepared
+                                                  //| , 12 -> and, 13 -> remains, 14 -> prepared, 15 -> for, 16 -> various, 17 -> 
+                                                  //| potential, 18 -> situations, 19 -> and, 20 -> scenarios)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
                                                   //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
                                                   //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16), 16 -> (16,17)
-                                                  //| , 17 -> (17,18))
-                                                  //| Edges:	Map((2,1) -> nsubj, (2,6) -> dobj, (2,8) -> tmod, (2,9) -> cc, (
-                                                  //| 2,10) -> conj, (4,3) -> nn, (4,5) -> possessive, (6,4) -> poss, (8,7) -> amo
-                                                  //| d, (10,17) -> ccomp, (13,12) -> det, (17,11) -> mark, (17,13) -> nsubj, (17,
-                                                  //| 14) -> cop, (17,15) -> neg, (17,16) -> det)
+                                                  //| , 17 -> (17,18), 18 -> (18,19), 19 -> (19,20), 20 -> (20,21))
+                                                  //| Edges:	Map((5,1) -> nn, (5,2) -> nn, (5,3) -> nn, (5,4) -> nn, (6,5) ->
+                                                  //|  nsubj, (6,11) -> ccomp, (6,12) -> cc, (6,14) -> conj, (9,8) -> nn, (11,7) -
+                                                  //| > mark, (11,9) -> nsubj, (11,10) -> cop, (14,13) -> cop, (14,15) -> prep, (1
+                                                  //| 5,18) -> pobj, (18,16) -> amod, (18,17) -> amod, (18,19) -> cc, (18,20) -> c
+                                                  //| onj)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| DeletedNodes:	Map(),Some(AMRGraph(Map(0.1 -> caution-01, 0.0.1.0.0.0 -
-                                                  //| > name, 0.0.0 -> organization, 0.1.0 -> breakthrough-01, 0.0.1.0 -> propose-
-                                                  //| 01, 0.0.1.0.0.0.1 -> "Korea", 0.0 -> accept-01, 0.0.1.0.0.0.0 -> "North", 0.
-                                                  //| 0.2 -> month, 0.0.0.0 -> name, 0.0.1 -> thing, 0.1.0.0 -> -, 0.0.1.0.0 -> co
-                                                  //| untry, 0 -> contrast-01, 0.0.0.0.0 -> "IAEA", 0.0.2.0 -> last),Map(0.1 -> (1
-                                                  //| 0,11), 0.0.1.0.0.0 -> (3,5), 0.0.0 -> (1,2), 0.1.0 -> (17,18), 0.0.1.0 -> (1
-                                                  //| 3,14), 0.0.1.0.0.0.1 -> (3,5), 0.0 -> (2,3), 0.0.1.0.0.0.0 -> (3,5), 0.0.2 -
-                                                  //| > (8,9), 0.0.0.0 -> (1,2), 0.0.1 -> (13,14), 0.0.1.0.0 -> (3,5), 0 -> (9,10)
-                                                  //| , 0.0.0.0.0 -> (1,2), 0.0.2.0 -> (7,8)),Map((0.0.1.0.0.0,0.0.1.0.0.0.1) -> o
-                                                  //| pN, (0.0,0.0.0) -> ARG0, (0.0.1.0.0,0.0.1.0.0.0) -> name, (0.0.0.0,0.0.0.0.0
-                                                  //| ) -> opN, (0.0.0,0.0.0.0) -> name, (0.1,0.1.0) -> ARG1, (0.1.0,
+                                                  //| DeletedNodes:	Map(),Some(AMRGraph(Map(0.1 -> and, 0.0.1.0.0.0 -> "Bell
+                                                  //| ", 0.0.0 -> name, 0.1.0.0.3 -> various, 0.1.0 -> prepare-02, 0.0.1.0 -> comp
+                                                  //| any, 0.1.0.0.0 -> situation, 0.0 -> person, 0.0.0.0 -> "Andrew", 0.1.0.0.1 -
+                                                  //| > scenario, 0.0.1.1 -> spokesman, 0.0.1 -> have-org-role-91, 0.1.0.0 -> and,
+                                                  //|  0.0.1.0.0 -> name, 0.1.0.0.2 -> potential, 0 -> state-01, 0.0.0.1 -> "Cole"
+                                                  //| , 0.0.1.0.0.1 -> "Canada", 0.1.1 -> remain-01),Map(0.1 -> (12,13), 0.0.1.0.0
+                                                  //| .0 -> (8,10), 0.0.0 -> (4,6), 0.1.0.0.3 -> (16,17), 0.1.0 -> (14,15), 0.0.1.
+                                                  //| 0 -> (8,10), 0.1.0.0.0 -> (18,19), 0.0 -> (4,6), 0.0.0.0 -> (4,6), 0.1.0.0.1
+                                                  //|  -> (20,21), 0.0.1.1 -> (3,4), 0.1.0.0 ->
                                                   //| Output exceeds cutoff limit.
   var state = expertSystem.init(s1)               //> state  : amr.WangXueTransitionState = 
-                                                  //| NodesToGo:	List(12, 13, 14, 15, 11, 16, 5, 3, 17, 7, 4, 10, 8, 6, 9, 1, 2)
+                                                  //| NodesToGo:	List(19, 17, 20, 16, 18, 8, 13, 15, 2, 1, 4, 3, 7, 10, 9, 14, 5,
+                                                  //|  11, 12, 6)
                                                   //| Children:	List()
                                                   //| PartialGraph:	
-                                                  //| NodeMap:	Map(1 -> IAEA, 2 -> accepted, 3 -> North, 4 -> Korea, 5 -> 's, 6
-                                                  //|  -> proposal, 7 -> last, 8 -> month, 9 -> but, 10 -> cautioned, 11 -> that, 
-                                                  //| 12 -> the, 13 -> proposal, 14 -> is, 15 -> not, 16 -> a, 17 -> breakthrough)
-                                                  //| 
+                                                  //| NodeMap:	Map(1 -> Bell, 2 -> Canada, 3 -> spokesman, 4 -> Andrew, 5 -> Co
+                                                  //| le, 6 -> stated, 7 -> that, 8 -> Bell, 9 -> Canada, 10 -> is, 11 -> prepared
+                                                  //| , 12 -> and, 13 -> remains, 14 -> prepared, 15 -> for, 16 -> various, 17 -> 
+                                                  //| potential, 18 -> situations, 19 -> and, 20 -> scenarios)
                                                   //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 
                                                   //| 6 -> (6,7), 7 -> (7,8), 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 11 -> (11,12
                                                   //| ), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 15 -> (15,16), 16 -> (16,17)
-                                                  //| , 17 -> (17,18))
-                                                  //| Edges:	Map((2,1) -> nsubj, (2,6) -> dobj, (2,8) -> tmod, (2,9) -> cc, (
-                                                  //| 2,10) -> conj, (4,3) -> nn, (4,5) -> possessive, (6,4) -> poss, (8,7) -> amo
-                                                  //| d, (10,17) -> ccomp, (13,12) -> det, (17,11) -> mark, (17,13) -> nsubj, (17,
-                                                  //| 14) -> cop, (17,15) -> neg, (17,16) -> det)
+                                                  //| , 17 -> (17,18), 18 -> (18,19), 19 -> (19,20), 20 -> (20,21))
+                                                  //| Edges:	Map((5,1) -> nn, (5,2) -> nn, (5,3) -> nn, (5,4) -> nn, (6,5) ->
+                                                  //|  nsubj, (6,11) -> ccomp, (6,12) -> cc, (6,14) -> conj, (9,8) -> nn, (11,7) -
+                                                  //| > mark, (11,9) -> nsubj, (11,10) -> cop, (14,13) -> cop, (14,15) -> prep, (1
+                                                  //| 5,18) -> pobj, (18,16) -> amod, (18,17) -> amod, (18,19) -> cc, (18,20) -> c
+                                                  //| onj)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
                                                   //| DeletedNodes:	Map()
-                                                  //| Mappings:	10 -> 0.1
-                                                  //| 1 -> 0.0.0.0.0
-                                                  //| 9 -> 0
-                                                  //| 13 -> 0.0.1.0
-                                                  //| 2 -> 0.0
-                                                  //| 17 -> 0.1.0
-                                                  //| 7 -> 0.0.2.0
-                                                  //| 3 -> 0.0.1.0.0.0.0
-                                                  //| 8 -> 0.0.2
-                                                  //| 4 -> 0.0.1.0.0.0.1
+                                                  //| Mappings:	5 -> 0.0.0.1
+                                                  //| 14 -> 0.1.0
+                                                  //| 20 -> 0.1.0.0.1
+                                                  //| 6 -> 0
+                                                  //| 9 -> 0.0.1.0.0.1
+                                                  //| 13 -> 0.1.1
+                                                  //| 17 -> 0.1.0.0.2
+                                                  //| 12 -> 0.1
+                                                  //| 3 -> 0.0.1.1
+                                                  //| 18 -> 0.1.0.0.0
+                                                  //| 16 -> 0.1.0.0.3
+                                                  //| 8 -> 0.0.1.0.0.0
+                                                  //| 19 -> 0.1.0.0
+                                                  //| 4 -> 0.0.0.0
                                                   //| 
   val action = new Array[WangXueAction](301)      //> action  : Array[amr.WangXueAction] = Array(null, null, null, null, null, nul
                                                   //| l, null, null, null, null, null, null, null, null, null, null, null, null, n
@@ -142,24 +149,27 @@ val testData = AMRGraph.importFile("C:\\AMR\\TargetIAEA.txt")
                                                   //| null, null, null, null, null, null, null, null, null, null, null, null, null
                                                   //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
                                                   //| ll, null, null, null, null, null, null)
-  s1.positionToAMR                                //> res0: Map[Int,String] = Map(10 -> 0.1, 1 -> 0.0.0.0.0, 9 -> 0, 13 -> 0.0.1.0
-                                                  //| , 2 -> 0.0, 17 -> 0.1.0, 7 -> 0.0.2.0, 3 -> 0.0.1.0.0.0.0, 8 -> 0.0.2, 4 -> 
-                                                  //| 0.0.1.0.0.0.1)
-  s1.amr.get.nodes                                //> res1: Map[String,String] = Map(0.1 -> caution-01, 0.0.1.0.0.0 -> name, 0.0.0
-                                                  //|  -> organization, 0.1.0 -> breakthrough-01, 0.0.1.0 -> propose-01, 0.0.1.0.0
-                                                  //| .0.1 -> "Korea", 0.0 -> accept-01, 0.0.1.0.0.0.0 -> "North", 0.0.2 -> month,
-                                                  //|  0.0.0.0 -> name, 0.0.1 -> thing, 0.1.0.0 -> -, 0.0.1.0.0 -> country, 0 -> c
-                                                  //| ontrast-01, 0.0.0.0.0 -> "IAEA", 0.0.2.0 -> last)
-  s1.amr.get.arcs                                 //> res2: Map[(String, String),String] = Map((0.0.1.0.0.0,0.0.1.0.0.0.1) -> opN,
-                                                  //|  (0.0,0.0.0) -> ARG0, (0.0.1.0.0,0.0.1.0.0.0) -> name, (0.0.0.0,0.0.0.0.0) -
-                                                  //| > opN, (0.0.0,0.0.0.0) -> name, (0.1,0.1.0) -> ARG1, (0.1.0,0.1.0.0) -> pola
-                                                  //| rity, (0.0.2,0.0.2.0) -> mod, (0,0.1) -> ARG2, (0.0,0.0.2) -> time, (0.1.0,0
-                                                  //| .0.1) -> domain, (0.1,0.0.0) -> ARG0, (0,0.0) -> ARG1, (0.0.1,0.0.1.0) -> AR
-                                                  //| G1-of, (0.0.1.0,0.0.1.0.0) -> ARG0, (0.0,0.0.1) -> ARG1, (0.0.1.0.0.0,0.0.1.
-                                                  //| 0.0.0.0) -> opN)
+  s1.positionToAMR                                //> res0: Map[Int,String] = Map(5 -> 0.0.0.1, 14 -> 0.1.0, 20 -> 0.1.0.0.1, 6 ->
+                                                  //|  0, 9 -> 0.0.1.0.0.1, 13 -> 0.1.1, 17 -> 0.1.0.0.2, 12 -> 0.1, 3 -> 0.0.1.1,
+                                                  //|  18 -> 0.1.0.0.0, 16 -> 0.1.0.0.3, 8 -> 0.0.1.0.0.0, 19 -> 0.1.0.0, 4 -> 0.0
+                                                  //| .0.0)
+  s1.amr.get.nodes                                //> res1: Map[String,String] = Map(0.1 -> and, 0.0.1.0.0.0 -> "Bell", 0.0.0 -> n
+                                                  //| ame, 0.1.0.0.3 -> various, 0.1.0 -> prepare-02, 0.0.1.0 -> company, 0.1.0.0.
+                                                  //| 0 -> situation, 0.0 -> person, 0.0.0.0 -> "Andrew", 0.1.0.0.1 -> scenario, 0
+                                                  //| .0.1.1 -> spokesman, 0.0.1 -> have-org-role-91, 0.1.0.0 -> and, 0.0.1.0.0 ->
+                                                  //|  name, 0.1.0.0.2 -> potential, 0 -> state-01, 0.0.0.1 -> "Cole", 0.0.1.0.0.1
+                                                  //|  -> "Canada", 0.1.1 -> remain-01)
+  s1.amr.get.arcs                                 //> res2: Map[(String, String),String] = Map((0.0,0.0.0) -> name, (0.0.1.0.0,0.0
+                                                  //| .1.0.0.0) -> opN, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> opN, (0.0.1.0.0,0.0
+                                                  //| .1.0.0.1) -> opN, (0.1.0.0,0.1.0.0.2) -> mod, (0.1.0.0,0.1.0.0.3) -> quant, 
+                                                  //| (0.1.0,0.1.0.0) -> ARG2, (0.1.0,0.0.1.0) -> ARG1, (0,0.1) -> ARG1, (0.0.0,0.
+                                                  //| 0.0.1) -> opN, (0.0.1,0.0.1.1) -> ARG2, (0.1.0.0,0.1.0.0.0) -> opN, (0.1.1,0
+                                                  //| .0.1.0) -> ARG1, (0.1.0.0,0.1.0.0.1) -> opN, (0,0.0) -> ARG0, (0.0.1,0.0.1.0
+                                                  //| ) -> ARG1, (0.0.1.0,0.0.1.0.0) -> name, (0.1.1,0.1.0) -> ARG3, (0.0,0.0.1) -
+                                                  //| > ARG0-of, (0.1,0.1.1) -> opN)
   import java.io._
-  val file = new FileWriter("C://AMR//i4_output.txt")
-                                                  //> file  : java.io.FileWriter = java.io.FileWriter@222a59e6
+  val file = new FileWriter("C://AMR//Bell_improved.txt")
+                                                  //> file  : java.io.FileWriter = java.io.FileWriter@23202fce
   for (i <- 0 to 300) {
     if (!expertSystem.isTerminal(state)) {
       stateHistory(i) = state
@@ -175,37 +185,40 @@ val testData = AMRGraph.importFile("C:\\AMR\\TargetIAEA.txt")
   }
   file.close
   val outputAdv = RunDagger.sampleTrajectory(s1, "C:\\AMR\\WangXueExpert_output.txt", new WangXueExpert)
-                                                  //> outputAdv  : amr.Sentence = Sentence(IAEA accepted North Korea's proposal l
-                                                  //| ast month but cautioned that the proposal is not a breakthrough.,
-                                                  //| NodeMap:	Map(1 -> IAEA, 2 -> accept-01, 3 -> North, 4 -> Korea, 7 -> last
-                                                  //| , 8 -> month, 9 -> contrast-01, 10 -> caution-01, 13 -> propose-01, 17 -> b
-                                                  //| reakthrough-01, 18 -> thing, 19 -> name, 20 -> country, 21 -> -, 22 -> name
-                                                  //| , 23 -> organization)
-                                                  //| SpanMap:	Map(1 -> (1,2), 2 -> (2,3), 3 -> (3,4), 4 -> (4,5), 7 -> (7,8), 
-                                                  //| 8 -> (8,9), 9 -> (9,10), 10 -> (10,11), 13 -> (13,14), 17 -> (17,18), 18 ->
-                                                  //|  (13,14), 19 -> (3,4), 20 -> (3,6), 21 -> (17,18), 22 -> (1,2), 23 -> (1,2)
-                                                  //| )
-                                                  //| Edges:	Map((2,8) -> time, (2,18) -> ARG1, (2,23) -> ARG0, (8,7) -> mod,
-                                                  //|  (9,2) -> ARG1, (9,10) -> ARG2, (10,17) -> ARG1, (13,20) -> ARG0, (17,18) -
-                                                  //| > domain, (17,21) -> polarity, (18,13) -> ARG1-of, (19,3) -> opN, (19,4) ->
-                                                  //|  opN, (20,19) -> name, (22,1) -> opN, (23,22) -> name)
-                                                  //| InsertedNodes:	Map(20 -> 0.0.1.0.0, 21 -> 0.1.0.0, 22 -> 0.0.0.0, 18 ->
-                                                  //|  0.0.1, 23 -> 0.0.0, 19 -> 0.0.1.0.0.0)
-                                                  //| MergedNodes:	Map(20 -> List((6,proposal)))
-                                                  //| SwappedArcs:	Set((4,20), (2,9))
-                                                  //| DeletedNodes:	Map(13 -> List((12,the)), 17 -> List((16,a), (11,that), 
-                                                  //| (15,not), (14,is)), 4 -> List((5,'s))),Some(AMRGraph(Map(8 -> month, 19 -> 
-                                                  //| name, 23 -> organization, 4 -> "Korea", 9 -> contrast-01, 22 -> name, 13 ->
-                                                  //|  propose-01, 10 -> caution-01, 21 -> -, 1 -> "IAEA", 17 -> breakthrough-01,
-                                                  //|  20 -> country, 2 -> accept-01, 18 -> thing, 7 -> last, 3 -> "North"),Map(8
-                                                  //|  -> (8,9), 19 -> (3,4), 23 -> (1,2), 4 -> (4,5), 9 -> (9,10), 22 -> (1,2), 
-                                                  //| 13 -> (13,14), 10 -> (10,11), 21 -> (17,18), 1 -> (1,2), 17 -> (17,18), 20 
-                                                  //| -> (3,6), 2 -> (2,3), 18 -> (13,14), 7 -> (7,8), 3 -> (3,4)),Map((2,8) -> t
-                                                  //| ime, (19,3) -> opN, (9,10) -> ARG2, (23,22) -> name, (2,23) -> ARG0, (10,17
-                                                  //| ) -> ARG1, (19,4) -> opN, (13,20) -> ARG0, (9,2) -> ARG1, (17,21) -> polari
-                                                  //| ty, (2,18) -> ARG1, (20,19) -> name, (22,1) -> opN, (18,13) -> ARG1-of, (17
-                                                  //| ,18) -> domain, (8,7) -> mod),Map(),List())),Map(10 -> 10, 20 -> 20, 1 -> 1
-                                                  //| , 21 -> 21, 9 -> 9, 13 -> 13, 2 -> 2, 17 -> 17, 22 -> 22, 7 -> 7, 3 -> 3, 1
-                                                  //| 8 -> 18, 23 -> 23, 8 -> 8, 19 -> 19, 4 -> 4))
+                                                  //> outputAdv  : amr.Sentence = Sentence(Bell Canada spokesman Andrew Cole stat
+                                                  //| ed that Bell Canada is prepared and remains prepared for various potential 
+                                                  //| situations and scenarios.,
+                                                  //| NodeMap:	Map(3 -> spokesman, 4 -> Andrew, 5 -> Cole, 6 -> state-01, 8 -> 
+                                                  //| Bell, 9 -> Canada, 12 -> and, 13 -> remain-01, 14 -> prepare-02, 16 -> vari
+                                                  //| ous, 17 -> potential, 18 -> situation, 19 -> and, 20 -> scenario, 21 -> nam
+                                                  //| e, 22 -> company, 23 -> have-org-role-91, 24 -> person, 25 -> name)
+                                                  //| SpanMap:	Map(3 -> (3,4), 4 -> (4,5), 5 -> (5,6), 6 -> (6,7), 8 -> (8,9), 
+                                                  //| 9 -> (9,10), 12 -> (12,13), 13 -> (13,14), 14 -> (14,15), 16 -> (16,17), 17
+                                                  //|  -> (17,18), 18 -> (18,19), 19 -> (15,19), 20 -> (20,21), 21 -> (8,9), 22 -
+                                                  //| > (8,9), 23 -> (8,9), 24 -> (8,11), 25 -> (4,5))
+                                                  //| Edges:	Map((6,12) -> ARG1, (6,24) -> ARG0, (12,13) -> opN, (12,14) -> o
+                                                  //| pN, (13,14) -> ARG3, (14,19) -> ARG2, (19,16) -> quant, (19,17) -> mod, (19
+                                                  //| ,18) -> opN, (19,20) -> opN, (21,8) -> opN, (21,9) -> opN, (22,21) -> name,
+                                                  //|  (23,3) -> ARG2, (23,22) -> ARG1, (24,23) -> ARG0-of, (24,25) -> name, (25,
+                                                  //| 4) -> opN, (25,5) -> opN)
+                                                  //| InsertedNodes:	Map(24 -> 0.0, 25 -> 0.0.0, 21 -> 0.0.1.0.0, 22 -> 0.0.1
+                                                  //| .0, 23 -> 0.0.1)
+                                                  //| MergedNodes:	Map(19 -> List((15,for)), 24 -> List((11,prepared)))
+                                                  //| SwappedArcs:	Set((18,19), (9,24), (14,13), (5,25))
+                                                  //| DeletedNodes:	Map(5 -> List((1,Bell), (2,Canada)), 11 -> List((10,is),
+                                                  //|  (7,that))),Some(AMRGraph(Map(12 -> and, 8 -> "Bell", 19 -> and, 23 -> have
+                                                  //| -org-role-91, 4 -> "Andrew", 9 -> "Canada", 22 -> company, 13 -> remain-01,
+                                                  //|  24 -> person, 16 -> various, 5 -> "Cole", 21 -> name, 6 -> state-01, 17 ->
+                                                  //|  potential, 25 -> name, 14 -> prepare-02, 20 -> scenario, 18 -> situation, 
+                                                  //| 3 -> spokesman),Map(12 -> (12,13), 8 -> (8,9), 19 -> (15,19), 23 -> (8,9), 
+                                                  //| 4 -> (4,5), 9 -> (9,10), 22 -> (8,9), 13 -> (13,14), 24 -> (8,11), 16 -> (1
+                                                  //| 6,17), 5 -> (5,6), 21 -> (8,9), 6 -> (6,7), 17 -> (17,18), 25 -> (4,5), 14 
+                                                  //| -> (14,15), 20 -> (20,21), 18 -> (18,19), 3 -> (3,4)),Map((6,12) -> ARG1, (
+                                                  //| 25,4) -> opN, (23,22) -> ARG1, (12,13) -> opN, (6,24) -> ARG0, (19,17) -> m
+                                                  //| od, (24,23) -> ARG0-of, (19,18) -> opN, (19,20) -> opN, (19,16) -> quant, (
+                                                  //| 14,19) -> ARG2, (21,8) -> opN, (21,9) -> opN, (25,5) -> opN, (23,3) -> ARG2
+                                                  //| , (13,14) -> ARG3, (22,21) -> name, (24,25) -> name, (12,14) -> opN),Map(),
+                                                  //| List())),Map(5 -> 5, 24 -> 24, 25 -> 25, 14 -> 14, 20 -> 20, 6 -> 6
+                                                  //| Output exceeds cutoff limit.
      
 }

@@ -116,6 +116,11 @@ class WangXueExpert extends WangXueExpertBasic {
           val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
           if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
         } else NextEdge(0)
+      case (None, _, beta, Some(betaAMR), false) =>
+        if (allNodesAMR contains betaAMRParents.head) {
+          val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
+          if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
+        } else NextEdge(0)
       case (_, _, beta, _, _) if beta > -1 => NextEdge(0)
       case (_, _, _, _, _) => NextNode(0)
     }

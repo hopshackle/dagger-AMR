@@ -19,9 +19,8 @@ object generalPlay {
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
-                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
-                                                  //| , 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
+                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -42,7 +41,8 @@ object generalPlay {
   val date1 = """((19|20)\d\d)[- /.]((0[1-9]|1[012]))[- /.]((0[1-9]|[12][0-9]|3[01]))""".r
                                                   //> date1  : scala.util.matching.Regex = ((19|20)\d\d)[- /.]((0[1-9]|1[012]))[- 
                                                   //| /.]((0[1-9]|[12][0-9]|3[01]))
-  val redDate = """(\d\d\d\d)-(\d\d)-(\d\d)""".r  //> redDate  : scala.util.matching.Regex = (\d\d\d\d)-(\d\d)-(\d\d)
+  val redDate = """\b((?:19|20)\d\d)-(\d\d)-(\d\d)\b""".r
+                                                  //> redDate  : scala.util.matching.Regex = \b((?:19|20)\d\d)-(\d\d)-(\d\d)\b
   val redDate2 = """(\d\d\d\d)(\d\d)(\d\d)""".r   //> redDate2  : scala.util.matching.Regex = (\d\d\d\d)(\d\d)(\d\d)
   val testDate = "The Date was 2001-12-01."       //> testDate  : String = The Date was 2001-12-01.
   val (year, month, day) = testDate match {
