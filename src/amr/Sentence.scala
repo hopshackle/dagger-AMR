@@ -105,7 +105,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
-  nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
+  nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], depLabels: Map[Int, String], reattachedNodes: List[Int],
   insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
@@ -140,6 +140,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // So we to add a new node as a parent, remove the edge from the current node to its current parent, and insert two new edges
     // ...parent to new, and new to current
     // we assign a nodeSpan to the new node to match its child
+    // we also take the DL and POS labelling and from old parent to child to be between old parent and new node
     val newNode = nodes.keys.max + 1
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
@@ -147,6 +148,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
       nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
+      nodePOS = this.nodePOS + (newNode -> this.nodePOS(node)), depLabels = this.depLabels + (newNode -> this.depLabels(node)), 
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {
@@ -416,7 +418,8 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set(), Map())
+    val depLabels = arcs map { case ((from, to), label) => (to, label)}  // as we have a tree at this point
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, depLabels, List(), Map(), Map(), Set(), Map())
   }
 
   def convertMonth(input: Option[String]): Option[String] = {
@@ -523,7 +526,7 @@ object AMRGraph {
     val tokenisedSentence = DependencyTree.preProcess(rawSentence)
     val amr = Graph.parse(rawAMR)
     val wordAlignments = if (useImprovedAligner)
-      AlignTest.alignWords(tokenisedSentence.toArray, amr, useWordNet)
+      AlignTest.alignWords(rawSentence, tokenisedSentence.toArray, amr, useWordNet)
     else
       AlignWords.alignWords(tokenisedSentence.toArray, amr)
 

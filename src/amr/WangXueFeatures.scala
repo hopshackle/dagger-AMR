@@ -117,8 +117,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (sigmaWord != sigmaLemma && includeWords) add(hmap, "SIGMA-WORD=" + sigmaWord)
     if (sigmaNER != "") add(hmap, "SIGMA-NER=" + sigmaNER)
     if (sigmaInserted) add(hmap, "SIGMA-INSERTED")
-    val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
-    for (sdl <- sigmaDL) add(hmap, "SIGMA-DL=" + sdl)
+    val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
+    add(hmap, "SIGMA-DL=" + sigmaDL)
 
     val mergedNodes = state.currentGraph.mergedNodes.get(sigma) match {
       case None => Nil
@@ -153,7 +153,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             val parentLemma = state.currentGraph.nodeLemmas.getOrElse(parent, "")
             val parentNER = state.currentGraph.nodeNER.getOrElse(parent, "")
             val parentPOS = state.currentGraph.nodePOS.getOrElse(parent, "")
-            val parentDL = state.startingDT.edgesToParents(parent) map state.startingDT.arcs
+            val parentDL = state.currentGraph.depLabels.getOrElse(parent, "") // state.startingDT.edgesToParents(parent) map state.startingDT.arcs
             if (state.currentGraph.insertedNodes contains parent) {
               add(hmap, "PARENT-INSERTED=" + parentWord)
               if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
@@ -169,14 +169,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             if (parentLemma != parentWord && includeWords) add(hmap, "PARENT-WORD=" + parentWord)
             if (parentPOS != "") add(hmap, "PARENT-POS=" + parentPOS)
             if (parentNER != "") add(hmap, "PARENT-NER=" + parentNER)
-            for (pdl <- parentDL) add(hmap, "PARENT-DL=" + pdl)
+            add(hmap, "PARENT-DL=" + parentDL)
             if (!quadraticTurbo) {
               if (includeWords) add(hmap, "PARENT-SIGMA-WORDS=" + parentWord + "-" + sigmaWord)
               add(hmap, "PARENT-SIGMA-LEMMAS=" + parentLemma + "-" + sigmaLemma)
               if (parentLemma != "" && sigmaPOS != "") add(hmap, "PARENT-LEMMA-SIGMA-POS=" + parentLemma + "-" + sigmaPOS)
               if (parentPOS != "" && sigmaLemma != "") add(hmap, "PARENT-POS-SIGMA-LEMMA=" + parentPOS + "-" + sigmaLemma)
-              if (parentDL.nonEmpty && sigmaLemma != "") for (pdl <- parentDL) add(hmap, "PARENT-DL-SIGMA-LEMMA=" + pdl + "-" + sigmaLemma)
-              if (parentLemma != "" && sigmaDL.nonEmpty) for (sdl <- sigmaDL) add(hmap, "PARENT-LEMMA-SIGMA-DL=" + parentLemma + "-" + sdl)
+              if (parentDL != "" && sigmaLemma != "") add(hmap, "PARENT-DL-SIGMA-LEMMA=" + parentDL + "-" + sigmaLemma)
+              if (parentLemma != "" && sigmaDL != "") add(hmap, "PARENT-LEMMA-SIGMA-DL=" + parentLemma + "-" + sigmaDL)
               if (parentNER != "" && sigmaNER != "") add(hmap, "PARENT-SIGMA-NER=" + parentNER + "-" + sigmaNER)
             }
         }
@@ -224,8 +224,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val label = state.currentGraph.arcs((sigma, beta))
-    val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
-    val betaDL = state.startingDT.edgesToParents(beta) map state.startingDT.arcs
+    val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "")// state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
+    val betaDL = state.currentGraph.depLabels.getOrElse(beta, "") // state.startingDT.edgesToParents(beta) map state.startingDT.arcs
     val sigmaParents = state.currentGraph.parentsOf(sigma)
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
     assert(sigmaWord != "!!??", "Sigma not found: " + state)
@@ -258,8 +258,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       if (sigmaLemma != "" && betaPOS != "") add(hmap, "SIGMA-LEMMA-BETA-POS=" + sigmaLemma + "-" + betaPOS)
       if (sigmaLemma != "" && label != "") add(hmap, "SIGMA-LEMMA-BETA-DL=" + sigmaLemma + "-" + label)
       if (sigmaPOS != "" && betaLemma != "") add(hmap, "SIGMA-POS-BETA-LEMMA=" + sigmaPOS + "-" + betaLemma)
-      if (sigmaDL.nonEmpty && betaLemma != "") for (sdl <- sigmaDL) add(hmap, "SIGMA-DL-BETA-LEMMA=" + sdl + "-" + betaLemma)
-      if (sigmaLemma != "" && betaDL.nonEmpty) for (bdl <- betaDL) add(hmap, "BETA-DL-SIGMA-LEMMA=" + bdl + "-" + betaLemma)
+      if (sigmaDL != "" && betaLemma != "") add(hmap, "SIGMA-DL-BETA-LEMMA=" + sigmaDL + "-" + betaLemma)
+      if (sigmaLemma != "" && betaDL != "") add(hmap, "BETA-DL-SIGMA-LEMMA=" + betaDL + "-" + betaLemma)
       if (sigmaLemma != "" && label != "") add(hmap, "SIGMA-LEMMA-LABEL=" + sigmaLemma + "-" + label)
       if (betaLemma != "" && label != "") add(hmap, "LABEL-BETA-LEMMA=" + label + "-" + betaLemma)
       if (sigmaNER != "" && betaNER != "") add(hmap, "SIGMA-BETA-NER=" + sigmaNER + "-" + betaNER)
@@ -273,8 +273,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (betaLemma != "") add(hmap, "BETA-LEMMA=" + betaLemma)
     if (betaLemma != betaWord) add(hmap, "BETA-WORD=" + betaWord)
     if (betaNER != "") add(hmap, "BETA-NER=" + betaNER)
-    for (bdl <- betaDL) add(hmap, "BETA-DL=" + bdl)
-    if (!(betaDL contains label)) add(hmap, "SIGMA-BETA-LABEL=" + label)
+    if (betaDL != "") add(hmap, "BETA-DL=" + betaDL)
+    if (betaDL != label) add(hmap, "SIGMA-BETA-LABEL=" + label)
 
     val prefix = betaLemma.split("-")
     if (prefix.size > 1) {
@@ -317,17 +317,17 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (kappaNER != "") add(hmap, "KAPPA-NER=" + kappaNER)
     if (kappaPOS != "") add(hmap, "KAPPA-POS=" + kappaPOS)
     if (kappaLemma != "") add(hmap, "KAPPA-LEMMA=" + kappaLemma)
-    if (kappaWord != kappaLemma) add(hmap, "KAPPA-WORD=" + kappaWord)
+    if (includeWords && kappaWord != kappaLemma) add(hmap, "KAPPA-WORD=" + kappaWord)
     //    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
     //    add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
     //    if (kappaPOS != "" && betaPOS != "") add(hmap, "KAPPA-BETA-POS=" + kappaPOS + "-" + betaPOS)
     //    if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
 
-    val kappaDL = state.startingDT.edgesToParents(parameterNode) map state.startingDT.arcs
+    val kappaDL = state.currentGraph.depLabels.getOrElse(parameterNode, "") // state.startingDT.edgesToParents(parameterNode) map state.startingDT.arcs
     val kappaParents = state.currentGraph.parentsOf(parameterNode)
     val kappaLabels = kappaParents map (state.currentGraph.arcs(_, parameterNode))
-    for (kl <- kappaLabels) add(hmap, "KAPPA-LABEL=" + kl)
-    for (kdl <- kappaDL) add(hmap, "KAPPA-DL=" + kdl)
+    for (kl <- kappaLabels) if (kl != kappaDL) add(hmap, "KAPPA-LABEL=" + kl)
+    if (kappaDL != "") add(hmap, "KAPPA-DL=" + kappaDL)
 
     betaOption match {
       case Some(beta) =>
@@ -347,14 +347,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         }
         add(hmap, "KAPPA-BETA-DISTANCE=" + distance) // distance indicator feature
         if (kappaPosition == 0 || betaPosition == 0) add(hmap, "KAPPA-BETA-DISTANCE-UNKNOWN")
-        val betaDL = state.startingDT.edgesToParents(beta) map state.startingDT.arcs
+        val betaDL = state.currentGraph.depLabels.getOrElse(beta, "") // state.startingDT.edgesToParents(beta) map state.startingDT.arcs
         val betaLabel = state.currentGraph.arcs((sigma, beta))
 
         // WangXue features
         if (!quadraticTurbo) {
-          if (betaLemma != "" && kappaDL.nonEmpty) for (kdl <- kappaDL) add(hmap, "BETA-LEMMA-KAPPA-DL=" + betaLemma + "-" + kdl)
+          if (betaLemma != "" && kappaDL != "") add(hmap, "BETA-LEMMA-KAPPA-DL=" + betaLemma + "-" + kappaDL)
           if (kappaPOS != "" && betaLemma != "") add(hmap, "KAPPA-POS-BETA-LEMMA=" + kappaPOS + "-" + betaLemma)
-          if (kappaLemma != "" && betaDL.nonEmpty) for (bdl <- betaDL) add(hmap, "KAPPA-LEMMA-BETA-DL=" + kappaLemma + "-" + bdl)
+          if (kappaLemma != "" && betaDL != "") add(hmap, "KAPPA-LEMMA-BETA-DL=" + kappaLemma + "-" + betaDL)
           if (kappaNER != "" && betaNER != "") add(hmap, "KAPPA-BETA-NER=" + kappaNER + "-" + betaNER)
         }
       case None =>
@@ -373,12 +373,12 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         }
         add(hmap, "KAPPA-BETA-DISTANCE=" + distance) // distance indicator feature
         if (kappaPosition == 0 || sigmaPosition == 0) add(hmap, "KAPPA-SIGMA-DISTANCE-UNKNOWN")
-        val sigmaDL = state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
+        val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
         // WangXue features
         if (!quadraticTurbo) {
-          if (sigmaLemma != "" && kappaDL.nonEmpty) for (kdl <- kappaDL) add(hmap, "SIGMA-LEMMA-KAPPA-DL=" + sigmaLemma + "-" + kdl)
+          if (sigmaLemma != "" && kappaDL != "") add(hmap, "SIGMA-LEMMA-KAPPA-DL=" + sigmaLemma + "-" + kappaDL)
           if (kappaPOS != "" && sigmaLemma != "") add(hmap, "KAPPA-POS-SIGMA-LEMMA=" + kappaPOS + "-" + sigmaLemma)
-          if (kappaLemma != "" && sigmaDL.nonEmpty) for (sdl <- sigmaDL) add(hmap, "KAPPA-LEMMA-SIGMA-DL=" + kappaLemma + "-" + sdl)
+          if (kappaLemma != "" && sigmaDL != "") add(hmap, "KAPPA-LEMMA-SIGMA-DL=" + kappaLemma + "-" + sigmaDL)
           if (kappaNER != "" && sigmaNER != "") add(hmap, "KAPPA-SIGMA-NER=" + kappaNER + "-" + sigmaNER)
         }
     }

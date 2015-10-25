@@ -2,6 +2,7 @@ package amr
 import java.io._
 import dagger.core._
 import dagger.ml.MultiClassClassifier
+import dagger.ml.AROWClassifier
 
 object RunDagger {
 
@@ -59,11 +60,11 @@ object RunDagger {
       outputFile.close()
     }
 
- //   val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
+    //   val totalTriples = i map { case (x, y) => (x.nodes.size + x.arcs.size, y.nodes.size + y.arcs.size) } reduce { (a, b) => (a._1 + b._1, a._2 + b._2) }
     val totalTriples1 = (results map (_._6) sum)
     val totalTriples2 = (results map (_._7) sum)
     val totalMatches = results map (_._5) sum
-    val overallRecall =  totalMatches.toDouble / totalTriples1.toDouble
+    val overallRecall = totalMatches.toDouble / totalTriples1.toDouble
     val overallPrecision = totalMatches.toDouble / totalTriples2.toDouble
     val overallScore = (2 * overallPrecision * overallRecall) / (overallPrecision + overallRecall)
     List(("F-Score", overallScore), ("Precision", overallPrecision), ("Recall", overallRecall))
@@ -99,9 +100,16 @@ object RunDagger {
       case _ => devData
     }
 
+    val startingClassifier = if (options.getBoolean("--startingClassifier", false)) {
+      AROWClassifier.fromFile[WangXueAction](options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
+    } else null
+
     val lossToUse = options.getString("--lossFunction", "")
     val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
     val featureIndex = new MapIndex
+    if (startingClassifier != null) {
+      featureIndex.initialiseFromFile(options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
+    }
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
     val insertProhibition = options.getBoolean("--insertProhibition", true)
     val useReentrance = options.getBoolean("--reentrance", false)
@@ -112,11 +120,11 @@ object RunDagger {
     val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
       actionToString = if (fileCache) (x => x.name) else null,
       stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
-      AMROutput.AMROutputFunction)
+      AMROutput.AMROutputFunction,
+      startingClassifier)
     //  GraphViz.graphVizOutputFunction)
-    if (options.DEBUG) classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "ClassifierWeightsFinal.txt")
 
-    val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
+    val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureSummaryByAction.txt")
     for (j <- (WangXueTransitionSystem.actions ++ Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))) {
       outputFile.write(j + "\n")
       var relevantFeatures = List[(Int, Float)]()
@@ -133,6 +141,8 @@ object RunDagger {
     }
     outputFile.close()
 
+    classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
+    featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
     classifier
   }
 
@@ -147,6 +157,7 @@ object RunDagger {
 
     val options = new DAGGEROptions(args)
     val classifier = testDAGGERrun(options)
+
   }
 
   def replaceLemmasGlove(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
