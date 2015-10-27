@@ -31,7 +31,7 @@ object Smatch {
   def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double, Int, Int, Int) = {
     var currentBestMap = if (useImprovedMapping) initialMap2(AMR1, AMR2) else initialMap(AMR1, AMR2)
     var improvement = true
-    var lastBestScore = (0.0, 0.0, 0.0, 0.0, 0, 0, 0)
+    var lastBestScore = fScoreWithMap(AMR1, AMR2, Map())
     do {
       var lastBestMap = currentBestMap
       currentBestMap = getBestMove(AMR1, AMR2, currentBestMap, movesToConsider)
@@ -45,13 +45,13 @@ object Smatch {
       val amr1 = stringSeq(AMR1)
       val amr2 = stringSeq(AMR2, currentBestMap)
       val amr2raw = stringSeq(AMR2)
- //           println
- //     amr1 foreach println
- //     println
- //     amr2 foreach println
- //     println
- //     amr2raw foreach println
-//      println  */
+      println
+      amr1 foreach println
+      println
+      amr2 foreach println
+      println
+      amr2raw foreach println
+      println
       currentBestMap foreach { case (i, v) => println(s"$i [${AMR2.nodes(i)}] -> $v [${AMR1.nodes(v)}] ") }
       println()
       // mappings are keyed on 2

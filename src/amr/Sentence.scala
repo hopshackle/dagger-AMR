@@ -148,7 +148,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
       nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
-      nodePOS = this.nodePOS + (newNode -> this.nodePOS(node)), depLabels = this.depLabels + (newNode -> this.depLabels(node)), 
+      nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")), 
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {
@@ -224,7 +224,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       "\nInsertedNodes:\t" + insertedNodes.toString +
       "\nMergedNodes:\t" + mergedNodes.toString +
       "\nSwappedArcs:\t" + swappedArcs.toString +
-      "\nDeletedNodes:\t" + deletedNodes.toString
+      "\nDeletedNodes:\t" + deletedNodes.toString +
+      "\nPartsOfSpeech:\t" + nodePOS.toString +
+      "\nDependencyLabels:\t" + depLabels.toString
   }
 
   def toAMR: AMRGraph = {

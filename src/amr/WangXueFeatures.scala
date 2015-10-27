@@ -371,7 +371,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           add(hmap, "KAPPA-SIGMA-PATH-LEMMAS=" + kappaLemma + "-" + path + "-" + sigmaLemma)
           add(hmap, "KAPPA-SIGMA-PATH-DISTANCE=" + distance + "-" + path)
         }
-        add(hmap, "KAPPA-BETA-DISTANCE=" + distance) // distance indicator feature
+        add(hmap, "KAPPA-SIGMA-DISTANCE=" + distance) // distance indicator feature
         if (kappaPosition == 0 || sigmaPosition == 0) add(hmap, "KAPPA-SIGMA-DISTANCE-UNKNOWN")
         val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
         // WangXue features

@@ -30,7 +30,7 @@ object AlignTest {
       wordAlignments(i) = None
     }
     //    println(sentence.mkString(" "))
-    val dt = DependencyTree(rawSentence)
+    val dt = DependencyTree(tokenizedSentence.mkString(" "))
     logger(2, "Stemmed sentence " + stemmedSentence.toList.toString)
     alignWords(stemmedSentence, graph, wordAlignments, dt)
     //    AlignWords.fuzzyAligner(stemmedSentence, graph.root, wordAlignments)

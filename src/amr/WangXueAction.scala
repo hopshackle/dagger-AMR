@@ -120,13 +120,14 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
   // Really should be encapsulated elsewhere
 
   def apply(state: WangXueTransitionState): WangXueTransitionState = {
-    // We create a new node, and insert it as parent of this node (this includes providing the concept - so this is not overridden later)
+    // We create a new node, and insert it as parent of this node (this includes providing the concept - which could be overridden,
+    // but we need to not add the node to the processed list as we might want to put some Reentrant arcs in)
     // We then continue processing the current node
     // We try a few heuristics to match up AMR node to the newly inserted node
     val amrRef = if (otherRef == "") Insert.estimatedAMRRef(state, conceptIndex) else otherRef
     val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex, amrRef)
     state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess), currentGraph = tree,
-      previousActions = this :: state.previousActions, processedNodes = state.processedNodes + newNode).fastForward
+      previousActions = this :: state.previousActions).fastForward
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state)
@@ -245,7 +246,9 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       state.currentGraph.nodes.contains(newNode) &&
       !(state.currentGraph.reattachedNodes contains state.childrenToProcess.head) &&
       !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
-      (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) <= Reattach.REATTACH_RANGE)
+      (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) <= Reattach.REATTACH_RANGE ||
+        math.abs(state.currentGraph.nodeSpans.getOrElse(newNode, (-100, -100))._1 - 
+            state.currentGraph.nodeSpans.getOrElse(state.childrenToProcess.head, (100, 100))._1) <= 2)
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
     // And also only consider attachment points range in the current graph
   }
@@ -339,7 +342,9 @@ case class Reentrance(kappa: Int) extends WangXueAction with hasNodeAsParameter 
     state.nodesToProcess.nonEmpty && state.childrenToProcess.isEmpty &&
     state.currentGraph.nodes.contains(kappa) &&
     !(state.currentGraph.subGraph(kappa) contains state.nodesToProcess.head) &&
-    state.currentGraph.getDistanceBetween(kappa, state.nodesToProcess.head) < 5
+    (state.currentGraph.getDistanceBetween(kappa, state.nodesToProcess.head) < 5 ||
+        math.abs(state.currentGraph.nodeSpans.getOrElse(kappa, (-100, -100))._1 - 
+            state.currentGraph.nodeSpans.getOrElse(state.nodesToProcess.head, (100, 100))._1) <= 2)
 
 }
 

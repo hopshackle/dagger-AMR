@@ -41,7 +41,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
     trialAction: WangXueAction, lastExpertAction: WangXueAction): Double = {
     
     def conceptNotInAMR(c: Int): Boolean = {
-      if (c == 0) false else {
+      if (c == 0 || c == -1 || c == -2) false else {
         gold.amr match {
           case None => false
           case Some(amr) => !(amr.nodes.values.toSet contains concept(c))
