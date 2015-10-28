@@ -85,25 +85,14 @@ class WangXueExpert extends WangXueExpertBasic {
       case (Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
-      case (Some(sigmaAMR), _, -1, _, _) =>
+      case (Some(sigmaAMR), _, -1, _, _) if !(state.currentGraph.insertedNodes contains sigma) =>
+        // an inserted node is always, always named using 0
         val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
         if (concept == "UNKNOWN") {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
           println(state.currentGraph.insertedNodes)
         }
-        val conceptToUse = if (!WangXueTransitionSystem.preferKnown) {
-          if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head))
-            -1
-          else if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head) + "-01")
-            -2
-          else if (concept == state.currentGraph.nodes(state.nodesToProcess.head))
-            0
-          else
-            conceptIndex(concept)
-        } else {
-          conceptIndex(concept)
-        }
-        NextNode(conceptToUse)
+        NextNode(conceptToUse(concept, state))
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
       case (None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
@@ -127,6 +116,21 @@ class WangXueExpert extends WangXueExpertBasic {
 
     if (debug) println("Action chosen: " + chosenAction)
     chosenAction
+  }
+
+  def conceptToUse(concept: String, state: WangXueTransitionState): Int = {
+    if (!WangXueTransitionSystem.preferKnown) {
+      if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head))
+        -1
+      else if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head) + "-01")
+        -2
+      else if (concept == state.currentGraph.nodes(state.nodesToProcess.head))
+        0
+      else
+        conceptIndex(concept)
+    } else {
+      conceptIndex(concept)
+    }
   }
 
 }

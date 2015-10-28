@@ -200,7 +200,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             val childWord = state.currentGraph.nodes(child)
             val childLemma = state.currentGraph.nodeLemmas.getOrElse(child, "")
             if (state.currentGraph.insertedNodes contains child) {
-              add(hmap, "CHILD-INSERTED=" + childWord)
+              add(hmap, "CHILD-INSERTED=" + childLemma)
               if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "SIGMA-CHILD-BOTH-INSERTED")
             }
             add(hmap, "CHILD-SIGMA-LABEL=" + label)
@@ -251,7 +251,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (betaInserted) add(hmap, "BETA-INSERTED")
     if (!quadraticTurbo) if (sigmaInserted && betaInserted) add(hmap, "SIGMA-BETA-INSERTED")
-    if (!quadraticTurbo) add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
+    if (!quadraticTurbo && includeWords) add(hmap, "SIGMA-BETA-WORDS=" + sigmaWord + "-" + betaWord)
 
     // WangXue features
     if (!quadraticTurbo) {
@@ -271,7 +271,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     if (betaPOS != "") add(hmap, "BETA-POS=" + betaPOS)
     if (betaLemma != "") add(hmap, "BETA-LEMMA=" + betaLemma)
-    if (betaLemma != betaWord) add(hmap, "BETA-WORD=" + betaWord)
+    if (betaLemma != betaWord && includeWords) add(hmap, "BETA-WORD=" + betaWord)
     if (betaNER != "") add(hmap, "BETA-NER=" + betaNER)
     if (betaDL != "") add(hmap, "BETA-DL=" + betaDL)
     if (betaDL != label) add(hmap, "SIGMA-BETA-LABEL=" + label)

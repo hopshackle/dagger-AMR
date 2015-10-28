@@ -35,4 +35,13 @@ object stringmetrictets {
                                                   //> res14: Double = 0.8333333333333334
   JaroWinklerMetric.compare("canada", "and").getOrElse(0.0)
                                                   //> res15: Double = 0.8333333333333334
+  
+  JaroMetric.compare("over", "overflights").getOrElse(0.0)
+                                                  //> res16: Double = 0.787878787878788
+  JaroWinklerMetric.compare("over", "overflights").getOrElse(0.0)
+                                                  //> res17: Double = 0.8727272727272728
+    JaroMetric.compare("name", "are").getOrElse(0.0)
+                                                  //> res18: Double = 0.7222222222222222
+  JaroWinklerMetric.compare("name", "are").getOrElse(0.0)
+                                                  //> res19: Double = 0.7222222222222222
 }

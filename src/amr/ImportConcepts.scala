@@ -31,9 +31,10 @@ object ImportConcepts {
   lazy val allSentencesAndAMR = importFile(amrFile)
   lazy val allAMR = allSentencesAndAMR map { case (sentence, amr) => AMRGraph(amr, sentence) }
   lazy val conceptStrings = loadConcepts
+  lazy val defaultOptions = if (WangXueTransitionSystem.preferKnown) Map(0 -> "WORD") else Map((0 -> "WORD"), (-1 -> "LEMMA"), (-2 -> "VERB-FORM"))
   lazy val conceptMaster = (for {
     (concept, index) <- conceptStrings zipWithIndex
-  } yield ((index + 1) -> concept)).toMap + (0 -> "WORD") + (-1 -> "LEMMA") + (-2 -> "VERB-FORM")
+  } yield ((index + 1) -> concept)).toMap ++ defaultOptions
   lazy val conceptStringToIndex = conceptMaster map (_ match { case (index, text) => (text -> index) })
 
   lazy val conceptsPerLemma = loadConceptsPerLemmaReduced

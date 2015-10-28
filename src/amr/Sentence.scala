@@ -148,7 +148,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
       nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
-      nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")), 
+      nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")),
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {
@@ -181,7 +181,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
         assert(false, "No such arc to swap in DependencyTree.swapArc " + currentParent + " -> " + currentChild + "\n" + this); "NONE"
       case head :: tail => head
     }
-    val otherEdgestoChild = edgesToParents(currentChild) diff Seq((currentParent, currentChild)) map { case arc=> (arc, arcs(arc)) }
+    val otherEdgestoChild = edgesToParents(currentChild) diff Seq((currentParent, currentChild)) map { case arc => (arc, arcs(arc)) }
     val newEdgesFromParent = edgesToParents(currentParent) map { case (from, to) => ((from, currentChild), arcs((from, to))) }
     this.copy(arcs = this.arcs -- edgesToParents(currentParent) ++ newEdgesFromParent ++ otherEdgestoChild - ((currentParent, currentChild)) + ((currentChild, currentParent) -> currentLabel),
       swappedArcs = this.swappedArcs + ((currentParent, currentChild)))
@@ -290,8 +290,8 @@ object Sentence {
     //      n > m : unassigned DT nodes mapped to random bottom-most AMR nodes. Surplus AMR nodes not entered into map
     // Problem - when NodeSpans overlap (usually because one is a subset of another)
     // Solution - Remove these subsets from consideration (this works as long as one is a strict subset of another
- //   println(amr)
-    
+    //   println(amr)
+
     val uniqueSpans = (amr match {
       case Some(amrGraph) => for {
         (key, span) <- amrGraph.nodeSpans.toSeq
@@ -299,7 +299,7 @@ object Sentence {
       case None => Nil
     }).distinct
 
-    val removeOverlaps = uniqueSpans filter {s1 =>
+    val removeOverlaps = uniqueSpans filter { s1 =>
       var start = s1._1
       var end = s1._2
       var remove = false
@@ -311,12 +311,12 @@ object Sentence {
       }
       !remove
     }
-    
-    val amrToWordIndices= for {
-        (start, end) <- removeOverlaps
-        val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
-      } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
-    
+
+    val amrToWordIndices = for {
+      (start, end) <- removeOverlaps
+      val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
+    } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
+
     (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }
 
@@ -420,7 +420,7 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    val depLabels = arcs map { case ((from, to), label) => (to, label)}  // as we have a tree at this point
+    val depLabels = arcs map { case ((from, to), label) => (to, label) } // as we have a tree at this point
     DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, depLabels, List(), Map(), Map(), Set(), Map())
   }
 
@@ -463,7 +463,7 @@ object DependencyTree {
       val regexToUse = """\$""".r.replaceAllIn(regexStr, str).r
       output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
     }
-    
+
     val numbersWithComma = """\b((?:[0-9,]+\.[0-9]*)|(?:[0-9,]*\.[0-9]+)|(?:[0-9,]+))""".r
     output = numbersWithComma replaceAllIn (output, _ match {
       case numbersWithComma(number) => number.replaceAll(",", "")
@@ -525,19 +525,19 @@ object AMRGraph {
   }
 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
-    val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-    val amr = Graph.parse(rawAMR)
-    val wordAlignments = if (useImprovedAligner)
-      AlignTest.alignWords(rawSentence, tokenisedSentence.toArray, amr, useWordNet)
-    else
-      AlignWords.alignWords(tokenisedSentence.toArray, amr)
 
-    // wordAlignments from JAMR aligns to spans of words
-    // We now wish to fine-tune this
+    val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
+    // to avoid re-inventing the wheel
+    
+    if (useImprovedAligner)
+      AlignTest.alignWords(rawSentence, amr, useWordNet)
+    else {
+      val tokenisedSentence = DependencyTree.preProcess(rawSentence)
+      val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
+      val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
 
-    val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
-
-    AMRGraph(amr)
+      AMRGraph(amr)
+    }
   }
 
   def importFile(fileName: String): IndexedSeq[(String, String)] = {
@@ -547,7 +547,10 @@ object AMRGraph {
       if line.matches("^# ::snt .*")
     } yield i
     val startIndices = sentenceIndices.map(_ + 2)
-    val endIndices = sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
+    val endIndices = if (sentenceIndices.size > 1)
+      sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
+    else
+      List(input.length - 1)
 
     for {
       i <- 0 until sentenceIndices.size
