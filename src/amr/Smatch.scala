@@ -200,8 +200,11 @@ object Smatch {
   }
 
   def naiveFScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Int, Int, Int) = {
-    val triples1 = naiveStringSeq(AMR1)
-    val triples2 = naiveStringSeq(AMR2)
+    val triples1 = naiveStringSeq(reduceAMR(AMR1))
+    val triples2 = naiveStringSeq(reduceAMR(AMR2))
+/*    triples1 foreach println
+    println("------")
+    triples2 foreach println */
     val oneNotTwo = triples1 diff triples2 size
     val twoNotOne = triples2 diff triples1 size
     val matches = Math.min(triples1.size - oneNotTwo, triples2.size - twoNotOne)
@@ -236,7 +239,7 @@ object Smatch {
 
   def stringSeq(AMR: AMRGraph, nodeMap: Map[String, String]): Seq[String] = {
     val nodes = AMR.nodes map (node => alias(node._1, nodeMap) + ":" + node._2)
-    
+
     val arcs = for {
       ((s, d), relation) <- AMR.arcs
       val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
@@ -244,7 +247,7 @@ object Smatch {
         case Some(_) => (alias(d, nodeMap), alias(s, nodeMap), relation.substring(0, relation.size - 3))
       }
     } yield (source + ":" + arcName + ":" + dest)
-    
+
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => alias(node, nodeMap) + ":" + attrType + ":" + attrValue
     }
@@ -253,18 +256,26 @@ object Smatch {
 
   def naiveStringSeq(AMR: AMRGraph): Seq[String] = {
     val nodes = AMR.nodes map (_._2)
-    val arcs = for {
+    val arcsIn = for {
       ((s, d), relation) <- AMR.arcs
       val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
         case None => (s, d, relation)
         case Some(_) => (d, s, relation.substring(0, relation.size - 3))
       }
-    } yield (source + ":" + arcName + ":" + dest)
-    
+    } yield (AMR.nodes(source) + ":" + arcName + ":" + AMR.nodes(dest))
+/*
+    val arcsOut = for {
+      ((s, d), relation) <- AMR.arcs
+      val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
+        case None => (s, d, relation)
+        case Some(_) => (d, s, relation.substring(0, relation.size - 3))
+      }
+    } yield (arcName + ":" + AMR.nodes(dest))
+ */  
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => AMR.nodes(node) + ":" + attrType + ":" + attrValue
     }
-    (nodes ++ arcs ++ attributes).toSeq
+    (nodes ++ arcsIn ++ attributes).toSeq
   }
 
   // We simply replace all nodes in AMR2 with the name of the node to which they are mapped in AMR1
