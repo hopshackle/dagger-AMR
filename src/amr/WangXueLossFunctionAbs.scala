@@ -32,7 +32,7 @@ class WangXueLossFunctionAbsPenalty extends WangXueLossFunction {
       case Some(graph) => graph
     }
 
-    Smatch.fScore(gold.amr.get, testAMR, 2, 1000)._4 + (testActions.size / 5.0)
+    Smatch.fScore(gold.amr.get, testAMR, 2, 1000)._4 + (testActions.size / 2.5)
   }
   
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence

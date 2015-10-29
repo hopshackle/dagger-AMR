@@ -263,7 +263,7 @@ object Smatch {
         case Some(_) => (d, s, relation.substring(0, relation.size - 3))
       }
     } yield (AMR.nodes(source) + ":" + arcName + ":" + AMR.nodes(dest))
-/*
+
     val arcsOut = for {
       ((s, d), relation) <- AMR.arcs
       val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
@@ -271,11 +271,11 @@ object Smatch {
         case Some(_) => (d, s, relation.substring(0, relation.size - 3))
       }
     } yield (arcName + ":" + AMR.nodes(dest))
- */  
+ 
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => AMR.nodes(node) + ":" + attrType + ":" + attrValue
     }
-    (nodes ++ arcsIn ++ attributes).toSeq
+    (nodes ++ nodes ++ arcsIn ++ arcsOut ++ attributes ++ attributes).toSeq
   }
 
   // We simply replace all nodes in AMR2 with the name of the node to which they are mapped in AMR1
