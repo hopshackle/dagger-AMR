@@ -53,8 +53,16 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     val permissibleConcepts = beta match {
       case Some(b) => Set()
       case None =>
-        val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
-        if (preferKnown && wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 ++ (if (WangXueTransitionSystem.preferKnown) Set(0) else Set(0, -1, -2))
+        // if the word of the sigma node does not exist, then wordIndex is 0, so adding it will default to WORD
+        val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + wordIndex
+        if (preferKnown) {
+          pc1
+        } else {
+          val lemmaIndex = conceptIndex(state.currentGraph.nodeLemmas(sigma))
+          val verbIndex = conceptIndex(state.currentGraph.nodeLemmas(sigma) + "-01")
+          val wordEqualsLemma = wordIndex == lemmaIndex && wordIndex != 0
+          pc1 - wordIndex - lemmaIndex - verbIndex ++ (if (wordEqualsLemma) Set(-1, -2) else Set (0, -1, -2))
+        }
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 

@@ -85,7 +85,7 @@ class WangXueExpert extends WangXueExpertBasic {
       case (Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
-      case (Some(sigmaAMR), _, -1, _, _) if !(state.currentGraph.insertedNodes contains sigma) =>
+      case (Some(sigmaAMR), _, -1, _, _) =>
         // an inserted node is always, always named using 0
         val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
         if (concept == "UNKNOWN") {
