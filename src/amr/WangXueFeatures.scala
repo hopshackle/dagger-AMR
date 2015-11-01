@@ -242,8 +242,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigmaInserted = state.currentGraph.insertedNodes contains sigma
     val betaInserted = state.currentGraph.insertedNodes contains beta
 
-    if (!betaInserted && !sigmaInserted) {
-      val path = state.startingDT.getPathBetween(sigma, beta)
+    if (betaPosition > 0 && sigmaPosition > 0) {
+      val sigmaDTNode = if (!sigmaInserted) sigma else {
+        (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == sigmaPosition } map { case (node, (_, _)) => node }).toSeq(0)
+      }
+      val betaDTNode = if (!betaInserted) beta else {
+        (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == betaPosition } map { case (node, (_, _)) => node }).toSeq(0)
+      }
+      val path = state.startingDT.getPathBetween(sigmaDTNode, betaDTNode)
       add(hmap, "SIGMA-BETA-PATH=" + path)
       add(hmap, "SIGMA-BETA-PATH-LEMMAS=" + sigmaLemma + "-" + path + "-" + betaLemma)
       add(hmap, "SIGMA-BETA-PATH-DISTANCE=" + distance + "-" + path)
@@ -339,8 +345,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         val betaLemma = state.currentGraph.nodeLemmas.getOrElse(beta, "")
         val betaNER = state.currentGraph.nodeNER.getOrElse(beta, "")
         if (distance > 0) add(hmap, "KAPPA-BETA-DISTANCE", distance)
-        if (!betaInserted && !kappaInserted) {
-          val path = state.startingDT.getPathBetween(beta, parameterNode)
+        if (betaPosition > 0 && kappaPosition > 0) {
+          val kappaDTNode = if (!kappaInserted) parameterNode else {
+            (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == kappaPosition } map { case (node, (_, _)) => node }).toSeq(0)
+          }
+          val betaDTNode = if (!betaInserted) beta else {
+            (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == betaPosition } map { case (node, (_, _)) => node }).toSeq(0)
+          }
+          val path = state.startingDT.getPathBetween(betaDTNode, kappaDTNode)
           add(hmap, "KAPPA-BETA-PATH=" + path)
           add(hmap, "KAPPA-BETA-PATH-LEMMAS=" + kappaLemma + "-" + path + "-" + betaLemma)
           add(hmap, "KAPPA-BETA-PATH-DISTANCE=" + distance + "-" + path)
@@ -365,11 +377,17 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
         val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
         if (distance > 0) add(hmap, "KAPPA-SIGMA-DISTANCE", distance)
-        if (!sigmaInserted && !kappaInserted) {
-          val path = state.startingDT.getPathBetween(sigma, parameterNode)
+        if (sigmaPosition > 0 && kappaPosition > 0) {
+          val sigmaDTNode = if (!sigmaInserted) sigma else {
+            (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == sigmaPosition } map { case (node, (_, _)) => node }).toSeq(0)
+          }
+          val kappaDTNode = if (!kappaInserted) parameterNode else {
+            (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == kappaPosition } map { case (node, (_, _)) => node }).toSeq(0)
+          }
+          val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
           add(hmap, "KAPPA-SIGMA-PATH=" + path)
           add(hmap, "KAPPA-SIGMA-PATH-LEMMAS=" + kappaLemma + "-" + path + "-" + sigmaLemma)
-          add(hmap, "KAPPA-SIGMA-PATH-DISTANCE=" + distance + "-" + path)
+          add(hmap, "KAPPA-SIGMA-PATH-DISTANCE=" + distance  + "-" + path)
         }
         add(hmap, "KAPPA-SIGMA-DISTANCE=" + distance) // distance indicator feature
         if (kappaPosition == 0 || sigmaPosition == 0) add(hmap, "KAPPA-SIGMA-DISTANCE-UNKNOWN")

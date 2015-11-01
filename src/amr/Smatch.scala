@@ -317,7 +317,7 @@ object Smatch {
       case ((source, dest), relation) => !(attributeNodes.contains(dest) || attributeNodes.contains(source))
     }
 
-    val attributes = (attributeNodes map {
+    val attributes = ((attributeNodes map {
       case (node, value) =>
           val allP = input.parentsOf(node)
           if (allP.nonEmpty) {
@@ -326,7 +326,7 @@ object Smatch {
           } else {
             ("R", "R", value)
           }
-    }).toList ++ (input.getRoots map {r => (r, "ROOT", input.nodes(r))})
+    }).toList filterNot { case (key, _, _) => key == "R"}) ++ (input.getRoots map {r => (r, "ROOT", input.nodes(r))})
     
     input.copy(nodes = newNodes, arcs = newArcs, attributes = attributes)
   }

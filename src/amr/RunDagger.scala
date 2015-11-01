@@ -118,7 +118,9 @@ object RunDagger {
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
+    val maxNodesForTraining = options.getInt("--maxTrainingSize", 100)
+    val filteredTrainingData = trainData filter { s => s.amr.get.nodes.size <= maxNodesForTraining}
+    val classifier = dagger.train(filteredTrainingData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
       actionToString = if (fileCache) (x => x.name) else null,
       stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
       AMROutput.AMROutputFunction,
