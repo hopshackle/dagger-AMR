@@ -185,7 +185,7 @@ object Insert {
     if (state.originalInput.isEmpty || state.originalInput.get.amr.isEmpty) "" else {
       val conceptToMatch = concept(conceptIndex)
       val amr = state.originalInput.get.amr.get
-      val fullMapDTtoAMR = state.originalInput.get.positionToAMR ++ state.currentGraph.insertedNodes
+      val fullMapDTtoAMR = state.originalInput.get.positionToAMR ++ (state.currentGraph.insertedNodes filter { case (i, ref) => ref != "" })
       val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
       val currentNode = state.nodesToProcess.head
       val currentParents = if (currentNode == 0) List() else state.currentGraph.parentsOf(currentNode)
@@ -195,6 +195,7 @@ object Insert {
       val sigmaAMRChildren = getAMRChildren(currentNodeAMR)
       val unmatchedNodes = (sigmaAMRParents ++ sigmaAMRChildren) filter (!fullMapAMRtoDT.contains(_))
       val unmatchedNodeLabels = unmatchedNodes map (amr.nodes(_))
+//      println(unmatchedNodeLabels)
       val actualMatches = (unmatchedNodeLabels zip unmatchedNodes) filter { case (label, ref) => label == conceptToMatch }
       actualMatches match {
         case Nil => ""
@@ -309,6 +310,7 @@ case object ReversePolarity extends WangXueAction {
   def apply(state: WangXueTransitionState): WangXueTransitionState = {
     // We simply insert a new child polarity node
     val amrRef = Insert.estimatedAMRRef(state, conceptIndex("-"))
+ //   println("ReversePolarity AMR Ref: "+ amrRef + " from " + state.nodesToProcess.head + ", Last Action: " + state.previousActions.headOption)
     val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), amrRef, label = "polarity")
     state.copy(nodesToProcess = Insert.insertNodeIntoProcessList(newNode, tree, state.nodesToProcess),
       childrenToProcess = newNode :: state.childrenToProcess, currentGraph = tree, previousActions = this :: state.previousActions,

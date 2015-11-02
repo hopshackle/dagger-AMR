@@ -41,7 +41,7 @@ class WangXueExpert extends WangXueExpertBasic {
     }
 
     if (debug) println(sigmaAMRAncestors)
-    
+
     val sigmaChildren = state.currentGraph.childrenOf(sigma)
     val sigmaChildrenAMR = sigmaChildren map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "") toSet
 
@@ -50,8 +50,8 @@ class WangXueExpert extends WangXueExpertBasic {
     if (debug) println(s"sigmaAMRParents = ${sigmaAMRParents.toString}")
     val betaAMRParents = getAMRParents(BETAAMR)
     if (debug) println(s"betaAMR = ${BETAAMR}")
- //   if (debug) println(s"betaAMRParents = ${betaAMRParents.toString}")
-//    if (debug) println(s"Swap permissible ${Swap.isPermissible(state)}")
+    //   if (debug) println(s"betaAMRParents = ${betaAMRParents.toString}")
+    //    if (debug) println(s"Swap permissible ${Swap.isPermissible(state)}")
     val nodesToProcessAMR = state.nodesToProcess map (fullMapDTtoAMR.getOrElse(_, "")) filter (_ != "")
     val allNodesAMR = fullMapDTtoAMR.values.toSet
 
@@ -63,8 +63,9 @@ class WangXueExpert extends WangXueExpertBasic {
     //    if (debug) println(unmatchedParentLabels)
     val unmatchedChildrenLabels = unmatchedChildren map (data.amr.get.nodes(_))
     val unmatchedPolarityChild = unmatchedChildrenLabels contains "-"
+
     val kappa = unlinkedAMRChildren.toList map fullMapAMRtoDT filter state.currentGraph.nodes.contains filter (Reentrance(_).isPermissible(state))
-    
+
     val chosenAction = (SIGMAAMR, unmatchedParentLabels.isEmpty, BETA, BETAAMR, betaAMRParents.isEmpty) match {
       // cases to cover: no beta - Delete, Insert or NextNode
       //    If sigmaAMR and the parent AMR node is unmatched to DT, then we InsertNode
@@ -86,11 +87,9 @@ class WangXueExpert extends WangXueExpertBasic {
       case (Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
       case (Some(sigmaAMR), _, -1, _, _) =>
-        // an inserted node is always, always named using 0
         val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
         if (concept == "UNKNOWN") {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
-          println(state.currentGraph.insertedNodes)
         }
         NextNode(conceptToUse(concept, state))
       case (None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode

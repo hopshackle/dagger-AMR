@@ -141,7 +141,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // ...parent to new, and new to current
     // we assign a nodeSpan to the new node to match its child
     // we also take the DL and POS labelling and from old parent to child to be between old parent and new node
-    val newNode = nodes.keys.max + 1
+    val newNode = getNextNodeToInsert
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
@@ -152,7 +152,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {
-    val newNode = nodes.keys.max + 1
+    val newNode = getNextNodeToInsert
     val parentSpan = nodeSpans.getOrElse(node, (0, 0))
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val labelToUse = if (label != "") label else concept(conceptIndex) + "#" // label made up for use as feature
@@ -162,16 +162,22 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       insertedNodes = newInsertedNodes))
   }
 
+  def getNextNodeToInsert: Int = {
+    val d = deletedNodes.values.flatten map { case (k, v) => k }
+    val m = mergedNodes.values.flatten map { case (k, v) => k }
+    (d ++ m ++ nodes.keys).max + 1
+  }
+
   def mergeNodes(nodeToRemove: Int, nodeToKeep: Int): DependencyTree = {
     val currentEdges = edgesToChildren(nodeToKeep) map { case (from, to) => ((from, to), arcs((from, to))) }
     val newEdgesIn = edgesToParents(nodeToRemove) map { case (from, to) => ((from, nodeToKeep), arcs((from, to))) }
     val newEdgesOut = edgesToChildren(nodeToRemove) map { case (from, to) => ((nodeToKeep, to), arcs((from, to))) }
     val oldEdges = edgesToParents(nodeToRemove) ++ edgesToChildren(nodeToRemove)
     // We also need to avoid over-writing any edges already processed
-    val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
+    //   val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
     val alreadyMergedNodes = this.mergedNodes.get(nodeToKeep) match { case None => List(); case Some(mergedNodes) => mergedNodes }
     val newMergedNodes = (nodeToRemove, this.nodes(nodeToRemove)) :: alreadyMergedNodes
-    this.copy(nodes = this.nodes - nodeToRemove, nodeSpans = newSpans, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut ++ currentEdges - ((nodeToKeep, nodeToKeep)),
+    this.copy(nodes = this.nodes - nodeToRemove, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut ++ currentEdges - ((nodeToKeep, nodeToKeep)),
       mergedNodes = this.mergedNodes + (nodeToKeep -> newMergedNodes))
   }
 
@@ -338,6 +344,7 @@ object Sentence {
       amrKey <- amrKeys
       val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       word <- wordIndices
+      if dependencyTree.nodes contains word  // as this might have been deleted during parsing
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       val similarity = JaroMetric.compare(dtWord, amrConcept).getOrElse(0.0)
       if similarity > 0.001
@@ -528,7 +535,7 @@ object AMRGraph {
 
     val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
     // to avoid re-inventing the wheel
-    
+
     if (useImprovedAligner)
       AlignTest.alignWords(rawSentence, amr, useWordNet)
     else {
