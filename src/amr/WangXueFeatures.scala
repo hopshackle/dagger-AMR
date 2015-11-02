@@ -46,29 +46,36 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (cachedState != null && cachedState.eq(state) && !parameterisedAction) {
       cachedFeatures
     } else {
+      // also; even if we do have a parameterNode, we can still share the core features
 
       val thisDebug = if (debug && random.nextDouble < 0.001) true else false
       val quadraticTurbo = options.contains("--quadratic")
 
-      val linearOutput = sigmaFeatures(sentence, state, action) ++ {
-        (state.childrenToProcess, parameterisedAction) match {
-          case (Nil, false) => Nil
-          case (Nil, true) => kappaFeatures(sentence, state, action)
-          case (head :: tail, false) => betaFeatures(sentence, state, action)
-          case (head :: tail, true) => betaFeatures(sentence, state, action) ++ kappaFeatures(sentence, state, action)
-        }
+      if (cachedState != null && cachedState.eq(state)) {
+        // we can reuse the existing cache
+      } else {
+        cachedState = state
+        cachedFeatures = Instance.scalaMapToTrove(sigmaFeatures(sentence, state, action) ++ {
+          state.childrenToProcess match {
+            case Nil => Nil
+            case head :: tail => betaFeatures(sentence, state, action)
+          }
+        })
+        cachedFeatures.compact
       }
+
+      val linearOutput = cachedFeatures ++ Instance.scalaMapToTrove({
+        parameterisedAction match {
+          case false => Map()
+          case true => kappaFeatures(sentence, state, action)
+        }
+      })
       val output = linearOutput ++ (if (quadraticTurbo) quadraticCombination(linearOutput) else Map())
       if (thisDebug) {
         val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
         featuresDebug.write(state.toString)
         output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
         featuresDebug.close
-      }
-
-      if (!parameterisedAction) {
-        cachedFeatures = Instance.scalaMapToTrove(output)
-        cachedState = state
       }
       Instance.scalaMapToTrove(output)
     }
@@ -224,7 +231,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val label = state.currentGraph.arcs((sigma, beta))
-    val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "")// state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
+    val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     val betaDL = state.currentGraph.depLabels.getOrElse(beta, "") // state.startingDT.edgesToParents(beta) map state.startingDT.arcs
     val sigmaParents = state.currentGraph.parentsOf(sigma)
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
@@ -387,7 +394,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
           add(hmap, "KAPPA-SIGMA-PATH=" + path)
           add(hmap, "KAPPA-SIGMA-PATH-LEMMAS=" + kappaLemma + "-" + path + "-" + sigmaLemma)
-          add(hmap, "KAPPA-SIGMA-PATH-DISTANCE=" + distance  + "-" + path)
+          add(hmap, "KAPPA-SIGMA-PATH-DISTANCE=" + distance + "-" + path)
         }
         add(hmap, "KAPPA-SIGMA-DISTANCE=" + distance) // distance indicator feature
         if (kappaPosition == 0 || sigmaPosition == 0) add(hmap, "KAPPA-SIGMA-DISTANCE-UNKNOWN")
