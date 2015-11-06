@@ -233,7 +233,6 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val label = state.currentGraph.arcs((sigma, beta))
     val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     val betaDL = state.currentGraph.depLabels.getOrElse(beta, "") // state.startingDT.edgesToParents(beta) map state.startingDT.arcs
-    val sigmaParents = state.currentGraph.parentsOf(sigma)
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
     assert(sigmaWord != "!!??", "Sigma not found: " + state)
     val betaWord = state.currentGraph.nodes(beta)
