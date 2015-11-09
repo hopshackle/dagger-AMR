@@ -68,7 +68,7 @@ class ClassicFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (word.startsWith("un") || word.startsWith("in") || word.startsWith("il") || word.startsWith("anti")) add(hmap, prefix + "-NEGATION")
 
     val hyphenSplit = word.split("-")
-    if (prefix.size > 1) {
+    if (hyphenSplit.size > 1) {
       add(hmap, prefix + "-PREFIX=" + hyphenSplit(0))
       add(hmap, prefix + "-SUFFIX=" + hyphenSplit(1))
     }

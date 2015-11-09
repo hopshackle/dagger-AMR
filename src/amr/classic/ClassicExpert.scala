@@ -16,12 +16,24 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
   }
 
   def conceptForCurrentNode(data: Sentence, state: ClassicTransitionState): Int = {
+
     val conceptKey = data.positionToAMR.getOrElse(state.nodesToProcess.head, "NULL")
-    val conceptString = data.amr.get.nodes.getOrElse(conceptKey, "NULL")
+    val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(conceptKey, "NULL"), "")
     if (debug) {
-      println("Concept: " + conceptKey + " -> " + conceptString)
-      println("Index: " + conceptIndex(conceptString))
+      println("Concept: " + conceptKey + " -> " + concept)
+      println("Index: " + conceptIndex(concept))
     }
-    conceptIndex(conceptString)
+    if (!ClassicTransitionSystem.preferKnown) {
+      if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head))
+        -1
+      else if (concept == state.currentGraph.nodeLemmas(state.nodesToProcess.head) + "-01")
+        -2
+      else if (concept == state.currentGraph.nodes(state.nodesToProcess.head))
+        0
+      else
+        conceptIndex(concept)
+    } else {
+      conceptIndex(concept)
+    }
   }
 }

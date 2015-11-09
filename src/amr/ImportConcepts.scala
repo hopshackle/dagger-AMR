@@ -25,7 +25,7 @@ object ImportConcepts {
     val output = for {
       ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
       val s = Sentence(sentence, Some(amr))
-    } yield (s, RunDagger.sampleTrajectory(s, "", expert))
+    } yield (s, RunDagger.sampleTrajectory(s, "", expert, WangXueTransitionSystem))
     output
   }
   lazy val allSentencesAndAMR = importFile(amrFile)

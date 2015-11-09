@@ -6,6 +6,7 @@ import amr.ImportConcepts.{conceptIndex, concept, conceptMaster}
 abstract class ClassicAction extends TransitionAction[ClassicTransitionState] {
   def isPermissible(state: ClassicTransitionState): Boolean
   def name: String
+  def construct(name: String): ClassicAction = ClassicAction.construct(name)
 }
 
 object ClassicAction {

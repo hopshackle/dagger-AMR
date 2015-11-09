@@ -3,11 +3,13 @@ package amr.classic
 import dagger.core._
 import amr.Sentence
 import amr.ImportConcepts._
+import amr.DependencyTree
 
 object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction, ClassicTransitionState] {
   var preferKnown = true
+  val expert = new ClassicExpert
 
-  def actions(): Array[ClassicAction] = NextNode.all
+  def actions(): Array[ClassicAction] = NextNode.all ++ Array(DeleteNode)
 
   def actions(state: ClassicTransitionState) = {
     val sigma = state.nodesToProcess.head
@@ -33,7 +35,7 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
 
   def approximateLoss(datum: Sentence, state: ClassicTransitionState, action: ClassicAction): Double = ???
 
-  def chooseTransition(datum: Sentence, state: ClassicTransitionState): ClassicAction = ???
+  def chooseTransition(datum: Sentence, state: ClassicTransitionState): ClassicAction = expert.chooseTransition(datum, state)
 
   def construct(state: ClassicTransitionState, datum: Sentence): Sentence = {
     Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.toAMR))
@@ -48,7 +50,10 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
         spans.getOrElse(a1, (0, 0))._1 > spans.getOrElse(a2, (0, 0))._1
     }
 
-    ClassicTransitionState(allNodes, datum.dependencyTree, Nil, Some(datum), datum.dependencyTree, Set(), Set())
+    val startingGraph = DependencyTree(datum.dependencyTree.nodes, datum.dependencyTree.nodeLemmas, datum.dependencyTree.nodePOS,
+    datum.dependencyTree.nodeNER, datum.dependencyTree.nodeSpans, Map(), Map(), List(), Map(), Map(), Set(), Map()) 
+    // remove all edges
+    ClassicTransitionState(allNodes, startingGraph, Nil, Some(datum), datum.dependencyTree, Set(), Set())
   }
 
   override def isPermissible(action: ClassicAction, state: ClassicTransitionState): Boolean = action.isPermissible(state)
