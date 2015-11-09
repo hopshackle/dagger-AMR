@@ -83,8 +83,8 @@ abstract class Graph[K] {
     else
       getDescendants(allChildren.distinct)
   }
-    def getAncestors(list: Seq[K]): Seq[K] = {
-    val allParents = list ++ (list flatMap parentsOf) 
+  def getAncestors(list: Seq[K]): Seq[K] = {
+    val allParents = list ++ (list flatMap parentsOf)
     if (allParents.distinct.size == list.distinct.size)
       list // we're done
     else
@@ -93,9 +93,9 @@ abstract class Graph[K] {
 
 }
 
-case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String], 
-    originalArcs:  Map[(String, String), String] = Map(),
-    attributes: List[(String, String, String)] = List()) extends Graph[String] {
+case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: Map[(String, String), String],
+  originalArcs: Map[(String, String), String] = Map(),
+  attributes: List[(String, String, String)] = List()) extends Graph[String] {
   def toOutputFormat: String = {
     val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\n")
     val arcOutput = arcs map (x => s"# ::edge\t${x._1._1}\t${x._1._2}\t${x._2}\n")
@@ -105,7 +105,7 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
-  nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], reattachedNodes: List[Int],
+  nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], depLabels: Map[Int, String], reattachedNodes: List[Int],
   insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
@@ -121,10 +121,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def labelNode(node: Int, label: String): DependencyTree = {
-    // We account for the fact that if we have no idea of the concept, then using the actual word might just work
-    val oldValue = nodes.getOrElse(node, "UNKNOWN")
-    val newLabel = if (label == "UNKNOWN") oldValue else label
-    val newNodes = nodes + (node -> newLabel)
+    val newNodes = nodes + (node -> label)
     this.copy(nodes = newNodes)
   }
 
@@ -143,17 +140,19 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // So we to add a new node as a parent, remove the edge from the current node to its current parent, and insert two new edges
     // ...parent to new, and new to current
     // we assign a nodeSpan to the new node to match its child
-    val newNode = nodes.keys.max + 1
+    // we also take the DL and POS labelling and from old parent to child to be between old parent and new node
+    val newNode = getNextNodeToInsert
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
       nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
+      nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")),
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {
-    val newNode = nodes.keys.max + 1
+    val newNode = getNextNodeToInsert
     val parentSpan = nodeSpans.getOrElse(node, (0, 0))
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val labelToUse = if (label != "") label else concept(conceptIndex) + "#" // label made up for use as feature
@@ -163,14 +162,22 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       insertedNodes = newInsertedNodes))
   }
 
+  def getNextNodeToInsert: Int = {
+    val d = deletedNodes.values.flatten map { case (k, v) => k }
+    val m = mergedNodes.values.flatten map { case (k, v) => k }
+    (d ++ m ++ nodes.keys).max + 1
+  }
+
   def mergeNodes(nodeToRemove: Int, nodeToKeep: Int): DependencyTree = {
+    val currentEdges = edgesToChildren(nodeToKeep) map { case (from, to) => ((from, to), arcs((from, to))) }
     val newEdgesIn = edgesToParents(nodeToRemove) map { case (from, to) => ((from, nodeToKeep), arcs((from, to))) }
     val newEdgesOut = edgesToChildren(nodeToRemove) map { case (from, to) => ((nodeToKeep, to), arcs((from, to))) }
     val oldEdges = edgesToParents(nodeToRemove) ++ edgesToChildren(nodeToRemove)
-    val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
+    // We also need to avoid over-writing any edges already processed
+    //   val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
     val alreadyMergedNodes = this.mergedNodes.get(nodeToKeep) match { case None => List(); case Some(mergedNodes) => mergedNodes }
     val newMergedNodes = (nodeToRemove, this.nodes(nodeToRemove)) :: alreadyMergedNodes
-    this.copy(nodes = this.nodes - nodeToRemove, nodeSpans = newSpans, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut - ((nodeToKeep, nodeToKeep)),
+    this.copy(nodes = this.nodes - nodeToRemove, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut ++ currentEdges - ((nodeToKeep, nodeToKeep)),
       mergedNodes = this.mergedNodes + (nodeToKeep -> newMergedNodes))
   }
 
@@ -180,8 +187,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
         assert(false, "No such arc to swap in DependencyTree.swapArc " + currentParent + " -> " + currentChild + "\n" + this); "NONE"
       case head :: tail => head
     }
+    val otherEdgestoChild = edgesToParents(currentChild) diff Seq((currentParent, currentChild)) map { case arc => (arc, arcs(arc)) }
     val newEdgesFromParent = edgesToParents(currentParent) map { case (from, to) => ((from, currentChild), arcs((from, to))) }
-    this.copy(arcs = this.arcs -- edgesToParents(currentParent) ++ newEdgesFromParent - ((currentParent, currentChild)) + ((currentChild, currentParent) -> currentLabel),
+    this.copy(arcs = this.arcs -- edgesToParents(currentParent) ++ newEdgesFromParent ++ otherEdgestoChild - ((currentParent, currentChild)) + ((currentChild, currentParent) -> currentLabel),
       swappedArcs = this.swappedArcs + ((currentParent, currentChild)))
   }
 
@@ -222,7 +230,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       "\nInsertedNodes:\t" + insertedNodes.toString +
       "\nMergedNodes:\t" + mergedNodes.toString +
       "\nSwappedArcs:\t" + swappedArcs.toString +
-      "\nDeletedNodes:\t" + deletedNodes.toString
+      "\nDeletedNodes:\t" + deletedNodes.toString +
+      "\nPartsOfSpeech:\t" + nodePOS.toString +
+      "\nDependencyLabels:\t" + depLabels.toString
   }
 
   def toAMR: AMRGraph = {
@@ -284,21 +294,44 @@ object Sentence {
     //   For those left over: 
     //      m > n : unassigned AMR nodes mapped to random top-most DT nodes. Surplus DT nodes not entered into map
     //      n > m : unassigned DT nodes mapped to random bottom-most AMR nodes. Surplus AMR nodes not entered into map
+    // Problem - when NodeSpans overlap (usually because one is a subset of another)
+    // Solution - Remove these subsets from consideration (this works as long as one is a strict subset of another
+    //   println(amr)
 
-    val amrToWordIndices: Map[Seq[String], Seq[Int]] = amr match {
-      case None => Map[Seq[String], Seq[Int]]()
+    val uniqueSpans = (amr match {
       case Some(amrGraph) => for {
-        (amrKey, (start, end)) <- amrGraph.nodeSpans
-        val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
-      } yield (allAMRWithSameSpan(amrKey, amr), allDTIndices.toSeq)
+        (key, span) <- amrGraph.nodeSpans.toSeq
+      } yield span
+      case None => Nil
+    }).distinct
+
+    val removeOverlaps = uniqueSpans filter { s1 =>
+      var start = s1._1
+      var end = s1._2
+      var remove = false
+      for (s2 <- uniqueSpans diff Seq(s1)) {
+        if (start >= s2._1 && end <= s2._2) {
+          // s1 is subsumed within s2 and must be removed
+          remove = true
+        }
+      }
+      !remove
     }
+
+    val amrToWordIndices = for {
+      (start, end) <- removeOverlaps
+      val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
+    } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
+
     (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }
 
-  def allAMRWithSameSpan(amrKey: String, amr: Option[AMRGraph]): Seq[String] = {
+  def allAMRWithSameSpan(start: Int, end: Int, amr: Option[AMRGraph]): Seq[String] = {
     val amrNodes = amr.get.nodes.keys
     val amrNodeSpans = amr.get.nodeSpans
-    val sameSpans = amrNodes filter (amrNodeSpans.getOrElse(_, (0, 0)) == amrNodeSpans(amrKey))
+    val sameSpans = amrNodes filter (amrNodeSpans.getOrElse(_, (0, 0)) match {
+      case (spanStart, spanEnd) => if (spanStart >= start && spanEnd <= end) true else false
+    })
     sameSpans.toSeq
   }
 
@@ -311,6 +344,7 @@ object Sentence {
       amrKey <- amrKeys
       val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       word <- wordIndices
+      if dependencyTree.nodes contains word  // as this might have been deleted during parsing
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       val similarity = JaroMetric.compare(dtWord, amrConcept).getOrElse(0.0)
       if similarity > 0.001
@@ -393,7 +427,8 @@ object DependencyTree {
       (ConllToken(Some(index), _, _, pos, cpos, feats, _, deprel, phead, Some(ner)), wordCount) <- parseTree
     } yield (index -> ner)).toMap
 
-    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, List(), Map(), Map(), Set(), Map())
+    val depLabels = arcs map { case ((from, to), label) => (to, label) } // as we have a tree at this point
+    DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, depLabels, List(), Map(), Map(), Set(), Map())
   }
 
   def convertMonth(input: Option[String]): Option[String] = {
@@ -418,9 +453,9 @@ object DependencyTree {
   }
 
   def extractDates(input: String): String = {
-    val redDate = """(\d\d\d\d)-(\d\d)-(\d\d)""".r
-    val redDate2 = """(\d\d\d\d)(\d\d)(\d\d)""".r
-    val redDate3 = """(\d\d)(\d\d)(\d\d)""".r
+    val redDate = """\b(\d\d\d\d)-(\d\d)-(\d\d)\b""".r
+    val redDate2 = """\b((?:19|20)\d\d)(\d\d)(\d\d)\b""".r
+    val redDate3 = """\b(\d\d)(\d\d)(\d\d)\b""".r
 
     var output = redDate replaceAllIn (input, m => (m group 1).toInt + " " + (m group 2).toInt + " " + (m group 3).toInt)
     output = redDate2 replaceAllIn (output, m => (m group 1).toInt + " " + (m group 2).toInt + " " + (m group 3).toInt)
@@ -428,19 +463,24 @@ object DependencyTree {
   }
 
   def extractNumbers(input: String): String = {
-    val regexStr = "^$ | $ | $-| $[,.?!;:]"
-    val numbers = List("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve")
+    val regexStr = "(?i)(^$ | $ | $-| $[,.?!;:])"
+    val numbers = List("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen")
     var output = input
     for ((str, number) <- numbers.zipWithIndex) {
       val regexToUse = """\$""".r.replaceAllIn(regexStr, str).r
       output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
     }
 
-    val numbersWithHyphen = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))-""".r
+    val numbersWithComma = """\b((?:[0-9,]+\.[0-9]*)|(?:[0-9,]*\.[0-9]+)|(?:[0-9,]+))""".r
+    output = numbersWithComma replaceAllIn (output, _ match {
+      case numbersWithComma(number) => number.replaceAll(",", "")
+      case other => ""
+    })
+
+    val numbersWithHyphen = """\b((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+))-""".r
     output = numbersWithHyphen replaceAllIn (output, _ match {
       case numbersWithHyphen(number) =>
-        val replacement = number.toDouble;
-        f"$replacement%.0f "
+        number + " "
       case other => ""
     })
     val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)[ -]""".r
@@ -458,7 +498,7 @@ object DependencyTree {
 
 object AMRGraph {
   // We then use the JAMR functionality here
-    val opN = "^op[0-9]+$".r
+  val opN = "^op[0-9]+$".r
   var useImprovedAligner = false
   var useWordNet = false
   def setAligner(code: String): Unit = {
@@ -474,7 +514,6 @@ object AMRGraph {
     // Note our convention is that the first word in a sentence is at index 1
 
     val Relation = """:?(.*)""".r
-    
 
     val originalArcs = (for {
       node1 <- jamrGraph.nodes
@@ -482,28 +521,30 @@ object AMRGraph {
       Relation(relation) = label // label includes the ":"
     } yield ((node1.id, node2.id) -> relation)).toMap
 
-    val arcs = originalArcs map { case (k, v) => opN.findFirstIn(v) match {
-      case None => (k, v)
-      case Some(_) => (k, "opN")
-    }}
-    
+    val arcs = originalArcs map {
+      case (k, v) => opN.findFirstIn(v) match {
+        case None => (k, v)
+        case Some(_) => (k, "opN")
+      }
+    }
+
     AMRGraph(nodes, nodeSpans, arcs, originalArcs)
   }
 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
-    val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-    val amr = Graph.parse(rawAMR)
-    val wordAlignments = if (useImprovedAligner)
-      AlignTest.alignWords(tokenisedSentence.toArray, amr, useWordNet)
-    else
-      AlignWords.alignWords(tokenisedSentence.toArray, amr)
-      
-    // wordAlignments from JAMR aligns to spans of words
-    // We now wish to fine-tune this
 
-    val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
+    val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
+    // to avoid re-inventing the wheel
 
-    AMRGraph(amr)
+    if (useImprovedAligner)
+      AlignTest.alignWords(rawSentence, amr, useWordNet)
+    else {
+      val tokenisedSentence = DependencyTree.preProcess(rawSentence)
+      val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
+      val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
+
+      AMRGraph(amr)
+    }
   }
 
   def importFile(fileName: String): IndexedSeq[(String, String)] = {
@@ -513,7 +554,10 @@ object AMRGraph {
       if line.matches("^# ::snt .*")
     } yield i
     val startIndices = sentenceIndices.map(_ + 2)
-    val endIndices = sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
+    val endIndices = if (sentenceIndices.size > 1)
+      sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
+    else
+      List(input.length - 1)
 
     for {
       i <- 0 until sentenceIndices.size

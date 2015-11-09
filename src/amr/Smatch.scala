@@ -31,7 +31,7 @@ object Smatch {
   def oneIteration(AMR1: AMRGraph, AMR2: AMRGraph, movesToConsider: Int): (Double, Double, Double, Double, Int, Int, Int) = {
     var currentBestMap = if (useImprovedMapping) initialMap2(AMR1, AMR2) else initialMap(AMR1, AMR2)
     var improvement = true
-    var lastBestScore = (0.0, 0.0, 0.0, 0.0, 0, 0, 0)
+    var lastBestScore = fScoreWithMap(AMR1, AMR2, Map())
     do {
       var lastBestMap = currentBestMap
       currentBestMap = getBestMove(AMR1, AMR2, currentBestMap, movesToConsider)
@@ -45,13 +45,13 @@ object Smatch {
       val amr1 = stringSeq(AMR1)
       val amr2 = stringSeq(AMR2, currentBestMap)
       val amr2raw = stringSeq(AMR2)
- //           println
- //     amr1 foreach println
- //     println
- //     amr2 foreach println
- //     println
- //     amr2raw foreach println
-//      println  */
+      println
+      amr1 foreach println
+      println
+      amr2 foreach println
+      println
+      amr2raw foreach println
+      println
       currentBestMap foreach { case (i, v) => println(s"$i [${AMR2.nodes(i)}] -> $v [${AMR1.nodes(v)}] ") }
       println()
       // mappings are keyed on 2
@@ -149,8 +149,8 @@ object Smatch {
       (i, name) <- AMR2.nodes
       j <- (AMR1.nodes.keySet -- currentMap.values)
     } yield Map(i -> j)
-    
-  //  if (debug) allVacantMoves foreach println
+
+    //  if (debug) allVacantMoves foreach println
 
     val allSwapMoves = for {
       (i, iPointer) <- currentMap
@@ -166,7 +166,7 @@ object Smatch {
     loop.breakable {
       for (move <- allMoves) {
         val score = fScoreWithMap(AMR1, AMR2, currentMap ++ move)
-   //     if (debug) println(f"$move gives score of ${score._1}%.3f")
+        //     if (debug) println(f"$move gives score of ${score._1}%.3f")
         if (useSatisficing && score._1 > startScore._1) {
           bestMove = move
           loop.break
@@ -200,8 +200,11 @@ object Smatch {
   }
 
   def naiveFScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Int, Int, Int) = {
-    val triples1 = naiveStringSeq(AMR1)
-    val triples2 = naiveStringSeq(AMR2)
+    val triples1 = naiveStringSeq(reduceAMR(AMR1))
+    val triples2 = naiveStringSeq(reduceAMR(AMR2))
+    /*    triples1 foreach println
+    println("------")
+    triples2 foreach println */
     val oneNotTwo = triples1 diff triples2 size
     val twoNotOne = triples2 diff triples1 size
     val matches = Math.min(triples1.size - oneNotTwo, triples2.size - twoNotOne)
@@ -223,11 +226,11 @@ object Smatch {
         case Some(_) => (d, s, relation.substring(0, relation.size - 3))
       }
     } yield (source + ":" + arcName + ":" + dest)
- /*   
+    /*   
     val arcs = AMR.arcs map {
       case ((source, dest), arcName) => source + ":" + arcName + ":" + dest
     }
- */   
+ */
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => node + ":" + attrType + ":" + attrValue
     }
@@ -236,7 +239,7 @@ object Smatch {
 
   def stringSeq(AMR: AMRGraph, nodeMap: Map[String, String]): Seq[String] = {
     val nodes = AMR.nodes map (node => alias(node._1, nodeMap) + ":" + node._2)
-    
+
     val arcs = for {
       ((s, d), relation) <- AMR.arcs
       val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
@@ -244,7 +247,7 @@ object Smatch {
         case Some(_) => (alias(d, nodeMap), alias(s, nodeMap), relation.substring(0, relation.size - 3))
       }
     } yield (source + ":" + arcName + ":" + dest)
-    
+
     val attributes = AMR.attributes map {
       case (node, attrType, attrValue) => alias(node, nodeMap) + ":" + attrType + ":" + attrValue
     }
@@ -253,18 +256,30 @@ object Smatch {
 
   def naiveStringSeq(AMR: AMRGraph): Seq[String] = {
     val nodes = AMR.nodes map (_._2)
-    val arcs = for {
+    val arcsIn = for {
       ((s, d), relation) <- AMR.arcs
       val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
         case None => (s, d, relation)
         case Some(_) => (d, s, relation.substring(0, relation.size - 3))
       }
-    } yield (source + ":" + arcName + ":" + dest)
-    
+    } yield (AMR.nodes(source) + ":" + arcName + ":" + AMR.nodes(dest))
+
+    val arcsOut = for {
+      ((s, d), relation) <- AMR.arcs
+      val (source, dest, arcName) = ARGof.findFirstIn(relation) match {
+        case None => (s, d, relation)
+        case Some(_) => (d, s, relation.substring(0, relation.size - 3))
+      }
+    } yield (arcName + ":" + AMR.nodes(dest))
+
     val attributes = AMR.attributes map {
-      case (node, attrType, attrValue) => AMR.nodes(node) + ":" + attrType + ":" + attrValue
+      case (node, attrType, attrValue) => if (AMR.nodes.contains(node)) AMR.nodes(node) + ":" + attrType + ":" + attrValue else {
+        println("No Node = " + node + " found in AMR:")
+        println(AMR)
+        "UNK:" + attrType + ":" + attrValue
+      }
     }
-    (nodes ++ arcs ++ attributes).toSeq
+    (nodes ++ nodes ++ arcsIn ++ arcsOut ++ attributes ++ attributes).toSeq
   }
 
   // We simply replace all nodes in AMR2 with the name of the node to which they are mapped in AMR1
@@ -283,14 +298,14 @@ object Smatch {
     // (if it's not a leaf node, then we can't do this, and have to leave it as an incorrect node)
 
     // So what we do here, is remove any leaf nodes from the graph, and store their values in an attribute list for the node
-    
+
     val newNodes = for {
       (n, v) <- input.nodes
       if !(input.isLeafNode(n) && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
     } yield (n, quote.replaceAllIn(v, ""))
 
     val arcsToUse = if (input.originalArcs.isEmpty) input.arcs else input.originalArcs
-    
+
     val arcsWithOpN = arcsToUse map {
       case ((source, dest), relation) if relation != "opN" => ((source, dest), relation)
       case ((source, dest), relation) =>
@@ -306,17 +321,17 @@ object Smatch {
       case ((source, dest), relation) => !(attributeNodes.contains(dest) || attributeNodes.contains(source))
     }
 
-    val attributes = (attributeNodes map {
+    val attributes = ((attributeNodes map {
       case (node, value) =>
-          val allP = input.parentsOf(node)
-          if (allP.nonEmpty) {
-            val p = allP.head
-          (p, arcsWithOpN((p, node)), value) 
-          } else {
-            ("R", "R", value)
-          }
-    }).toList ++ (input.getRoots map {r => (r, "ROOT", input.nodes(r))})
-    
+        val allP = input.parentsOf(node)
+        if (allP.nonEmpty) {
+          val p = allP.head
+          (p, arcsWithOpN((p, node)), value)
+        } else {
+          ("R", "R", value)
+        }
+    }).toList filterNot { case (key, _, _) => key == "R" }) ++ (input.getRoots filter newNodes.contains map { r => (r, "ROOT", input.nodes(r)) })
+
     input.copy(nodes = newNodes, arcs = newArcs, attributes = attributes)
   }
 }

@@ -15,7 +15,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++
-    Insert.all ++ NextNode.all ++ NextEdge.all ++ Array(DoNothing)
+    Insert.all ++ NextNode.all ++ NextEdge.all
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
@@ -29,37 +29,44 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
 
-    if (state.phaseTwo) {
-      val reentranceActions = state.currentGraph.getNeighbourhood(sigma, 4) map (Reentrance(_)) filter (_.isPermissible(state))
-      nextEdgeActions.toArray ++ reentranceActions ++ Array(DoNothing)
-    } else {
-      val reattachActions = (if (state.childrenToProcess.isEmpty || (state.currentGraph.reattachedNodes contains beta)) {
-        Set[Reattach]()
-      } else {
-        val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE) - sigma -- state.currentGraph.subGraph(beta.get)
-        possibleNodes map (Reattach(_))
-      }).toArray
-      val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
-      val prohibitedNodes = if (prohibition) {
-        val parents = state.currentGraph.parentsOf(sigma)
-        val grandParents = parents flatMap state.currentGraph.parentsOf
-        val children = state.currentGraph.childrenOf(sigma)
-        val grandChildren = children flatMap state.currentGraph.childrenOf
-        ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
-      } else Set[String]()
-      val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
-      val insertActions = insertable map (Insert(_))
-      val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
-      val permissibleConcepts = beta match {
-        case Some(b) => Set()
-        case None =>
-          val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set())
-          if (preferKnown && wordIndex != 0 && (pc1 contains wordIndex)) pc1 else pc1 + 0
-      }
-      val nextNodeActions = permissibleConcepts map (NextNode(_))
+    val reentranceActions = if (reentrance) {
+      state.currentGraph.getNeighbourhood(sigma, 4) map (Reentrance(_)) filter (_.isPermissible(state))
+    } else Set[Reentrance]()
 
-      reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
+    val reattachActions = (if (state.childrenToProcess.isEmpty || (state.currentGraph.reattachedNodes contains beta)) {
+      Set[Reattach]()
+    } else {
+      val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE) - sigma -- state.currentGraph.subGraph(beta.get)
+      possibleNodes map (Reattach(_))
+    }).toArray
+    val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
+    val prohibitedNodes = if (prohibition) {
+      val parents = state.currentGraph.parentsOf(sigma)
+      val grandParents = parents flatMap state.currentGraph.parentsOf
+      val children = state.currentGraph.childrenOf(sigma)
+      val grandChildren = children flatMap state.currentGraph.childrenOf
+      ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
+    } else Set[String]()
+    val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
+    val insertActions = insertable map (Insert(_))
+    val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
+    val permissibleConcepts = beta match {
+      case Some(b) => Set()
+      case None =>
+        // if the word of the sigma node does not exist, then wordIndex is 0, so adding it will default to WORD
+        val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + wordIndex
+        if (preferKnown) {
+          pc1
+        } else {
+          val lemmaIndex = conceptIndex(state.currentGraph.nodeLemmas(sigma))
+          val verbIndex = conceptIndex(state.currentGraph.nodeLemmas(sigma) + "-01")
+          val wordEqualsLemma = wordIndex == lemmaIndex && wordIndex != 0
+          pc1 - wordIndex - lemmaIndex - verbIndex ++ (if (wordEqualsLemma) Set(-1, -2) else Set (0, -1, -2))
+        }
     }
+    val nextNodeActions = permissibleConcepts map (NextNode(_))
+
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
@@ -74,7 +81,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   def init(datum: Sentence): WangXueTransitionState = {
 
     val rootNodes = datum.dependencyTree.getRoots.toList
-    val allNodes = datum.dependencyTree.getDescendants(rootNodes) 
+    val allNodes = datum.dependencyTree.getDescendants(rootNodes)
 
     // all Nodes with leaves first, so we finish with the roots
     // the children of the top node (which will always be Nil at initialisation)
@@ -87,8 +94,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
   override def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
 
-  override def isTerminal(state: WangXueTransitionState): Boolean = if (reentrance) (state.nodesToProcess.isEmpty && state.phaseTwo) else
-    (state.nodesToProcess.isEmpty || state.phaseTwo)
+  override def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 
   override def permissibleActions(state: WangXueTransitionState): Array[WangXueAction] = {
     actions(state).filter(action => isPermissible(action, state))
