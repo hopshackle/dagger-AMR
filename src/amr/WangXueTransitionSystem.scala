@@ -66,7 +66,8 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 
-    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ 
+    (Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)).filter(action => isPermissible(action, state))
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
@@ -97,6 +98,6 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   override def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
 
   override def permissibleActions(state: WangXueTransitionState): Array[WangXueAction] = {
-    actions(state).filter(action => isPermissible(action, state))
+    actions(state)
   }
 }
