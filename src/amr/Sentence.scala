@@ -243,7 +243,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
       if (parentNodeIsName) quote + oldValue + quote else oldValue
     }
-
+    
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
     val amrNodeSpan = nodeSpans map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }

@@ -20,7 +20,6 @@ object ImportConcepts {
   } yield ((index + 1) -> relation)).toMap + (0 -> "UNKNOWN")
   lazy val relationStringToIndex = relationMaster map (_ match { case (index, text) => (text -> index) })
   lazy val expertResults = {
-    println("Now calculating expert results")
     val expert = new WangXueExpert
     val output = for {
       ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
@@ -41,6 +40,8 @@ object ImportConcepts {
   lazy val edgesPerLemma = loadEdgesPerLemma
 
   lazy val insertableConcepts = loadInsertableConcepts
+
+  lazy val compositeNodes = loadCompositeNodes
 
   def initialise(fileName: String): Unit = {
     amrFile = fileName
@@ -66,11 +67,40 @@ object ImportConcepts {
   }
 
   private def loadRelations: Set[String] = {
-    println("Loading Relations")
     (for {
       graph <- allAMR
       relation <- graph.arcs.values
     } yield relation).toSet
+  }
+
+  private def loadCompositeNodes: Set[String] = {
+    val output = (for {
+      (original, _) <- expertResults
+      unmappedAMR <- original.amr.get.nodes.keys filterNot original.AMRToPosition.contains
+      if original.amr.get childrenOf (unmappedAMR) exists original.AMRToPosition.contains
+    } yield allCompositesFrom(unmappedAMR, original)).flatten.toSet
+
+    val cn = new FileWriter(amrFile + "_cn")
+    output foreach (x => cn.write(x + "\n"))
+    cn.close
+    output
+  }
+
+  private def allCompositesFrom(amrKey: String, sentence: Sentence): List[String] = {
+    def oneUp(amrKey: String, sentence: Sentence, acc: List[String]): List[String] = {
+      val unmappedParents = sentence.amr.get.parentsOf(amrKey) filterNot sentence.AMRToPosition.contains
+      if (unmappedParents.isEmpty)
+        acc
+      else {
+        (for {
+          p <- unmappedParents.toList
+          val concept = sentence.amr.get.nodes(p)
+          val relation = sentence.amr.get.arcs((p, amrKey))
+          val newAcc = acc map { concept + ":" + relation + ":" + _ }
+        } yield oneUp(p, sentence, newAcc)).flatten
+      }
+    }
+    oneUp(amrKey, sentence, List(sentence.amr.get.nodes(amrKey)))
   }
 
   private def loadInsertableConcepts: Map[String, Set[String]] = {
