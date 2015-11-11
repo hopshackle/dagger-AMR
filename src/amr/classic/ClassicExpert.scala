@@ -34,13 +34,17 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
           // we find the node, plus all unmapped nodes further up the tree iff there is a single line of ascent
           // in other words, we stop once we hit a node that has other children, or which has more than one parent
           // TODO: Consider descendant branches. Currently we just go up the tree
-         val amr = data.amr.get
-         val parents = amr.parentsOf(amrKey)
-         val unmappedParents = parents filterNot data.AMRToPosition.contains
-         if (parents.isEmpty || parents.size > 1 || unmappedParents.isEmpty)
-           if (acc == "") amr.nodes(amrKey) else amr.nodes(amrKey) + ":" + acc
-         else
-           acc
+          val amr = data.amr.get
+          val parents = amr.parentsOf(amrKey)
+          val unmappedParents = parents filterNot data.AMRToPosition.contains
+          val concept = amr.nodes(amrKey)
+          val newAcc = if (acc == "") amr.nodes(amrKey) else amr.nodes(amrKey) + ":" + acc
+          if (parents.isEmpty || parents.size > 1 || unmappedParents.isEmpty)
+            newAcc
+          else {
+            val relation = amr.arcs((unmappedParents(0), amrKey))
+            getCompositeNode(unmappedParents(0), relation + ":" + newAcc)
+          }
         }
         /*
          * Possibilities are:

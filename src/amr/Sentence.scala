@@ -109,13 +109,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
-  def toOutputFormat: String = {
-    val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\t${nodeSpans(x)._1}\t${nodeSpans(x)._2}\n")
-    val arcOutput = arcs map (x => s"# ::edge\t${x._1._1}\t${x._1._2}\t${x._2}\n")
-
-    "# ::SpanGraph\n" + nodeOutput.mkString + arcOutput.mkString
-  }
-
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
     this.copy(arcs = arcs + ((parent, child) -> label))
   }
@@ -317,11 +310,15 @@ object Sentence {
       }
       !remove
     }
-
+    
     val amrToWordIndices = for {
       (start, end) <- removeOverlaps
+//      val t = println(start + " : " + end)
       val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
+ //     val d = println(allDTIndices)
     } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
+    
+  //  amrToWordIndices foreach println
 
     (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }

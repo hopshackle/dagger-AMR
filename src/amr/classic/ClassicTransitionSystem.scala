@@ -61,21 +61,29 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
     def extractNodesAndArcs(startingNode: Int, input: Array[String]): (Map[Int, String], Map[(Int, Int), String]) = {
       val concepts = getEven(input)
       val relations = getOdd(input)
-      val allN = (conceptNumber until conceptNumber + concepts.size) map { k => (k -> concepts(k - conceptNumber)) }
-      val allR = Map((startingNode, conceptNumber) -> relations(0)) ++
-        ((conceptNumber + 1 until conceptNumber + concepts.size) map { a: Int => (((a, (a + 1)) -> relations(a - conceptNumber - 1))) })
+      val allN = (conceptNumber until conceptNumber + concepts.size - 1) map { k => (k -> concepts(k - conceptNumber + 1)) }
+      val allR = if (relations.isEmpty) Map.empty[(Int, Int), String] else Map((startingNode, conceptNumber) -> relations(0)) ++
+        ((conceptNumber + 1 until conceptNumber + concepts.size - 1) map { a: Int => (((a - 1, a) -> relations(a - conceptNumber))) })
       conceptNumber += concepts.size
       (allN.toMap, allR)
     }
 
     val fragmentHeaders = state.fragmentHeads map { case (k, v) => (k, v.split(":")) }
     val blah = for {
-      (p, stringArray) <- fragmentHeaders
+      (p, stringArray) <- fragmentHeaders.toList
       (n, a) = extractNodesAndArcs(p, stringArray)
-    } yield (n, a)
-    val allNodes = (blah flatMap { _._1 } toList)
+      bottomConcept = if (n.isEmpty) p else n.keys.max
+    } yield (n, a, bottomConcept)
+    val deletedNodes = state.currentGraph.deletedNodes.values.flatten.toList
+    val fragmentTerminals = state.fragments.values.flatten.toList
+    val fragmentChildNodes = deletedNodes filter { case (k, v) => fragmentTerminals contains k }
+    val allNodes = (blah map { _._1 }).flatten ++ fragmentChildNodes
     // the fragment header key node is already in the graph
-    val allArcs = (blah flatMap { _._2 }) ++ (fragmentHeaders.keySet flatMap { k => state.fragments(k) map (v => ((k, v) -> "opN")) }).toMap
+    val leafArcs = (fragmentHeaders.keys.zip(blah map { _._3 }) flatMap { case (f, b) => state.fragments(f) map (v => ((b, v) -> "opN")) }).toMap
+    val allArcs = (blah map { _._2 }).flatten.toMap ++ leafArcs
+
+    println(allNodes)
+    println(allArcs)
 
     Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.copy(nodes = state.currentGraph.nodes ++ allNodes,
       arcs = state.currentGraph.arcs ++ allArcs).toAMR))

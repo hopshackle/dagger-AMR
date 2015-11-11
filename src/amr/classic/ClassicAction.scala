@@ -1,6 +1,6 @@
 package amr.classic
 import dagger.core._
-import amr.hasNodeAsParameter
+import amr._
 import amr.ImportConcepts.{ conceptIndex, concept, conceptMaster }
 
 abstract class ClassicAction extends TransitionAction[ClassicTransitionState] {
@@ -19,6 +19,14 @@ object ClassicAction {
       case "DeleteNode" => DeleteNode
     }
   }
+
+  def nodesInTokenOrder(graph: DependencyTree): List[Int] = {
+    val spans = graph.nodeSpans
+    graph.nodes.keys.toList.sortWith {
+      case (a1, a2) =>
+        spans.getOrElse(a1, (0, 0))._1 > spans.getOrElse(a2, (0, 0))._1
+    }
+  }
 }
 
 case class NextNode(conceptIndex: Int) extends ClassicAction {
@@ -32,7 +40,7 @@ case class NextNode(conceptIndex: Int) extends ClassicAction {
     }
     val tree = conf.currentGraph.labelNode(conf.nodesToProcess.head, conceptToUse)
 
-    val (newPhase, newNodesToProcess) = if (conf.nodesToProcess.tail.isEmpty) (2, conf.nodesInTokenOrder) else (1, conf.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (conf.nodesToProcess.tail.isEmpty) (2, ClassicAction.nodesInTokenOrder(tree)) else (1, conf.nodesToProcess.tail)
     conf.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, previousActions = this :: conf.previousActions,
       processedNodes = conf.processedNodes + conf.nodesToProcess.head, phase = newPhase)
   }
@@ -53,7 +61,7 @@ case object DeleteNode extends ClassicAction {
     // delete node from graph (always a leaf, so no complications)
     // and pop it from the stack
     val tree = state.currentGraph.removeNode(state.nodesToProcess.head)
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (2, state.nodesInTokenOrder) else (1, state.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (2, ClassicAction.nodesInTokenOrder(tree)) else (1, state.nodesToProcess.tail)
 
     state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, previousActions = this :: state.previousActions, phase = newPhase)
   }
@@ -64,7 +72,7 @@ case object DeleteNode extends ClassicAction {
 case object CreateFragment extends ClassicAction {
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
     val newFragments = state.fragments + (state.nodesToProcess.head -> List(state.nodesToProcess.head))
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, state.nodesInTokenOrder) else (2, state.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, ClassicAction.nodesInTokenOrder(state.currentGraph)) else (2, state.nodesToProcess.tail)
 
     state.copy(nodesToProcess = newNodesToProcess, previousActions = this :: state.previousActions, fragments = newFragments, phase = newPhase)
   }
@@ -75,8 +83,8 @@ case object CreateFragment extends ClassicAction {
 case class AssignToFragment(parameterNode: Int) extends ClassicAction with hasNodeAsParameter {
   override def getMasterLabel = AssignToFragment(0)
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, state.nodesInTokenOrder) else (2, state.nodesToProcess.tail)
     val tree = state.currentGraph.removeNode(state.nodesToProcess.head)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, ClassicAction.nodesInTokenOrder(tree)) else (2, state.nodesToProcess.tail)
     val newFragments = state.fragments + (parameterNode -> (state.nodesToProcess.head :: state.fragments(parameterNode)))
     state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, previousActions = this :: state.previousActions,
       fragments = newFragments, phase = newPhase)
@@ -89,7 +97,7 @@ case class AssignToFragment(parameterNode: Int) extends ClassicAction with hasNo
 
 object NoParent extends ClassicAction {
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (4, state.nodesInTokenOrder) else (3, state.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (4, ClassicAction.nodesInTokenOrder(state.currentGraph)) else (3, state.nodesToProcess.tail)
     state.copy(nodesToProcess = newNodesToProcess, phase = newPhase)
   }
   override def toString: String = "NoParent"
@@ -100,7 +108,6 @@ object NoParent extends ClassicAction {
 
 case class AddParent(parentString: String) extends ClassicAction {
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (4, state.nodesInTokenOrder) else (3, state.nodesToProcess.tail)
     // now, we need to add in compositeNode as the parent of the fragment. This also means that we really want this as the node in the graph, 
     // so that the fragment just lists its children
     val topConcept = parentString.split(":")(0)
@@ -112,6 +119,7 @@ case class AddParent(parentString: String) extends ClassicAction {
     val stageTwo = stageOne.removeNode(state.nodesToProcess.head)
     val newFragments = state.fragments + (newNode -> (state.fragments(state.nodesToProcess.head))) - state.nodesToProcess.head
     val newFragmentHeads = state.fragmentHeads + (newNode -> parentString)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (4, ClassicAction.nodesInTokenOrder(stageTwo)) else (3, state.nodesToProcess.tail)
     state.copy(nodesToProcess = newNodesToProcess, currentGraph = stageTwo, fragments = newFragments, fragmentHeads = newFragmentHeads,
       phase = newPhase)
   }
