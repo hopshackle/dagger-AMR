@@ -8,6 +8,7 @@ import amr.DependencyTree
 object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction, ClassicTransitionState] {
   var preferKnown = true
   val expert = new ClassicExpert
+  val alwaysEdgePossibilities = Set("opN")
 
   def actions(): Array[ClassicAction] = NextNode.all ++ Array(DeleteNode)
 
@@ -36,8 +37,22 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
         val output: Array[ClassicAction] = (state.fragments.keys map { f => AssignToFragment(f) }).toArray ++ Array(CreateFragment)
         output
       case 3 =>
-        val output: Array[ClassicAction] = (compositeNodes.toArray map AddParent) ++
+        val output: Array[ClassicAction] = (compositeNodes.toArray map { cn => AddParent(cn) }) ++
           (if (NoParent.isPermissible(state)) Array(NoParent) else Array.empty[ClassicAction])
+        output
+      case 4 =>
+        val nextEdgeIndices = if (state.nodePair == (0, 0)) Set(0) else {
+          val concept1 = if (numbers.replaceAllIn(state.currentGraph.nodes(state.nodePair._1), "") == "") "##" else state.currentGraph.nodes(state.nodePair._1)
+          val concept2 = if (numbers.replaceAllIn(state.currentGraph.nodes(state.nodePair._2), "") == "") "##" else state.currentGraph.nodes(state.nodePair._2)
+          val edgeKeys1 = List(concept1 + "-OUT", concept2 + "-IN")
+          val edgeKeys2 = List(concept1 + "-IN", concept2 + "-OUT")
+          val permissibleEdges1 = (edgeKeys1 flatMap { concept => edgesPerConcept.getOrElse(concept, Set()) })
+          val permissibleEdges2 = (edgeKeys1 flatMap { concept => edgesPerConcept.getOrElse(concept, Set()) }) map { i => -i }
+
+          permissibleEdges1.toSet ++ permissibleEdges2.toSet + 0 ++
+            (alwaysEdgePossibilities map relationIndex toSet) ++ (alwaysEdgePossibilities map (i => -relationIndex(i)) toSet)
+        }
+        val output: Array[ClassicAction] = (nextEdgeIndices map NextEdge).toArray
         output
       case _ =>
         Array.empty[ClassicAction]
@@ -76,14 +91,10 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
     } yield (n, a, bottomConcept)
     val deletedNodes = state.currentGraph.deletedNodes.values.flatten.toList
     val fragmentTerminals = state.fragments.values.flatten.toList
-    val fragmentChildNodes = deletedNodes filter { case (k, v) => fragmentTerminals contains k }
-    val allNodes = (blah map { _._1 }).flatten ++ fragmentChildNodes
-    // the fragment header key node is already in the graph
-    val leafArcs = (fragmentHeaders.keys.zip(blah map { _._3 }) flatMap { case (f, b) => state.fragments(f) map (v => ((b, v) -> "opN")) }).toMap
-    val allArcs = (blah map { _._2 }).flatten.toMap ++ leafArcs
-
-    println(allNodes)
-    println(allArcs)
+    //    val fragmentChildNodes = deletedNodes filter { case (k, v) => fragmentTerminals contains k }
+    val allNodes = (blah map { _._1 }).flatten // ++ fragmentChildNodes
+    //    val leafArcs = (fragmentHeaders.keys.zip(blah map { _._3 }) flatMap { case (f, b) => state.fragments(f) map (v => ((b, v) -> "opN")) }).toMap
+    val allArcs = (blah map { _._2 }).flatten.toMap // ++ leafArcs
 
     Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.copy(nodes = state.currentGraph.nodes ++ allNodes,
       arcs = state.currentGraph.arcs ++ allArcs).toAMR))
@@ -97,7 +108,7 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
     val startingGraph = DependencyTree(datum.dependencyTree.nodes, datum.dependencyTree.nodeLemmas, datum.dependencyTree.nodePOS,
       datum.dependencyTree.nodeNER, datum.dependencyTree.nodeSpans, Map(), Map(), List(), Map(), Map(), Set(), Map())
     // remove all edges
-    ClassicTransitionState(allNodes, startingGraph, Nil, Some(datum), datum.dependencyTree, Set(), Set(), Map())
+    ClassicTransitionState(allNodes, startingGraph, Nil, Some(datum), (0, 0), datum.dependencyTree, Set(), Set(), Map())
   }
 
   def remainingNodesInTokenOrder(datum: Sentence): List[Int] = {
@@ -110,7 +121,7 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
 
   override def isPermissible(action: ClassicAction, state: ClassicTransitionState): Boolean = action.isPermissible(state)
 
-  override def isTerminal(state: ClassicTransitionState): Boolean = state.phase == 4
+  override def isTerminal(state: ClassicTransitionState): Boolean = state.phase == 5
 
   override def permissibleActions(state: ClassicTransitionState): Array[ClassicAction] = {
     actions(state)

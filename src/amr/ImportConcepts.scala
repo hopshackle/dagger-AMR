@@ -38,10 +38,12 @@ object ImportConcepts {
 
   lazy val conceptsPerLemma = loadConceptsPerLemmaReduced
   lazy val edgesPerLemma = loadEdgesPerLemma
+  lazy val edgesPerConcept = loadEdgesPerConcept
 
   lazy val insertableConcepts = loadInsertableConcepts
 
   lazy val compositeNodes = loadCompositeNodes
+  lazy val leafRelations = loadLeafRelations
 
   def initialise(fileName: String): Unit = {
     amrFile = fileName
@@ -86,6 +88,19 @@ object ImportConcepts {
     output
   }
 
+  private def loadLeafRelations: Set[String] = {
+    val output = (for {
+      (original, _) <- expertResults
+      unmappedAMR <- original.amr.get.nodes.keys filterNot original.AMRToPosition.contains
+      mappedLeafChildrenOfUnmappedAMR = original.amr.get.childrenOf(unmappedAMR) filter original.AMRToPosition.contains filter original.amr.get.isLeafNode
+    } yield mappedLeafChildrenOfUnmappedAMR).flatten.toSet
+    val lr = new FileWriter(amrFile + "_lr")
+    output foreach (x => lr.write(x + "\n"))
+    lr.close
+
+    output
+  }
+
   private def allCompositesFrom(amrKey: String, sentence: Sentence): List[String] = {
     def oneUp(amrKey: String, sentence: Sentence, acc: List[String]): List[String] = {
       val unmappedParents = sentence.amr.get.parentsOf(amrKey) filterNot sentence.AMRToPosition.contains
@@ -97,7 +112,7 @@ object ImportConcepts {
           val concept = sentence.amr.get.nodes(p)
           val relation = sentence.amr.get.arcs((p, amrKey))
           val newAcc = acc map { concept + ":" + relation + ":" + _ }
-        } yield oneUp(p, sentence, newAcc)).flatten
+        } yield oneUp(p, sentence, acc ++ newAcc)).flatten
       }
     }
     oneUp(amrKey, sentence, List(sentence.amr.get.nodes(amrKey)))
@@ -198,6 +213,36 @@ object ImportConcepts {
       arcsByName map { case (k, v) => (k, v map relationIndex) }
     } else {
       val input = Source.fromFile(amrFile + "_le").getLines
+      val lineSplit = input map (_.split(":").toList)
+      (lineSplit map (x => (x.head, x.tail map relationIndex toSet))).toMap
+    }
+  }
+  private def loadEdgesPerConcept: Map[String, Set[Int]] = {
+    val conceptFileExists = {
+      try {
+        val fr = new FileReader(amrFile + "_ce")
+        true
+      } catch {
+        case e: FileNotFoundException => false
+      }
+    }
+
+    if (!conceptFileExists) {
+      val edges = (for {
+        (original, _) <- expertResults
+        amr = original.amr.get
+        ((from, to), relation) <- amr.arcs
+        conceptFrom = if (numbers.replaceAllIn(amr.nodes(from), "") == "") "##"  else amr.nodes(from)
+        conceptTo = if (numbers.replaceAllIn(amr.nodes(to), "") == "") "##"  else amr.nodes(to)
+      } yield List((conceptFrom + "-OUT" -> relation), (conceptTo + "-IN" -> relation))).flatten.toSeq
+
+      val stuff = edges.groupBy(_._1).mapValues(seq => (seq map { i => relationIndex(i._2) }).toSet)
+      val ce = new FileWriter(amrFile + "_ce")
+      stuff filter (_._2.nonEmpty) foreach (x => ce.write(x._1 + ":" + x._2.mkString(":") + "\n"))
+      ce.close
+      stuff
+    } else {
+      val input = Source.fromFile(amrFile + "_ce").getLines
       val lineSplit = input map (_.split(":").toList)
       (lineSplit map (x => (x.head, x.tail map relationIndex toSet))).toMap
     }

@@ -33,10 +33,9 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
         def getCompositeNode(amrKey: String, acc: String): String = {
           // we find the node, plus all unmapped nodes further up the tree iff there is a single line of ascent
           // in other words, we stop once we hit a node that has other children, or which has more than one parent
-          // TODO: Consider descendant branches. Currently we just go up the tree
           val amr = data.amr.get
           val parents = amr.parentsOf(amrKey)
-          val unmappedParents = parents filterNot data.AMRToPosition.contains
+          val unmappedParents = parents filterNot data.AMRToPosition.contains filterNot state.amrMap.contains
           val concept = amr.nodes(amrKey)
           val newAcc = if (acc == "") amr.nodes(amrKey) else amr.nodes(amrKey) + ":" + acc
           if (parents.isEmpty || parents.size > 1 || unmappedParents.isEmpty)
@@ -60,15 +59,50 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
          *  The nodes in the fragment do not have a common parent, and all of them are mapped
          *      Non-ideal. Not much we can do. Insert a name node, and hope for the best.
          */
-        val fragmentNodes = state.fragments(state.nodesToProcess.head)
+        val fragmentNodes = state.fragments.getOrElse(state.nodesToProcess.head, List.empty[Int])
         val fragmentAMR = fragmentNodes map { data.positionToAMR.getOrElse(_, "U") }
         val fragmentParents = fragmentAMR flatMap data.amr.get.parentsOf distinct
         val unmappedFragmentParents = fragmentParents filterNot data.AMRToPosition.contains
-        (fragmentParents.size, unmappedFragmentParents.size) match {
-          case (_, 1) => AddParent(getCompositeNode(unmappedFragmentParents(0), ""))
-          case (1, 0) => NoParent
-          case (_, 0) => AddParent("and")
-          case (_, _) => AddParent(getCompositeNode(unmappedFragmentParents(0), ""))
+        val fragmentNodesAllLeaves = fragmentAMR forall data.amr.get.isLeafNode
+        (fragmentParents.size, unmappedFragmentParents.size, fragmentNodesAllLeaves) match {
+          case (_, 1, _) => AddParent(getCompositeNode(unmappedFragmentParents(0), ""))
+    //      case (_, 1, false) => InsertNode(getCompositeNode(unmappedFragmentParents(0), ""))
+          case (1, 0, _) => NoParent
+          case (_, 0, _) => AddParent("and")
+    //      case (_, 0, false) => InsertNode("and")
+          case (_, _, _) => AddParent(getCompositeNode(unmappedFragmentParents(0), ""))
+   //       case (_, _, false) => InsertNode(getCompositeNode(unmappedFragmentParents(0), ""))
+        }
+      case 4 =>
+        val allNodeMappings = data.positionToAMR.toList ++ state.amrMap.toList.map(i => (i._2, i._1))
+        val from = allNodeMappings filter (i => i._1 == state.nodePair._1) map (_._2)
+        val to = allNodeMappings filter (i => i._1 == state.nodePair._2) map (_._2)
+        /*
+         * allNodeMappings contains all node -> AMRKey mappings
+         * from then contains those that map to the first of the nodePair, and to contains those that map to the second
+         * 
+         * allAMRNodes then contains all these mappings, and we look for ALL arcs between them....aha....we actually
+         * only want arcs that start at one and go to the other!
+         */
+        if (from.isEmpty || to.isEmpty)
+          NextEdge(0)
+        else {
+          val allRelations = for {
+            f <- from
+            t <- to
+            direction <- List(1, 2)
+            key = if (direction == 1) (f, t) else (t, f)
+            if data.amr.get.arcs contains key
+          } yield (key._1, key._2, data.amr.get.arcs(key))
+          if (allRelations.isEmpty)
+            NextEdge(0)
+          else {
+            if ((from contains allRelations(0)._1) && (to contains allRelations(0)._2))
+              NextEdge(relationIndex(allRelations(0)._3))
+            else
+              NextEdge(-relationIndex(allRelations(0)._3))
+
+          }
         }
     }
   }

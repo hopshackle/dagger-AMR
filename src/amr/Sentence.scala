@@ -129,7 +129,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       deletedNodes = this.deletedNodes + (parent -> newDeletedNodes))
   }
 
-  def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
+  def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String, addArc: Boolean = true): (Int, DependencyTree) = {
     // So we to add a new node as a parent, remove the edge from the current node to its current parent, and insert two new edges
     // ...parent to new, and new to current
     // we assign a nodeSpan to the new node to match its child
@@ -139,8 +139,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
+    val newArcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent ++ (if (addArc) Map(newEdgeFromNode) else Map())
+
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
-      nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
+      nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = newArcs,
       nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")),
       insertedNodes = newInsertedNodes))
   }
@@ -236,7 +238,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
       if (parentNodeIsName) quote + oldValue + quote else oldValue
     }
-    
+
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
     val amrNodeSpan = nodeSpans map { case (key: Int, value: Any) => (key.toString -> value) }
     val amrArcs = arcs map { case (key: (Int, Int), value: Any) => ((key._1.toString, key._2.toString) -> value) }
@@ -310,15 +312,15 @@ object Sentence {
       }
       !remove
     }
-    
+
     val amrToWordIndices = for {
       (start, end) <- removeOverlaps
-//      val t = println(start + " : " + end)
+      //      val t = println(start + " : " + end)
       val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
- //     val d = println(allDTIndices)
+      //     val d = println(allDTIndices)
     } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
-    
-  //  amrToWordIndices foreach println
+
+    //  amrToWordIndices foreach println
 
     (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }
@@ -341,7 +343,7 @@ object Sentence {
       amrKey <- amrKeys
       val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       word <- wordIndices
-      if dependencyTree.nodes contains word  // as this might have been deleted during parsing
+      if dependencyTree.nodes contains word // as this might have been deleted during parsing
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       val similarity = JaroMetric.compare(dtWord, amrConcept).getOrElse(0.0)
       if similarity > 0.001
