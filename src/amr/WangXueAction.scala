@@ -6,6 +6,7 @@ import amr.ImportConcepts.{ relationMaster, conceptMaster, relation, concept, re
 abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
   def isPermissible(state: WangXueTransitionState): Boolean
   def name: String
+  def construct(name: String): WangXueAction = WangXueAction.construct(name)
 }
 
 object WangXueAction {
