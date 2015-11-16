@@ -64,40 +64,8 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
   def chooseTransition(datum: Sentence, state: ClassicTransitionState): ClassicAction = expert.chooseTransition(datum, state)
 
   def construct(state: ClassicTransitionState, datum: Sentence): Sentence = {
-    // Before constructing AMR from the dependencyTree, we need to unwrap all of the composite nodes
-    // We iterate through each fragmentHead - as this defines the set of composite nodes
-    // For each of them we insert a new node for each split (from : markers), and then 
-    // one node for each fragment content
-    // Then we need to insert the edges. This is easy for the final step, as we just use 'opN'.
-    // For the earlier edges we need to extract the information from fragmentHead
-    var conceptNumber = 501
-    def getOdd(input: Array[String]): Array[String] = { ((0 until input.length) filter (_ % 2 != 0) map input).toArray }
-    def getEven(input: Array[String]): Array[String] = { ((0 until input.length) filter (_ % 2 == 0) map input).toArray }
-    def extractNodesAndArcs(startingNode: Int, input: Array[String]): (Map[Int, String], Map[(Int, Int), String]) = {
-      val concepts = getEven(input)
-      val relations = getOdd(input)
-      val allN = (conceptNumber until conceptNumber + concepts.size - 1) map { k => (k -> concepts(k - conceptNumber + 1)) }
-      val allR = if (relations.isEmpty) Map.empty[(Int, Int), String] else Map((startingNode, conceptNumber) -> relations(0)) ++
-        ((conceptNumber + 1 until conceptNumber + concepts.size - 1) map { a: Int => (((a - 1, a) -> relations(a - conceptNumber))) })
-      conceptNumber += concepts.size
-      (allN.toMap, allR)
-    }
-
-    val fragmentHeaders = state.fragmentHeads map { case (k, v) => (k, v.split(":")) }
-    val blah = for {
-      (p, stringArray) <- fragmentHeaders.toList
-      (n, a) = extractNodesAndArcs(p, stringArray)
-      bottomConcept = if (n.isEmpty) p else n.keys.max
-    } yield (n, a, bottomConcept)
-    val deletedNodes = state.currentGraph.deletedNodes.values.flatten.toList
-    val fragmentTerminals = state.fragments.values.flatten.toList
-    //    val fragmentChildNodes = deletedNodes filter { case (k, v) => fragmentTerminals contains k }
-    val allNodes = (blah map { _._1 }).flatten // ++ fragmentChildNodes
-    //    val leafArcs = (fragmentHeaders.keys.zip(blah map { _._3 }) flatMap { case (f, b) => state.fragments(f) map (v => ((b, v) -> "opN")) }).toMap
-    val allArcs = (blah map { _._2 }).flatten.toMap // ++ leafArcs
-
-    Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.copy(nodes = state.currentGraph.nodes ++ allNodes,
-      arcs = state.currentGraph.arcs ++ allArcs).toAMR))
+    Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.copy(nodes = state.currentGraph.nodes,
+      arcs = state.currentGraph.arcs).toAMR))
   }
   def expertApprox(datum: Sentence, state: ClassicTransitionState): amr.Sentence = ???
 

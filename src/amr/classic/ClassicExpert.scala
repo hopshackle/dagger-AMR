@@ -19,12 +19,13 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
         // AssignToFragment iff:
         // Leaf node in AMR && Parent AMR is unassigned to token && has a sibling that has its own fragment already
         // && that sibling is also a leaf node
+        // *** Removed constraint on fragments needing to be leaf nodes. No longer true
         val amrKey = data.positionToAMR.getOrElse(state.nodesToProcess.head, "UNK")
         val amrParents = data.amr.get.parentsOf(amrKey)
         val unmappedParents = amrParents filterNot data.AMRToPosition.contains
         val mappedChildrenOfUnmappedParents = unmappedParents flatMap data.amr.get.childrenOf filter data.AMRToPosition.contains
-        val eligibleFragments = mappedChildrenOfUnmappedParents filter data.amr.get.isLeafNode map data.AMRToPosition filter state.fragments.contains
-        if (data.amr.get.isLeafNode(amrKey) && eligibleFragments.nonEmpty)
+        val eligibleFragments = mappedChildrenOfUnmappedParents map data.AMRToPosition filter state.fragments.contains
+        if (eligibleFragments.nonEmpty)
           AssignToFragment(eligibleFragments(0))
         else
           CreateFragment

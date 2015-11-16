@@ -43,7 +43,7 @@ case class NextNode(conceptIndex: Int) extends ClassicAction {
     }
     val tree = conf.currentGraph.labelNode(conf.nodesToProcess.head, conceptToUse)
 
-    val (newPhase, newNodesToProcess) = if (conf.nodesToProcess.tail.isEmpty) (2, nodesInTokenOrder(tree, conf.fragments)) else (1, conf.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (conf.nodesToProcess.tail.isEmpty) (2, nodesInTokenOrder(tree, Map())) else (1, conf.nodesToProcess.tail)
     conf.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, previousActions = this :: conf.previousActions,
       processedNodes = conf.processedNodes + conf.nodesToProcess.head, phase = newPhase)
   }
@@ -64,7 +64,7 @@ case object DeleteNode extends ClassicAction {
     // delete node from graph (always a leaf, so no complications)
     // and pop it from the stack
     val tree = state.currentGraph.removeNode(state.nodesToProcess.head)
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (2, nodesInTokenOrder(tree, state.fragments)) else (1, state.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (2, nodesInTokenOrder(tree, Map())) else (1, state.nodesToProcess.tail)
 
     state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, previousActions = this :: state.previousActions, phase = newPhase)
   }
@@ -75,7 +75,7 @@ case object DeleteNode extends ClassicAction {
 case object CreateFragment extends ClassicAction {
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
     val newFragments = state.fragments + (state.nodesToProcess.head -> List(state.nodesToProcess.head))
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, nodesInTokenOrder(state.currentGraph, Map())) else (2, state.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, nodesInTokenOrder(state.currentGraph, state.fragments)) else (2, state.nodesToProcess.tail)
 
     state.copy(nodesToProcess = newNodesToProcess, previousActions = this :: state.previousActions, fragments = newFragments, phase = newPhase)
   }
@@ -88,7 +88,7 @@ case class AssignToFragment(parameterNode: Int) extends ClassicAction with hasNo
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
     //  val tree = state.currentGraph.removeNode(state.nodesToProcess.head)
     val newFragments = state.fragments + (parameterNode -> (state.nodesToProcess.head :: state.fragments(parameterNode)))
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, nodesInTokenOrder(state.currentGraph, Map())) else (2, state.nodesToProcess.tail)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, nodesInTokenOrder(state.currentGraph, newFragments)) else (2, state.nodesToProcess.tail)
     state.copy(nodesToProcess = newNodesToProcess, previousActions = this :: state.previousActions,
       fragments = newFragments, phase = newPhase)
   }
@@ -130,7 +130,6 @@ object AddParent {
         }
     }
   }
-
 }
 
 case class AddParent(parentString: String) extends ClassicAction {
@@ -140,21 +139,35 @@ case class AddParent(parentString: String) extends ClassicAction {
     // so that the fragment just lists its children
     // parentString is of format concept:relation:concept:relation:concept.....
     val allConcepts = parentString.split(":").zipWithIndex filter { case (c, i) => i % 2 == 0 } map { _._1 }
-    val topConcept = allConcepts(0)
-    val mappedConcepts = mapToAMR(allConcepts.toSeq.reverse, state.originalInput.get,
-      state.originalInput.get.positionToAMR.getOrElse(state.nodesToProcess.head, ""))
-    // we insert the composite node first, with a concept of just the top of the chain
-    // we then remove the childNode it was inserted above
-    // allConcepts are in order of insertion. so we can iterate over them as we go up the AMR tree
-    val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex(topConcept), "", false)
-    val newAMRMap = mappedConcepts map ((_ -> newNode)) toMap
-    val newFragments = state.fragments + (newNode -> (state.fragments.getOrElse(state.nodesToProcess.head, List.empty[Int]))) - state.nodesToProcess.head
-    val newFragmentHeads = state.fragmentHeads + (newNode -> parentString)
-    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (4, nodesInTokenOrder(tree, Map())) else (3, state.nodesToProcess.tail)
+    val allRelations = (parentString.split(":").zipWithIndex filter { case (c, i) => i % 2 != 0 } map { _._1 }) ++ Array("XXX")
+    val mappedConcepts = state.originalInput.get.amr match {
+      case Some(goldAMR) => mapToAMR(allConcepts.toSeq.reverse, state.originalInput.get,
+        state.originalInput.get.positionToAMR.getOrElse(state.nodesToProcess.head, ""))
+      case None =>
+        var out = Seq[String]("")
+        for (i <- 1 until allConcepts.size) { out = "" +: out }
+        out
+    }
+
+    var runningGraph = state.currentGraph
+    var lastNode = state.nodesToProcess.head
+    var newAMRMap = Map.empty[String, Int]
+    var parentNode = 0
+    for (((c, r), amrKey) <- allConcepts.reverse zip allRelations.reverse zip mappedConcepts) {
+      val (newNode, tree) = runningGraph.insertNodeAbove(lastNode, conceptIndex(c), amrKey, false)
+      runningGraph = if (r != "XXX") { parentNode = newNode; tree.labelArc(newNode, lastNode, r) } else tree
+      newAMRMap = newAMRMap + (amrKey -> newNode)
+      lastNode = newNode
+    }
+
+    val newFragments = state.fragments + (parentNode -> (state.fragments.getOrElse(state.nodesToProcess.head, List.empty[Int]))) - state.nodesToProcess.head
+    val newFragmentHeads = state.fragmentHeads + (parentNode -> parentString)
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (4, nodesInTokenOrder(runningGraph, Map())) else (3, state.nodesToProcess.tail)
     val newNodePair = if (newPhase == 4 && newNodesToProcess.size > 1) (newNodesToProcess.head, newNodesToProcess.tail.head) else (0, 0)
-    state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, fragments = newFragments, fragmentHeads = newFragmentHeads,
+    state.copy(nodesToProcess = newNodesToProcess, currentGraph = runningGraph, fragments = newFragments, fragmentHeads = newFragmentHeads,
       amrMap = state.amrMap ++ newAMRMap, nodePair = newNodePair, phase = newPhase)
   }
+
   override def toString: String = "AddParent" + parentString
   override def name: String = "AddParent" + parentString
   override def isPermissible(state: ClassicTransitionState): Boolean = state.phase == 3 && state.nodesToProcess.nonEmpty
@@ -167,15 +180,15 @@ case class NextEdge(relationIndex: Int) extends ClassicAction {
     val tree = if (relationIndex == 0) state.currentGraph else state.currentGraph.labelArc(parent, child, relation(math.abs(relationIndex)))
     val nextNodePosition = state.nodesToProcess.indexOf(state.nodePair._2) + 1
     val updateOfFirstNodeRequired = (nextNodePosition >= state.nodesToProcess.size)
-    val lastFirstNode = state.nodesToProcess.size == 2
+    val lastFirstNode = state.nodesToProcess.size <= 2
     val (newPhase, newNodesToProcess, nextNodePair) = (updateOfFirstNodeRequired, lastFirstNode) match {
       case (true, true) => (5, List.empty[Int], (0, 0))
       case (true, false) => (4, state.nodesToProcess.tail, (state.nodesToProcess.tail.head, state.nodesToProcess.tail.tail.head))
       case (false, _) => (4, state.nodesToProcess, (state.nodesToProcess.head, state.nodesToProcess(nextNodePosition)))
     }
-    state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree,  phase = newPhase, nodePair = nextNodePair)
+    state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, phase = newPhase, nodePair = nextNodePair)
   }
-  override def toString: String = "NextEdge " + relationIndex + " : "  + relation(relationIndex)
+  override def toString: String = "NextEdge " + relationIndex + " : " + relation(relationIndex)
   override def name: String = "NextEdge" + relation(relationIndex)
   override def isPermissible(state: ClassicTransitionState): Boolean = state.phase == 4 && state.nodesToProcess.size > 1 && state.nodePair != (0, 0)
 }

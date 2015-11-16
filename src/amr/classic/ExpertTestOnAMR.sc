@@ -5,14 +5,15 @@ object ExpertTestOnAMR {
 import amr.{AMRGraph, ImportConcepts, Sentence, RunDagger, AMROutput}
 
 val testData = AMRGraph.importFile("C:\\AMR\\CountryList.txt")
-                                                  //> testData  : IndexedSeq[(String, String)] = Vector((Myanmar (MM); Thailand (T
-                                                  //| H); Lao People's Democratic Republic (LA),(a / and :op1 (c3 / country :name 
-                                                  //| (n7 / name :op1 "Myanmar")) :op2 (c4 / country :name (n8 / name :op1 "Thaila
-                                                  //| nd")) :op3 (c5 / country :name (n9 / name :op1 "Lao" :op2 "People's" :op3 "D
-                                                  //| emocratic" :op4 "Republic")))))
-  val expert = new ClassicExpert                  //> expert  : amr.classic.ClassicExpert = amr.classic.ClassicExpert@68be2bc2
+                                                  //> testData  : IndexedSeq[(String, String)] = Vector((Estonia (EE); Germany (DE
+                                                  //| ): Italy (IT); Spain (ES); United States (US),(a / and :op1 (c / country :na
+                                                  //| me (n / name :op1 "Estonia")) :op2 (c4 / country :name (n7 / name :op1 "Germ
+                                                  //| any")) :op3 (c5 / country :name (n9 / name :op1 "Italy")) :op4 (c6 / country
+                                                  //|  :name (n10 / name :op1 "Spain")) :op5 (c8 / country :name (n14 / name :op1 
+                                                  //| "United" :op2 "States")))))
+  val expert = new ClassicExpert                  //> expert  : amr.classic.ClassicExpert = amr.classic.ClassicExpert@482f8f11
   val expertSystem = ClassicTransitionSystem      //> expertSystem  : amr.classic.ClassicTransitionSystem.type = amr.classic.Class
-                                                  //| icTransitionSystem$@4c70fda8
+                                                  //| icTransitionSystem$@d8355a8
   AMRGraph.setAligner("JAMR")
   ImportConcepts.initialise("C:\\AMR\\CountryList.txt")
 // ImportConcepts.relationStrin
@@ -21,59 +22,60 @@ val testData = AMRGraph.importFile("C:\\AMR\\CountryList.txt")
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.4 sec].
+                                                  //| hPCFG.ser.gz ... done [1.1 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [3.9 sec].
+                                                  //| im.crf.ser.gz ... done [4.4 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.4 sec].
+                                                  //| im.crf.ser.gz ... done [2.2 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.5 sec].
-                                                  //| s1  : amr.Sentence = Sentence(Myanmar (MM); Thailand (TH); Lao People's Demo
-                                                  //| cratic Republic (LA),
-                                                  //| NodeMap:	Map(1 -> Myanmar, 3 -> MM, 6 -> Thailand, 8 -> TH, 11 -> Lao, 12
-                                                  //|  -> People, 13 -> 's, 14 -> Democratic, 15 -> Republic, 17 -> LA)
+                                                  //| tsim.crf.ser.gz ... done [4.3 sec].
+                                                  //| s1  : amr.Sentence = Sentence(Estonia (EE); Germany (DE): Italy (IT); Spain 
+                                                  //| (ES); United States (US),
+                                                  //| NodeMap:	Map(1 -> Estonia, 3 -> EE, 6 -> Germany, 8 -> DE, 11 -> Italy, 1
+                                                  //| 3 -> IT, 16 -> Spain, 18 -> ES, 21 -> United, 22 -> States, 24 -> US)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
-                                                  //|  12 -> (6,7), 13 -> (7,8), 14 -> (8,9), 15 -> (9,10), 17 -> (10,11))
-                                                  //| Edges:	Map((3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6,15) -> dep, (1
-                                                  //| 2,11) -> nn, (12,13) -> possessive, (15,12) -> poss, (15,14) -> amod, (15,17
-                                                  //| ) -> appos)
+                                                  //|  13 -> (6,7), 16 -> (7,8), 18 -> (8,9), 21 -> (9,10), 22 -> (10,11), 24 -> (
+                                                  //| 11,12))
+                                                  //| Edges:	Map((3,1) -> nn, (3,6) -> dep, (6,8) -> appos, (6,11) -> dep, (6
+                                                  //| ,16) -> dep, (6,22) -> dep, (11,13) -> dep, (16,18) -> appos, (22,21) -> nn,
+                                                  //|  (22,24) -> appos)
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
                                                   //| DeletedNodes:	Map()
-                                                  //| PartsOfSpeech:	Map(14 -> JJ, 1 -> NNP, 6 -> NNP, 13 -> POS, 17 -> NNP, 
-                                                  //| 12 -> NNP, 3 -> NN, 11 -> NNP, 8 -> NNP, 15 -> NN)
-                                                  //| DependencyLabels:	Map(14 -> amod, 1 -> nn, 6 -> dep, 13 -> possessive, 17 
-                                                  //| -> appos, 12 -> poss, 11 -> nn, 8 -> appos, 15 -> dep),Some(AMRGraph(Map(0.1
-                                                  //|  -> country, 0.0.0 -> name, 0.1.0 -> name, 0.0 -> country, 0.0.0.0 -> "Myanm
-                                                  //| ar", 0.2.0.1 -> "People's", 0.2.0 -> name, 0.1.0.0 -> "Thailand", 0 -> and, 
-                                                  //| 0.2.0.3 -> "Republic", 0.2 -> country, 0.2.0.2 -> "Democratic", 0.2.0.0 -> "
-                                                  //| Lao"),Map(0.1 -> (3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.0.0.
-                                                  //| 0 -> (1,2), 0.2.0.1 -> (5,10), 0.2.0 -> (5,10), 0.1.0.0 -> (3,4), 0.2.0.3 ->
-                                                  //|  (5,10), 0.2 -> (5,10), 0.2.0.2 -> (5,10), 0.2.0.0 -> (5,10)),Map((0.0,0.0.0
-                                                  //| ) -> name, (0.2.0,0.2.0.3) -> opN, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> na
-                                                  //| me, (0.2.0,0.2.0.2) -> opN, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) 
-                                                  //| -> opN, (0.2,0.2.0) -> name, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN, (0.2.0,
-                                                  //| 0.2.0.1) -> opN),Map((0.0,0.0.0) -> name, (0.2.0,0.2.0.3) -> op4, (0.0.0,0.0
-                                                  //| .0.0) -> op1, (0.1,0.1.0) -> name, (0.2.0,0.2.0.2) -> op3, (0.1.0,0.1.0.0) -
-                                                  //| > op1, (0,0.2) ->
+                                                  //| PartsOfSpeech:	Map(24 -> NNP, 1 -> NNP, 6 -> NNP, 21 -> NNP, 13 -> PRP,
+                                                  //|  22 -> NNPS, 3 -> NN, 18 -> NNP, 16 -> NNP, 11 -> NNP, 8 -> NNP)
+                                                  //| DependencyLabels:	Map(24 -> appos, 1 -> nn, 6 -> dep, 21 -> nn, 13 -> dep,
+                                                  //|  22 -> dep, 18 -> appos, 16 -> dep, 11 -> dep, 8 -> appos),Some(AMRGraph(Map
+                                                  //| (0.1 -> country, 0.0.0 -> name, 0.1.0 -> name, 0.0 -> country, 0.4 -> countr
+                                                  //| y, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.3.0.0 -> "Spain", 0.3.0 -> name, 0
+                                                  //| .1.0.0 -> "Germany", 0.4.0.0 -> "United", 0.3 -> country, 0.4.0 -> name, 0 -
+                                                  //| > and, 0.2 -> country, 0.4.0.1 -> "States", 0.2.0.0 -> "Italy"),Map(0.1 -> (
+                                                  //| 3,4), 0.0.0 -> (1,2), 0.1.0 -> (3,4), 0.0 -> (1,2), 0.4 -> (9,11), 0.0.0.0 -
+                                                  //| > (1,2), 0.2.0 -> (5,6), 0.3.0.0 -> (7,8), 0.3.0 -> (7,8), 0.1.0.0 -> (3,4),
+                                                  //|  0.4.0.0 -> (9,11), 0.3 -> (7,8), 0.4.0 -> (9,11), 0.2 -> (5,6), 0.4.0.1 -> 
+                                                  //| (9,11), 0.2.0.0 -> (5,6)),Map((0.0,0.0.0) -> name, (0.3.0,0.3.0.0) -> opN, (
+                                                  //| 0.4.0,0.4.0.1) -> opN, (0,0.3) -> opN, (0.4.0,0.4.0.0) -> opN, (0.0.0,0.0.0.
+                                                  //| 0) -> opN, (0.1,0.1.0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0
+                                                  //| .1) -> opN, (0.2,0.2.0) -> name, (0.3,0.3.0) -> n
                                                   //| Output exceeds cutoff limit.
-  var state = expertSystem.init(s1)               //> state  : amr.classic.ClassicTransitionState = NodesToProcess: 17, 15, 14, 13
-                                                  //| , 12, 11, 8, 6, 3, 1
+  var state = expertSystem.init(s1)               //> state  : amr.classic.ClassicTransitionState = NodesToProcess: 24, 22, 21, 18
+                                                  //| , 16, 13, 11, 8, 6, 3, 1
                                                   //| Current Graph: 
-                                                  //| NodeMap:	Map(1 -> Myanmar, 3 -> MM, 6 -> Thailand, 8 -> TH, 11 -> Lao, 12
-                                                  //|  -> People, 13 -> 's, 14 -> Democratic, 15 -> Republic, 17 -> LA)
+                                                  //| NodeMap:	Map(1 -> Estonia, 3 -> EE, 6 -> Germany, 8 -> DE, 11 -> Italy, 1
+                                                  //| 3 -> IT, 16 -> Spain, 18 -> ES, 21 -> United, 22 -> States, 24 -> US)
                                                   //| SpanMap:	Map(1 -> (1,2), 3 -> (2,3), 6 -> (3,4), 8 -> (4,5), 11 -> (5,6),
-                                                  //|  12 -> (6,7), 13 -> (7,8), 14 -> (8,9), 15 -> (9,10), 17 -> (10,11))
+                                                  //|  13 -> (6,7), 16 -> (7,8), 18 -> (8,9), 21 -> (9,10), 22 -> (10,11), 24 -> (
+                                                  //| 11,12))
                                                   //| Edges:	Map()
                                                   //| InsertedNodes:	Map()
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
                                                   //| DeletedNodes:	Map()
-                                                  //| PartsOfSpeech:	Map(14 -> JJ, 1 -> NNP, 6 -> NNP, 13 -> POS, 17 -> NNP, 
-                                                  //| 12 -> NNP, 3 -> NN, 11 -> NNP, 8 -> NNP, 15 -> NN)
+                                                  //| PartsOfSpeech:	Map(24 -> NNP, 1 -> NNP, 6 -> NNP, 21 -> NNP, 13 -> PRP,
+                                                  //|  22 -> NNPS, 3 -> NN, 18 -> NNP, 16 -> NNP, 11 -> NNP, 8 -> NNP)
                                                   //| DependencyLabels:	Map()
                                                   //| Fragments: Map()
                                                   //| FragmentHeads: Map()
@@ -131,19 +133,21 @@ val testData = AMRGraph.importFile("C:\\AMR\\CountryList.txt")
                                                   //| , null, null, null, null, null, null, null, null, null, null, null, null, nu
                                                   //| ll, null, null, null, null, null, null, null, null, null, null, null, null, 
                                                   //| null, null, null, null, null, null, null, null)
-  s1.positionToAMR                                //> res0: Map[Int,String] = Map(14 -> 0.2.0.2, 1 -> 0.0.0.0, 6 -> 0.1.0.0, 13 ->
-                                                  //|  0.2.0, 12 -> 0.2.0.1, 11 -> 0.2.0.0, 15 -> 0.2.0.3)
+  s1.positionToAMR                                //> res0: Map[Int,String] = Map(1 -> 0.0.0.0, 6 -> 0.1.0.0, 21 -> 0.4.0.0, 22 ->
+                                                  //|  0.4.0.1, 16 -> 0.3.0.0, 11 -> 0.2.0.0)
   s1.amr.get.nodes                                //> res1: Map[String,String] = Map(0.1 -> country, 0.0.0 -> name, 0.1.0 -> name,
-                                                  //|  0.0 -> country, 0.0.0.0 -> "Myanmar", 0.2.0.1 -> "People's", 0.2.0 -> name,
-                                                  //|  0.1.0.0 -> "Thailand", 0 -> and, 0.2.0.3 -> "Republic", 0.2 -> country, 0.2
-                                                  //| .0.2 -> "Democratic", 0.2.0.0 -> "Lao")
-  s1.amr.get.arcs                                 //> res2: Map[(String, String),String] = Map((0.0,0.0.0) -> name, (0.2.0,0.2.0.3
-                                                  //| ) -> opN, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> name, (0.2.0,0.2.0.2) -> op
-                                                  //| N, (0.1.0,0.1.0.0) -> opN, (0,0.2) -> opN, (0,0.1) -> opN, (0.2,0.2.0) -> na
-                                                  //| me, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN, (0.2.0,0.2.0.1) -> opN)
+                                                  //|  0.0 -> country, 0.4 -> country, 0.0.0.0 -> "Estonia", 0.2.0 -> name, 0.3.0.
+                                                  //| 0 -> "Spain", 0.3.0 -> name, 0.1.0.0 -> "Germany", 0.4.0.0 -> "United", 0.3 
+                                                  //| -> country, 0.4.0 -> name, 0 -> and, 0.2 -> country, 0.4.0.1 -> "States", 0.
+                                                  //| 2.0.0 -> "Italy")
+  s1.amr.get.arcs                                 //> res2: Map[(String, String),String] = Map((0.0,0.0.0) -> name, (0.3.0,0.3.0.0
+                                                  //| ) -> opN, (0.4.0,0.4.0.1) -> opN, (0,0.3) -> opN, (0.4.0,0.4.0.0) -> opN, (0
+                                                  //| .0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> name, (0.1.0,0.1.0.0) -> opN, (0,0.2) -
+                                                  //| > opN, (0,0.1) -> opN, (0.2,0.2.0) -> name, (0.3,0.3.0) -> name, (0.4,0.4.0)
+                                                  //|  -> name, (0,0.4) -> opN, (0,0.0) -> opN, (0.2.0,0.2.0.0) -> opN)
   import java.io._
   val file = new FileWriter("C://AMR//CountryList_exp.txt")
-                                                  //> file  : java.io.FileWriter = java.io.FileWriter@53fb3dab
+                                                  //> file  : java.io.FileWriter = java.io.FileWriter@231f98ef
   for (i <- 0 to 300) {
     if (!expertSystem.isTerminal(state)) {
       stateHistory(i) = state
@@ -161,33 +165,45 @@ val testData = AMRGraph.importFile("C:\\AMR\\CountryList.txt")
     }
   }
   file.close
-  val outputAdv = RunDagger.sampleTrajectory(s1, "C:\\AMR\\WangXueExpert_output.txt", expert, expertSystem = expertSystem)
-                                                  //> outputAdv  : amr.Sentence = Sentence(Myanmar (MM); Thailand (TH); Lao Peopl
-                                                  //| e's Democratic Republic (LA),
-                                                  //| NodeMap:	Map(1 -> Myanmar, 6 -> Thailand, 11 -> Lao, 12 -> People's, 13 -
-                                                  //| > name, 14 -> Democratic, 15 -> Republic, 18 -> and, 19 -> country, 20 -> c
-                                                  //| ountry)
-                                                  //| SpanMap:	Map(1 -> (1,2), 6 -> (3,4), 11 -> (5,6), 12 -> (6,7), 13 -> (7,8
-                                                  //| ), 14 -> (8,9), 15 -> (9,10), 18 -> (7,8), 19 -> (3,4), 20 -> (1,2))
-                                                  //| Edges:	Map((13,11) -> opN, (13,12) -> opN, (13,14) -> opN, (13,15) -> o
-                                                  //| pN, (18,13) -> name, (18,19) -> opN, (18,20) -> opN, (19,6) -> opN, (20,1) 
-                                                  //| -> opN)
-                                                  //| InsertedNodes:	Map(18 -> , 19 -> , 20 -> )
+  val outputAdv = RunDagger.sampleTrajectory(s1, "C:\\AMR\\ClassicExpert_output.txt", expert, expertSystem = expertSystem)
+                                                  //> outputAdv  : <error> = Sentence(Estonia (EE); Germany (DE): Italy (IT); Spa
+                                                  //| in (ES); United States (US),
+                                                  //| NodeMap:	Map(1 -> Estonia, 6 -> Germany, 11 -> Italy, 16 -> Spain, 21 -> 
+                                                  //| United, 22 -> States, 25 -> name, 26 -> country, 27 -> and, 28 -> name, 29 
+                                                  //| -> country, 30 -> name, 31 -> country, 32 -> name, 33 -> country, 34 -> nam
+                                                  //| e, 35 -> country)
+                                                  //| SpanMap:	Map(1 -> (1,2), 6 -> (3,4), 11 -> (5,6), 16 -> (7,8), 21 -> (9,1
+                                                  //| 0), 22 -> (10,11), 25 -> (10,11), 26 -> (10,11), 27 -> (10,11), 28 -> (7,8)
+                                                  //| , 29 -> (7,8), 30 -> (5,6), 31 -> (5,6), 32 -> (3,4), 33 -> (3,4), 34 -> (1
+                                                  //| ,2), 35 -> (1,2))
+                                                  //| Edges:	Map((25,21) -> opN, (25,22) -> opN, (26,25) -> name, (27,26) -> 
+                                                  //| opN, (27,29) -> opN, (27,31) -> opN, (27,33) -> opN, (27,35) -> opN, (28,16
+                                                  //| ) -> opN, (29,28) -> name, (30,11) -> opN, (31,30) -> name, (32,6) -> opN, 
+                                                  //| (33,32) -> name, (34,1) -> opN, (35,34) -> name)
+                                                  //| InsertedNodes:	Map(25 -> 0.4.0, 29 -> 0.3, 28 -> 0.3.0, 33 -> 0.1, 32 -
+                                                  //| > 0.1.0, 34 -> 0.0.0, 27 -> 0, 35 -> 0.0, 31 -> 0.2, 26 -> 0.4, 30 -> 0.2.0
+                                                  //| )
                                                   //| MergedNodes:	Map()
                                                   //| SwappedArcs:	Set()
-                                                  //| DeletedNodes:	Map(-1 -> List((3,MM), (8,TH), (17,LA)))
-                                                  //| PartsOfSpeech:	Map(14 -> JJ, 20 -> NNP, 1 -> NNP, 6 -> NNP, 13 -> POS, 
-                                                  //| 17 -> NNP, 12 -> NNP, 3 -> NN, 18 -> POS, 11 -> NNP, 8 -> NNP, 19 -> NNP, 1
-                                                  //| 5 -> NN)
-                                                  //| DependencyLabels:	Map(18 -> DUMMY, 19 -> DUMMY, 20 -> DUMMY),Some(AMRGraph
-                                                  //| (Map(12 -> "People's", 501 -> country, 19 -> country, 15 -> "Republic", 11 
-                                                  //| -> "Lao", 13 -> name, 505 -> name, 6 -> Thailand, 1 -> Myanmar, 14 -> "Demo
-                                                  //| cratic", 503 -> name, 20 -> country, 18 -> and),Map(12 -> (6,7), 19 -> (3,4
-                                                  //| ), 15 -> (9,10), 11 -> (5,6), 13 -> (7,8), 6 -> (3,4), 1 -> (1,2), 14 -> (8
-                                                  //| ,9), 20 -> (1,2), 18 -> (7,8)),Map((20,1) -> opN, (19,6) -> opN, (13,11) ->
-                                                  //|  opN, (20,505) -> name, (18,501) -> opN, (18,19) -> opN, (19,503) -> name, 
-                                                  //| (13,15) -> opN, (18,13) -> name, (18,20) -> opN, (13,12) -> opN, (13,14) ->
-                                                  //|  opN),Map(),List())),Map(14 -> 14, 20 -> 20, 1 -> 1, 6 -> 6, 13 -> 13, 12 -
-                                                  //| > 12, 18 -> 18, 11 -> 11, 19 -> 19, 15 -> 15))
+                                                  //| DeletedNodes:	Map(-1 -> List((3,EE), (8,DE), (13,IT), (18,ES), (24,US)
+                                                  //| ))
+                                                  //| PartsOfSpeech:	Map(24 -> NNP, 25 -> NNPS, 29 -> NNP, 1 -> NNP, 6 -> NNP
+                                                  //| , 28 -> NNP, 21 -> NNP, 33 -> NNP, 13 -> PRP, 32 -> NNP, 34 -> NNP, 22 -> N
+                                                  //| NPS, 27 -> NNPS, 3 -> NN, 35 -> NNP, 18 -> NNP, 16 -> NNP, 31 -> NNP, 11 ->
+                                                  //|  NNP, 26 -> NNPS, 8 -> NNP, 30 -> NNP)
+                                                  //| DependencyLabels:	Map(25 -> DUMMY, 29 -> DUMMY, 28 -> DUMMY, 33 -> DUMMY, 
+                                                  //| 32 -> DUMMY, 34 -> DUMMY, 27 -> DUMMY, 35 -> DUMMY, 31 -> DUMMY, 26 -> DUMM
+                                                  //| Y, 30 -> DUMMY),Some(AMRGraph(Map(34 -> name, 11 -> "Italy", 33 -> country,
+                                                  //|  22 -> "States", 26 -> country, 35 -> country, 16 -> "Spain", 21 -> "United
+                                                  //| ", 32 -> name, 6 -> "Germany", 1 -> "Estonia", 25 -> name, 31 -> country, 2
+                                                  //| 7 -> and, 30 -> name, 29 -> country, 28 -> name),Map(34 -> (1,2), 11 -> (5,
+                                                  //| 6), 33 -> (3,4), 22 -> (10,11), 26 -> (10,11), 35 -> (1,2), 16 -> (7,8), 21
+                                                  //|  -> (9,10), 32 -> (3,4), 6 -> (3,4), 1 -> (1,2), 25 -> (10,11), 31 -> (5,6)
+                                                  //| , 27 -> (10,11), 30 -> (5,6), 29 -> (7,8), 28 -> (7,8)),Map((35,34) -> name
+                                                  //| , (31,30) -> name, (34,1) -> opN, (32,6) -> opN, (28,16) -> opN, (27,31) ->
+                                                  //|  opN, (25,22) -> opN, (27,26) -> opN, (30,11) -> opN, (27,35) -> opN, (33,3
+                                                  //| 2) -> name, (26,25) -> name, (29,28) -> name, (25,21) -> opN, (27,33) -> op
+                                                  //| N, (27,2
+                                                  //| Output exceeds cutoff limit.
      
 }
