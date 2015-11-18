@@ -30,7 +30,6 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
         else
           CreateFragment
       case 3 =>
-
         def getCompositeNode(amrKey: String, acc: String): String = {
           // we find the node, plus all unmapped nodes further up the tree iff there is a single line of ascent
           // in other words, we stop once we hit a node that has other children, or which has more than one parent
@@ -104,6 +103,20 @@ class ClassicExpert extends HeuristicPolicy[Sentence, ClassicAction, ClassicTran
               NextEdge(-relationIndex(allRelations(0)._3))
 
           }
+        }
+      case 5 => 
+        // Determine if this node has a polarity node attached in the source AMR
+        // If so, add one; else Do Nothing. (No need for further checks as we visit each node exactly once in this phase)
+        val amr = data.amr.get
+        val currentNodeMap = data.positionToAMR.getOrElse(state.nodesToProcess.head, "")
+        if (currentNodeMap == "") {
+          DoNothing
+        } else {
+          val children = amr.childrenOf(currentNodeMap)
+          if (children map amr.nodes contains "-")
+            ReversePolarity
+          else
+            DoNothing
         }
     }
   }

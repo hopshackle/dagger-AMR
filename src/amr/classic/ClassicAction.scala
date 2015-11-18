@@ -1,7 +1,8 @@
 package amr.classic
 import dagger.core._
 import amr._
-import amr.ImportConcepts.{ conceptIndex, concept, conceptMaster, relation, relationIndex }
+import java.util.concurrent.atomic._
+import amr.ImportConcepts.{ conceptIndex, concept, conceptMaster, relation, relationIndex, relationMaster, compositeNodes }
 
 abstract class ClassicAction extends TransitionAction[ClassicTransitionState] {
   def isPermissible(state: ClassicTransitionState): Boolean
@@ -11,12 +12,45 @@ abstract class ClassicAction extends TransitionAction[ClassicTransitionState] {
 
 object ClassicAction {
 
+  private val idFountain = new AtomicInteger(1)
+
   def construct(name: String): ClassicAction = {
     name match {
       case x if x startsWith "NextNode" =>
         val index = conceptIndex(x.replaceAll("NextNode", ""))
         NextNode(index)
       case "DeleteNode" => DeleteNode
+      case "CreateFragment" => CreateFragment
+      case x if x startsWith "AssignToFragment" =>
+        val assignConcept = x.replaceAll("AssignToFragment", "")
+        if (idFountain.get > 20000) idFountain.set(1)
+        if (assignConcept == "") AssignToFragment(0) else {
+          val action = AssignToFragment(idFountain.getAndIncrement)
+          action.assignConcept = assignConcept
+          action
+        }
+      // This is in order to allow training to differentiate between different AssignToFragment actions with different
+      // parameter nodes. They will have correct differentiation of features during training (read in from file), but will 
+      // be indistinguishable from each other when the trainer decides if the correct one has been selected. Hence, if the correct action
+      // is an AssignToFragment, then we will not update the weights if *any* AssignToFragment action is selected by the learned classifier (even
+      // if it was a different one).
+      // So we only need unique ids within the training actions for a given Instance.
+      // The special case is of there is no assignConcept - as then we are reading in the weights from the classifier, and hence
+      // we must use the masterLabel convention
+      case "NoParent" => NoParent
+      case x if x startsWith "AddParent" =>
+        val parentString = x.replaceAll("AddParent", "")
+        AddParent(parentString)
+      case x if x startsWith "NextEdge" =>
+        val rawConcept = x.replaceAll("NextEdge", "")
+        val strippedConcept = rawConcept.replaceAll("-", "")
+        if (rawConcept.startsWith("-")) {
+          NextEdge(-relationIndex(strippedConcept))
+        } else {
+          NextEdge(relationIndex(strippedConcept))
+        }
+      case "ReversePolarity" => ReversePolarity
+      case "DoNothing" => DoNothing
     }
   }
 
@@ -84,16 +118,17 @@ case object CreateFragment extends ClassicAction {
 }
 
 case class AssignToFragment(parameterNode: Int) extends ClassicAction with hasNodeAsParameter {
+  var assignConcept = ""
   override def getMasterLabel = AssignToFragment(0)
   def apply(state: ClassicTransitionState): ClassicTransitionState = {
-    //  val tree = state.currentGraph.removeNode(state.nodesToProcess.head)
+    assignConcept = state.currentGraph.nodeLemmas.getOrElse(parameterNode, "")
     val newFragments = state.fragments + (parameterNode -> (state.nodesToProcess.head :: state.fragments(parameterNode)))
     val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (3, nodesInTokenOrder(state.currentGraph, newFragments)) else (2, state.nodesToProcess.tail)
     state.copy(nodesToProcess = newNodesToProcess, previousActions = this :: state.previousActions,
       fragments = newFragments, phase = newPhase)
   }
   override def toString: String = "AssignToFragment: " + parameterNode
-  override def name: String = "AssignToFragment"
+  override def name: String = "AssignToFragment" + assignConcept
   override def isPermissible(state: ClassicTransitionState): Boolean = state.phase == 2 && state.nodesToProcess.nonEmpty &&
     state.fragments.contains(parameterNode)
 }
@@ -129,6 +164,10 @@ object AddParent {
             Seq()
         }
     }
+  }
+
+  def all(): Array[ClassicAction] = {
+    (compositeNodes map { i => AddParent(i) }).toArray
   }
 }
 
@@ -182,13 +221,45 @@ case class NextEdge(relationIndex: Int) extends ClassicAction {
     val updateOfFirstNodeRequired = (nextNodePosition >= state.nodesToProcess.size)
     val lastFirstNode = state.nodesToProcess.size <= 2
     val (newPhase, newNodesToProcess, nextNodePair) = (updateOfFirstNodeRequired, lastFirstNode) match {
-      case (true, true) => (5, List.empty[Int], (0, 0))
+      case (true, true) => (5, nodesInTokenOrder(tree, Map()), (0, 0))
       case (true, false) => (4, state.nodesToProcess.tail, (state.nodesToProcess.tail.head, state.nodesToProcess.tail.tail.head))
       case (false, _) => (4, state.nodesToProcess, (state.nodesToProcess.head, state.nodesToProcess(nextNodePosition)))
     }
     state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, phase = newPhase, nodePair = nextNodePair)
   }
-  override def toString: String = "NextEdge " + relationIndex + " : " + relation(relationIndex)
-  override def name: String = "NextEdge" + relation(relationIndex)
+  override def toString: String = name
+  override def name: String = "NextEdge" + (if (relationIndex < 0) "-" + relation(-relationIndex) else relation(relationIndex))
   override def isPermissible(state: ClassicTransitionState): Boolean = state.phase == 4 && state.nodesToProcess.size > 1 && state.nodePair != (0, 0)
+}
+
+object NextEdge {
+  def all(): Array[ClassicAction] = {
+    ((relationMaster.keys map (i => NextEdge(i))) ++ (relationMaster.keys map (i => NextEdge(-i)))).toArray
+  }
+}
+
+object ReversePolarity extends ClassicAction {
+  def apply(state: ClassicTransitionState): ClassicTransitionState = {
+    // We simply insert a new child polarity node
+    val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex("-"), "", label = "polarity")
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (6, List.empty[Int]) else (5, state.nodesToProcess.tail)
+    state.copy(nodesToProcess = newNodesToProcess, currentGraph = tree, phase = newPhase)
+  }
+
+  override def isPermissible(state: ClassicTransitionState): Boolean = state.phase == 5 && state.nodesToProcess.nonEmpty
+  override def name: String = "ReversePolarity"
+  override def toString: String = "ReversePolarity"
+}
+
+object DoNothing extends ClassicAction {
+  def apply(state: ClassicTransitionState): ClassicTransitionState = {
+    // We simply insert a new child polarity node
+    val (newPhase, newNodesToProcess) = if (state.nodesToProcess.tail.isEmpty) (6, List.empty[Int]) else (5, state.nodesToProcess.tail)
+
+    state.copy(nodesToProcess = newNodesToProcess, phase = newPhase)
+  }
+
+  override def isPermissible(state: ClassicTransitionState): Boolean = state.phase == 5
+  override def name: String = "DoNothing"
+  override def toString: String = "DoNothing"
 }

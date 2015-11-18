@@ -238,7 +238,7 @@ object ImportConcepts {
 
       val stuff = edges.groupBy(_._1).mapValues(seq => (seq map { i => relationIndex(i._2) }).toSet)
       val ce = new FileWriter(amrFile + "_ce")
-      stuff filter (_._2.nonEmpty) foreach (x => ce.write(x._1 + ":" + x._2.mkString(":") + "\n"))
+      stuff filter (_._2.nonEmpty) foreach (x => ce.write(x._1 + ":" + (x._2 map relation).mkString(":") + "\n"))
       ce.close
       stuff
     } else {

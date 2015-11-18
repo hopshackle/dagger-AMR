@@ -25,20 +25,26 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     val beta = state.childrenToProcess.headOption
 
     val edgeKeys = (beta match { case Some(index) => state.currentGraph.nodeLemmas.getOrElse(index, "") + "-IN" :: List(state.currentGraph.nodeLemmas.getOrElse(sigma, "") + "-OUT"); case None => List() })
-    val permissibleEdges = (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
-
+    val permissibleEdges = beta match {
+      case None => Set.empty[Int]
+      case Some(_) => (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
+    }
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
 
     val reentranceActions = if (reentrance) {
       state.currentGraph.getNeighbourhood(sigma, 4) map (Reentrance(_)) filter (_.isPermissible(state))
     } else Set[Reentrance]()
 
-    val reattachActions = (if (state.childrenToProcess.isEmpty || (state.currentGraph.reattachedNodes contains beta)) {
+    val reattachActions = (if (Reattach.disableReattach || state.childrenToProcess.isEmpty || 
+        (state.currentGraph.reattachedNodes contains beta.get)) {
       Set[Reattach]()
     } else {
-      val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE) - sigma -- state.currentGraph.subGraph(beta.get)
+      val tokenPos = state.currentGraph.nodeSpans.getOrElse(beta.get, (100, 100))._1
+      val neighbouringTokens = state.currentGraph.nodes.keySet filter {n => math.abs(state.currentGraph.nodeSpans.getOrElse(n, (-100, -100))._1 - tokenPos) <=2}
+      val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE - 1) ++ neighbouringTokens - sigma -- state.currentGraph.subGraph(beta.get) 
       possibleNodes map (Reattach(_))
     }).toArray
+
     val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
     val prohibitedNodes = if (prohibition) {
       val parents = state.currentGraph.parentsOf(sigma)

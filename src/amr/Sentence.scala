@@ -25,11 +25,11 @@ abstract class Graph[K] {
   def parentLabels(node: K): Seq[String] = (parentsOf(node) map (x => nodes(x)))
   def getNeighbourhood(node: K, range: Int): Set[K] = {
     range match {
+      case 0 => Set()
       case 1 => (parentsOf(node) ++ childrenOf(node)).toSet
-      case n => {
+      case _ =>
         val immediate = getNeighbourhood(node, 1)
-        (immediate flatMap (getNeighbourhood(_, n - 1))) ++ immediate - node
-      }
+        (immediate flatMap (getNeighbourhood(_, range - 1))) ++ immediate - node
     }
   }
   def childrenOf(node: K): Seq[K] = edgesToChildren(node) map { case (p, c) => c }
@@ -64,7 +64,7 @@ abstract class Graph[K] {
 
   def getDistanceBetween(node1: K, node2: K): Int = {
     val path = getNodesBetween(node2, node1)
-    if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
+    if (path.isEmpty) 30 else path.size - 1
   }
 
   private def subGraph(node: K, acc: Int): Set[K] = {
@@ -197,22 +197,24 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def getPathBetween(node1: Int, node2: Int): String = {
-    // starting with node1, we're just conducting a search until we hit node2
+    if (!nodes.contains(node1) || !nodes.contains(node2)) return ""
     val path = getNodesBetween(node2, node1)
-    val slidingPath = path.sliding(2)
-    val pathString = nodePOS.getOrElse(path.head, "XX") + "-" +
-      (for {
-        a <- slidingPath
-        val b = a match {
-          case first :: second :: tail => {
-            val label = if (labelsBetween(first, second).isEmpty) labelsBetween(second, first).head else labelsBetween(first, second).head
-            val pos = nodePOS.getOrElse(second, "XX")
-            label + "-" + pos
+    if (path.nonEmpty) {
+      val slidingPath = path.sliding(2)
+      val pathString = nodePOS.getOrElse(path.head, "XX") + "-" +
+        (for {
+          a <- slidingPath
+          val b = a match {
+            case first :: second :: tail => {
+              val label = if (labelsBetween(first, second).isEmpty) labelsBetween(second, first).head else labelsBetween(first, second).head
+              val pos = nodePOS.getOrElse(second, "XX")
+              label + "-" + pos
+            }
+            case _ => "ERR"
           }
-          case _ => "ERR"
-        }
-      } yield b).mkString("-")
-    pathString
+        } yield b).mkString("-")
+      pathString
+    } else ""
   }
 
   override def toString: String = {
