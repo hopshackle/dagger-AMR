@@ -9,6 +9,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   val expert = new WangXueExpert
   var prohibition = true
   var reentrance = false
+  var reentrancePhase = true
   var preferKnown = true
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN")
@@ -31,22 +32,24 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     }
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
 
-    val reentranceActions = if (reentrance) {
-      state.currentGraph.getNeighbourhood(sigma, 4) map (Reentrance(_)) filter (_.isPermissible(state))
+    val reentranceActions = if (reentrance && ((reentrancePhase && state.phase == 2) || (!reentrancePhase && state.phase == 1))) {
+      val tokenPos = state.currentGraph.nodeSpans.getOrElse(sigma, (100, 100))._1
+      val neighbouringTokens = state.currentGraph.nodes.keySet filter { n => math.abs(state.currentGraph.nodeSpans.getOrElse(n, (-100, -100))._1 - tokenPos) <= 2 }
+      (state.currentGraph.getNeighbourhood(sigma, 4) ++ neighbouringTokens - sigma) map (Reentrance(_)) filter (_.isPermissible(state))
     } else Set[Reentrance]()
 
-    val reattachActions = (if (Reattach.disableReattach || state.childrenToProcess.isEmpty || 
-        (state.currentGraph.reattachedNodes contains beta.get)) {
+    val reattachActions = (if (state.phase == 2 || Reattach.disableReattach || state.childrenToProcess.isEmpty ||
+      (state.currentGraph.reattachedNodes contains beta.get)) {
       Set[Reattach]()
     } else {
       val tokenPos = state.currentGraph.nodeSpans.getOrElse(beta.get, (100, 100))._1
-      val neighbouringTokens = state.currentGraph.nodes.keySet filter {n => math.abs(state.currentGraph.nodeSpans.getOrElse(n, (-100, -100))._1 - tokenPos) <=2}
-      val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE - 1) ++ neighbouringTokens - sigma -- state.currentGraph.subGraph(beta.get) 
+      val neighbouringTokens = state.currentGraph.nodes.keySet filter { n => math.abs(state.currentGraph.nodeSpans.getOrElse(n, (-100, -100))._1 - tokenPos) <= 2 }
+      val possibleNodes = state.currentGraph.getNeighbourhood(sigma, Reattach.REATTACH_RANGE - 1) ++ neighbouringTokens - sigma -- state.currentGraph.subGraph(beta.get)
       possibleNodes map (Reattach(_))
     }).toArray
 
     val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
-    val prohibitedNodes = if (prohibition) {
+    val prohibitedNodes = if (prohibition && state.phase == 1) {
       val parents = state.currentGraph.parentsOf(sigma)
       val grandParents = parents flatMap state.currentGraph.parentsOf
       val children = state.currentGraph.childrenOf(sigma)
@@ -54,11 +57,12 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
     } else Set[String]()
     val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
-    val insertActions = insertable map (Insert(_))
+    val insertActions = if (state.phase == 1) insertable map (Insert(_)) else Set[Insert]()
     val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
-    val permissibleConcepts = beta match {
-      case Some(b) => Set()
-      case None =>
+    val permissibleConcepts = (beta, state.phase) match {
+      case (Some(b), _) => Set()
+      case (_, 2) => Set()
+      case (_, _) =>
         // if the word of the sigma node does not exist, then wordIndex is 0, so adding it will default to WORD
         val pc1 = conceptsPerLemma.getOrElse(state.currentGraph.nodeLemmas.getOrElse(sigma, "UNKNOWN"), Set()) + wordIndex
         if (preferKnown) {
@@ -67,13 +71,13 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
           val lemmaIndex = conceptIndex(state.currentGraph.nodeLemmas(sigma))
           val verbIndex = conceptIndex(state.currentGraph.nodeLemmas(sigma) + "-01")
           val wordEqualsLemma = wordIndex == lemmaIndex && wordIndex != 0
-          pc1 - wordIndex - lemmaIndex - verbIndex ++ (if (wordEqualsLemma) Set(-1, -2) else Set (0, -1, -2))
+          pc1 - wordIndex - lemmaIndex - verbIndex ++ (if (wordEqualsLemma) Set(-1, -2) else Set(0, -1, -2))
         }
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 
-    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ 
-    (Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity)).filter(action => isPermissible(action, state))
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++
+      (Array(DeleteNode, ReplaceHead, Swap, ReversePolarity, DoNothing)).filter(action => isPermissible(action, state))
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
@@ -101,7 +105,11 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
   override def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
 
-  override def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty
+  override def isTerminal(state: WangXueTransitionState): Boolean = (reentrance, reentrancePhase) match {
+    case (true, true) => state.nodesToProcess.isEmpty && state.phase == 2
+    case (true, false) => state.phase == 2
+    case _ => state.phase == 2
+  }
 
   override def permissibleActions(state: WangXueTransitionState): Array[WangXueAction] = {
     actions(state)
