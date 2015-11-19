@@ -4,16 +4,16 @@ import ImportConcepts.relationIndex
 
 case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: List[Int], currentGraph: DependencyTree,
   previousActions: List[WangXueAction], originalInput: Option[Sentence],
-  startingDT: DependencyTree, processedEdges: Set[(Int, Int)], processedNodes: Set[Int]) extends TransitionState {
+  startingDT: DependencyTree, processedEdges: Set[(Int, Int)], processedNodes: Set[Int],  phase: Int = 1) extends TransitionState {
 
   def fastForward: WangXueTransitionState = {
     // We skip any Edges or Nodes that have already been processed
       val sigmaOption = nodesToProcess.headOption
       val betaOption = childrenToProcess.headOption
-      val ffState = (sigmaOption, betaOption) match {
-        case (Some(sigma), Some(beta)) => if (processedEdges contains (sigma, beta)) NextEdge(relationIndex(currentGraph.arcs((sigma, beta))))(this).fastForward else this
-        case (Some(sigma), None) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
-        case (None, _) => this
+      val ffState = (sigmaOption, betaOption, phase) match {
+        case (Some(sigma), Some(beta), _) => if (processedEdges contains (sigma, beta)) NextEdge(relationIndex(currentGraph.arcs((sigma, beta))))(this).fastForward else this
+        case (Some(sigma), None, 1) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
+        case (_, _, _) => this
       }
       ffState
   }

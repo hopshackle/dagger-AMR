@@ -25,11 +25,11 @@ abstract class Graph[K] {
   def parentLabels(node: K): Seq[String] = (parentsOf(node) map (x => nodes(x)))
   def getNeighbourhood(node: K, range: Int): Set[K] = {
     range match {
+      case 0 => Set()
       case 1 => (parentsOf(node) ++ childrenOf(node)).toSet
-      case n => {
+      case _ =>
         val immediate = getNeighbourhood(node, 1)
-        (immediate flatMap (getNeighbourhood(_, n - 1))) ++ immediate - node
-      }
+        (immediate flatMap (getNeighbourhood(_, range - 1))) ++ immediate - node
     }
   }
   def childrenOf(node: K): Seq[K] = edgesToChildren(node) map { case (p, c) => c }
@@ -64,7 +64,7 @@ abstract class Graph[K] {
 
   def getDistanceBetween(node1: K, node2: K): Int = {
     val path = getNodesBetween(node2, node1)
-    if (path.isEmpty) 20 else Math.max(path.size - 1, 0)
+    if (path.isEmpty) 30 else path.size - 1
   }
 
   private def subGraph(node: K, acc: Int): Set[K] = {
@@ -109,13 +109,6 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
-  def toOutputFormat: String = {
-    val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\t${nodeSpans(x)._1}\t${nodeSpans(x)._2}\n")
-    val arcOutput = arcs map (x => s"# ::edge\t${x._1._1}\t${x._1._2}\t${x._2}\n")
-
-    "# ::SpanGraph\n" + nodeOutput.mkString + arcOutput.mkString
-  }
-
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
     this.copy(arcs = arcs + ((parent, child) -> label))
   }
@@ -136,7 +129,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       deletedNodes = this.deletedNodes + (parent -> newDeletedNodes))
   }
 
-  def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String): (Int, DependencyTree) = {
+  def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String, addArc: Boolean = true): (Int, DependencyTree) = {
     // So we to add a new node as a parent, remove the edge from the current node to its current parent, and insert two new edges
     // ...parent to new, and new to current
     // we assign a nodeSpan to the new node to match its child
@@ -146,8 +139,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
     val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
+    val newArcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent ++ (if (addArc) Map(newEdgeFromNode) else Map())
+
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
-      nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent + newEdgeFromNode,
+      nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = newArcs,
       nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")),
       insertedNodes = newInsertedNodes))
   }
@@ -202,22 +197,24 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 
   def getPathBetween(node1: Int, node2: Int): String = {
-    // starting with node1, we're just conducting a search until we hit node2
+    if (!nodes.contains(node1) || !nodes.contains(node2)) return ""
     val path = getNodesBetween(node2, node1)
-    val slidingPath = path.sliding(2)
-    val pathString = nodePOS.getOrElse(path.head, "XX") + "-" +
-      (for {
-        a <- slidingPath
-        val b = a match {
-          case first :: second :: tail => {
-            val label = if (labelsBetween(first, second).isEmpty) labelsBetween(second, first).head else labelsBetween(first, second).head
-            val pos = nodePOS.getOrElse(second, "XX")
-            label + "-" + pos
+    if (path.nonEmpty) {
+      val slidingPath = path.sliding(2)
+      val pathString = nodePOS.getOrElse(path.head, "XX") + "-" +
+        (for {
+          a <- slidingPath
+          val b = a match {
+            case first :: second :: tail => {
+              val label = if (labelsBetween(first, second).isEmpty) labelsBetween(second, first).head else labelsBetween(first, second).head
+              val pos = nodePOS.getOrElse(second, "XX")
+              label + "-" + pos
+            }
+            case _ => "ERR"
           }
-          case _ => "ERR"
-        }
-      } yield b).mkString("-")
-    pathString
+        } yield b).mkString("-")
+      pathString
+    } else ""
   }
 
   override def toString: String = {
@@ -320,8 +317,12 @@ object Sentence {
 
     val amrToWordIndices = for {
       (start, end) <- removeOverlaps
+      //      val t = println(start + " : " + end)
       val allDTIndices = dt.nodeSpans filter { case (_, (wordPos, _)) => (start until end) contains wordPos } map { case (index, (wp, _)) => index }
+      //     val d = println(allDTIndices)
     } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
+
+    //  amrToWordIndices foreach println
 
     (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }
@@ -344,7 +345,7 @@ object Sentence {
       amrKey <- amrKeys
       val amrConcept = amrNodes(amrKey).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       word <- wordIndices
-      if dependencyTree.nodes contains word  // as this might have been deleted during parsing
+      if dependencyTree.nodes contains word // as this might have been deleted during parsing
       val dtWord = dependencyTree.nodes(word).toLowerCase.replaceAll("""[^0-9a-zA-Z\-' ]""", "")
       val similarity = JaroMetric.compare(dtWord, amrConcept).getOrElse(0.0)
       if similarity > 0.001

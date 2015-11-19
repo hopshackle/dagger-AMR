@@ -3,19 +3,22 @@ import java.io._
 import dagger.core._
 import dagger.ml.MultiClassClassifier
 import dagger.ml.AROWClassifier
+import amr.classic._
+
+import scala.reflect.ClassTag
 
 object RunDagger {
 
   val debug = false
 
-  def sampleTrajectory(data: Sentence, logFile: String = "", expert: WangXueExpertBasic = new WangXueExpert): Sentence = {
+  def sampleTrajectory[S <: TransitionState, A <: TransitionAction[S]](data: Sentence, logFile: String = "", expert: HeuristicPolicy[Sentence, A, S],
+    expertSystem: TransitionSystem[Sentence, A, S]): Sentence = {
     val output = if (logFile != "") new FileWriter(logFile) else null
-    val expertSystem = WangXueTransitionSystem
     var nextState = expertSystem.init(data)
     var finished = false
     while (!finished) {
       var nextAction = expert.chooseTransition(data, nextState)
-      if (debug) println(nextState.nodesToProcess.head + "\t" + nextAction)
+      if (debug) println(nextState + "\t" + nextAction)
       var lastState = nextState
       nextState = nextAction(lastState)
       finished = expertSystem.isTerminal(nextState)
@@ -70,69 +73,80 @@ object RunDagger {
     List(("F-Score", overallScore), ("Precision", overallPrecision), ("Recall", overallRecall))
   }
 
-  def testDAGGERrun(options: DAGGEROptions): MultiClassClassifier[WangXueAction] = {
+  def testDAGGERrun[S <: TransitionState, A <: TransitionAction[S]](options: DAGGEROptions): Unit = {
 
-    WangXueTransitionSystem.prohibition = false // temp value for lemma / concept extraction
-    WangXueTransitionSystem.reentrance = true // temp value for lemma / concept extraction
-    val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
-    val alignerToUse = options.getString("--aligner", "")
-    val lemmaReplacement = options.getString("--lemmaReplace", "None")
-    Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
-    DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)
-    AMRGraph.setAligner(alignerToUse)
-    WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
-    WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
-    WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
-    WangXueFeatures.includeShenanigans = (options.getString("--WXfeatures", "") contains "S")
-    WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
-    WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
-    WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    
-    ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    val trainData = (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
-    //   val trainData = AMRGraph.importFile(options.getString("--train.data", "C:\\AMR\\AMR2.txt")) map { case (english, amr) => Sentence(english, amr) }
+    val trainData = initialiseAndGetTrainingData(options)
+    val maxNodesForTraining = options.getInt("--maxTrainingSize", 100)
+    val filteredTrainingData = trainData filter { s => s.amr.get.nodes.size <= maxNodesForTraining }
+
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
+    val lemmaReplacement = options.getString("--lemmaReplace", "None")
     val correctedDevData = lemmaReplacement match {
       case "glove" => replaceLemmasGlove(devData, options.DAGGER_OUTPUT_PATH + "../glove.6B.50d.txt")
       case "wordnet" => replaceLemmasWordnet(devData)
       case _ => devData
     }
 
-    val startingClassifier = if (options.getBoolean("--startingClassifier", false)) {
-      AROWClassifier.fromFile[WangXueAction](options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
-    } else null
-
     val lossToUse = options.getString("--lossFunction", "")
-    val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
+
     val featureIndex = new MapIndex
-    if (startingClassifier != null) {
-      featureIndex.initialiseFromFile(options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
-    }
-    val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
+
     val insertProhibition = options.getBoolean("--insertProhibition", true)
     val useReentrance = options.getBoolean("--reentrance", false)
+    val reentrancePhase = options.getBoolean("--reentrancePhase", true)
     val fileCache = options.getBoolean("--fileCache", false)
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
+    WangXueTransitionSystem.reentrancePhase = reentrancePhase
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    val maxNodesForTraining = options.getInt("--maxTrainingSize", 100)
-    val filteredTrainingData = trainData filter { s => s.amr.get.nodes.size <= maxNodesForTraining}
-    val classifier = dagger.train(filteredTrainingData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
-      actionToString = if (fileCache) (x => x.name) else null,
-      stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
-      AMROutput.AMROutputFunction,
-      startingClassifier)
-    //  GraphViz.graphVizOutputFunction)
+    ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
 
+    val startingClassifier = if (options.getBoolean("--startingClassifier", false)) {
+      if (options.getBoolean("--WangXue", true)) {
+        AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
+      } else {
+        AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => ClassicAction.construct(y))
+      }
+    } else null
+
+    if (startingClassifier != null) {
+      featureIndex.initialiseFromFile(options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
+    }
+
+    val (fc, aa) = if (options.getBoolean("--WangXue", true)) {
+      val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
+      val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
+      val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
+      val classifier = dagger.train(filteredTrainingData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
+        actionToString = if (fileCache) (x => x.name) else null,
+        stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
+        AMROutput.AMROutputFunction,
+        startingClassifier.asInstanceOf[MultiClassClassifier[WangXueAction]])
+      (classifier, WangXueTransitionSystem.actions ++
+        Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
+    } else {
+      val dagger = new DAGGER[Sentence, ClassicAction, ClassicTransitionState](options)
+      val classicFeatures = new ClassicFeatureFactory(options, featureIndex)
+      val lossFunctionFactory = new ClassicLossFunctionFactory(lossToUse)
+      val classifier = dagger.train(filteredTrainingData, new ClassicExpert, classicFeatures, ClassicTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
+        actionToString = if (fileCache) (x => x.name) else null,
+        stringToAction = if (fileCache) (y => ClassicAction.construct(y)) else null,
+        AMROutput.AMROutputFunction,
+        startingClassifier.asInstanceOf[MultiClassClassifier[ClassicAction]])
+      (classifier, ClassicTransitionSystem.actions ++ Array(AssignToFragment(0)))
+    }
+
+    val finalClassifier = fc.asInstanceOf[MultiClassClassifier[A]]
+    val allActions = aa.asInstanceOf[Array[A]]
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureSummaryByAction.txt")
-    for (j <- (WangXueTransitionSystem.actions ++ Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))) {
+    for (j <- allActions) {
+      val f: A = j.asInstanceOf[A];
       outputFile.write(j + "\n")
       var relevantFeatures = List[(Int, Float)]()
       for (i <- 1 to featureIndex.size) {
-        val weight = classifier.weightOf(j, i)
+        val weight = finalClassifier.weightOf(f, i)
         if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
       }
       val sortedFeatures = relevantFeatures.sortWith((a, b) => Math.abs(a._2) > Math.abs(b._2))
@@ -144,9 +158,30 @@ object RunDagger {
     }
     outputFile.close()
 
-    classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
+    finalClassifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
     featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
-    classifier
+  }
+
+  def initialiseAndGetTrainingData(options: DAGGEROptions): IndexedSeq[Sentence] = {
+    WangXueTransitionSystem.prohibition = false // temp value for lemma / concept extraction
+    WangXueTransitionSystem.reentrance = true // temp value for lemma / concept extraction
+    val alignerToUse = options.getString("--aligner", "")
+    Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
+    DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)
+    AMRGraph.setAligner(alignerToUse)
+    WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
+    WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
+    WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
+    WangXueFeatures.includeShenanigans = (options.getString("--WXfeatures", "") contains "S")
+    WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
+    ClassicFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
+    WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
+    WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
+    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+    ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+
+    ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
+    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
   }
 
   def main(args: Array[String]): Unit = {
@@ -159,7 +194,8 @@ object RunDagger {
     //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
 
     val options = new DAGGEROptions(args)
-    val classifier = testDAGGERrun(options)
+
+    testDAGGERrun(options)
 
   }
 
