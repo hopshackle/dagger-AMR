@@ -167,7 +167,7 @@ object AddParent {
   }
 
   def all(): Array[ClassicAction] = {
-    (compositeNodes map { i => AddParent(i) }).toArray
+    (compositeNodes.values.flatten.toSet map { i: String => AddParent(i) }).toArray
   }
 }
 

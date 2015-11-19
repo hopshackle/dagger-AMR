@@ -75,15 +75,32 @@ object ImportConcepts {
     } yield relation).toSet
   }
 
-  private def loadCompositeNodes: Set[String] = {
-    val output = (for {
+  private def loadCompositeNodes: Map[String, Set[String]] = {
+    val stage1 = (for {
       (original, _) <- expertResults
-      unmappedAMR <- original.amr.get.nodes.keys filterNot original.AMRToPosition.contains
-      if original.amr.get childrenOf (unmappedAMR) exists original.AMRToPosition.contains
-    } yield allCompositesFrom(unmappedAMR, original)).flatten.toSet
+      allLemmas = original.dependencyTree.nodeLemmas.values.toSet
+      allUnmappedAMRKeys = original.amr.get.nodes.keys filterNot original.AMRToPosition.contains
+      allComposites = (allUnmappedAMRKeys map { key => allCompositesFrom(key, original) }).flatten.toSet
+    } yield (allLemmas, allComposites)).toSeq
+    // I also now want to keep track of the lemmas in each sentence, so that I can track which lemmas give which composite nodes
+    // obviously keyed from lemma to list of nodes
+
+    // excluding any lemma that appears more than n times (rather than hard-coding common words)
+    // or which is linked to more than n of the composite nodes
+    // OK - both limits now implemented independently
+    val sentenceTotal = stage1.size
+    val commonLemmaProportion = 0.10
+    val lemmaCountsBySentence = (stage1 flatMap (_._1.toList) groupBy identity mapValues (_.size)) - "##"
+    
+    val limitOfCompositesNodesPerLemma = 1000
+    val output = (for {
+      (lemmas, composites) <- stage1
+      lemma <- lemmas
+      if lemmaCountsBySentence.getOrElse(lemma, 0) <= sentenceTotal * commonLemmaProportion
+    } yield (lemma, composites)).groupBy(_._1).mapValues { all => all flatMap (_._2) toSet } filter (i => i._2.size <= limitOfCompositesNodesPerLemma)
 
     val cn = new FileWriter(amrFile + "_cn")
-    output foreach (x => cn.write(x + "\n"))
+    output filter (i => i._2.nonEmpty) foreach (x => cn.write(x._1 + " " + x._2.toList.mkString(" ") + "\n"))
     cn.close
     output
   }
@@ -232,8 +249,8 @@ object ImportConcepts {
         (original, _) <- expertResults
         amr = original.amr.get
         ((from, to), relation) <- amr.arcs
-        conceptFrom = if (numbers.replaceAllIn(amr.nodes(from), "") == "") "##"  else amr.nodes(from)
-        conceptTo = if (numbers.replaceAllIn(amr.nodes(to), "") == "") "##"  else amr.nodes(to)
+        conceptFrom = if (numbers.replaceAllIn(amr.nodes(from), "") == "") "##" else amr.nodes(from)
+        conceptTo = if (numbers.replaceAllIn(amr.nodes(to), "") == "") "##" else amr.nodes(to)
       } yield List((conceptFrom + "-OUT" -> relation), (conceptTo + "-IN" -> relation))).flatten.toSeq
 
       val stuff = edges.groupBy(_._1).mapValues(seq => (seq map { i => relationIndex(i._2) }).toSet)

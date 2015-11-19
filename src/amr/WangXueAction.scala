@@ -190,7 +190,7 @@ object Insert {
   }
 
   def all(): Array[WangXueAction] = {
-    (insertableConcepts.values.flatten.map(i => Insert(conceptIndex(i)))).toArray
+    (insertableConcepts.values.flatten.toList.distinct.map(i => Insert(conceptIndex(i)))).toArray
   }
   def estimatedAMRRef(state: WangXueTransitionState, conceptIndex: Int): String = {
     // first we check immediate parents

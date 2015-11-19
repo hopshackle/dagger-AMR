@@ -39,15 +39,22 @@ class ClassicFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   override def features(sentence: Sentence, state: ClassicTransitionState, action: ClassicAction): gnu.trove.map.hash.THashMap[Int, Float] = {
 
     val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]
-    if (cachedState != null && cachedState.eq(state) && !parameterisedAction) {
-      cachedFeatures
+    val dt = state.originalInput.get.dependencyTree
+    val currentDT = state.currentGraph
+    if (cachedState != null && cachedState.eq(state)) {
+      if (!parameterisedAction)
+        cachedFeatures
+      else {
+        val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
+        val paramFeatures = nodeFeatures("K", action.asInstanceOf[hasNodeAsParameter].parameterNode, dt, currentDT, state)
+        hmap.putAll(cachedFeatures)
+        hmap.putAll(paramFeatures)
+        hmap
+      }
     } else {
-      // also; even if we do have a parameterNode, we can still share the core features
       val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
       add(hmap, "BIAS")
-      val dt = state.originalInput.get.dependencyTree
-      val currentDT = state.currentGraph
- //     val coreFeatures = sentenceFeatures("C", dt, currentDT, state)
+      //     val coreFeatures = sentenceFeatures("C", dt, currentDT, state)
       val sigmaFeatures = nodeFeatures("S", state.nodesToProcess.head, dt, currentDT, state)
       val parents = dt.parentsOf(state.nodesToProcess.head)
       val parentFeatures = if (parents.nonEmpty) nodeFeatures("P", parents.head, dt, currentDT, state) else new THashMap[Int, Float]
@@ -58,16 +65,19 @@ class ClassicFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       val betaFeatures = if (state.nodePair._2 != 0) nodeFeatures("B", state.nodePair._2, dt, currentDT, state) else new THashMap[Int, Float]
       val sigmaBeta = if (state.nodePair._2 != 0) nodeFeatures("SB", state.nodePair._1, state.nodePair._2, dt, currentDT, state) else new THashMap[Int, Float]
       val sigmaParam = if (parameterisedAction) nodeFeatures("SK", state.nodesToProcess.head, action.asInstanceOf[hasNodeAsParameter].parameterNode, dt, currentDT, state) else new THashMap[Int, Float]
- //     val parentCombo = if (parents.nonEmpty) nodeFeatures("SP", state.nodesToProcess.head, parents.head, dt, currentDT, state) else new THashMap[Int, Float]
+      //     val parentCombo = if (parents.nonEmpty) nodeFeatures("SP", state.nodesToProcess.head, parents.head, dt, currentDT, state) else new THashMap[Int, Float]
       hmap.putAll(sigmaFeatures)
       hmap.putAll(parentFeatures)
       hmap.putAll(gpFeatures)
-      hmap.putAll(paramFeatures)
       hmap.putAll(betaFeatures)
       hmap.putAll(sigmaBeta)
       hmap.putAll(sigmaParam)
- //     hmap.putAll(parentCombo)
-  //    hmap.putAll(coreFeatures)
+      //     hmap.putAll(parentCombo)
+      //    hmap.putAll(coreFeatures)
+      cachedFeatures = hmap    // we only cache the feature not dependent on a parameter node specific to an action
+      cachedState = state
+
+      hmap.putAll(paramFeatures)
       hmap
     }
   }
@@ -157,8 +167,8 @@ class ClassicFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     for ((fh, fString) <- state.fragmentHeads) {
       add(hmap, prefix + "-FRG=" + fString)
     }
-    val lemmaCounts = dt.nodeLemmas.values.groupBy(identity) map {case (key, iter) => (key -> iter.size)}
-    lemmaCounts foreach {lc => add(hmap, prefix + "-LEM=" + lc._1, lc._2)}
+    val lemmaCounts = dt.nodeLemmas.values.groupBy(identity) map { case (key, iter) => (key -> iter.size) }
+    lemmaCounts foreach { lc => add(hmap, prefix + "-LEM=" + lc._1, lc._2) }
     hmap
   }
 

@@ -40,7 +40,8 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
           val output: Array[ClassicAction] = (state.fragments.keys map { f => AssignToFragment(f) }).toArray ++ Array(CreateFragment)
           output
         case 3 =>
-          val output: Array[ClassicAction] = (compositeNodes.toArray map { cn => AddParent(cn) }) ++
+          val validComposites = state.startingDT.nodeLemmas.values flatMap (i => compositeNodes.getOrElse(i, Set())) toList
+          val output: Array[ClassicAction] = (validComposites.distinct.toArray map { cn => AddParent(cn) }) ++
             (if (NoParent.isPermissible(state)) Array(NoParent) else Array.empty[ClassicAction])
           output
         case 4 =>
