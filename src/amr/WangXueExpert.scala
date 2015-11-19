@@ -8,11 +8,13 @@ class WangXueExpert extends WangXueExpertBasic {
   val quote = """"""".r
 
   override def chooseTransition(data: Sentence, state: WangXueTransitionState): WangXueAction = {
+
     if (debug) println("Considering current node: " + state.nodesToProcess.head +
       " with child " + (if (state.childrenToProcess isEmpty) "Nil" else state.childrenToProcess.head))
-      
+
     val reentrance = WangXueTransitionSystem.reentrance
     val reentrancePhase = WangXueTransitionSystem.reentrancePhase
+    val useCompositeNodes = WangXueTransitionSystem.useCompositeNodes
 
     def getAMRParents(nodeAMR: Option[String]): Seq[String] = nodeAMR match {
       case None => List[String]()
@@ -85,7 +87,12 @@ class WangXueExpert extends WangXueExpertBasic {
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
       case (1, Some(sigmaAMR), _, beta, Some(betaAMR), true) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
-      case (1, Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) => Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
+      case (1, Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) =>
+        if (useCompositeNodes) {
+          val parentString = getParentString(data, state, fullMapAMRtoDT)
+           AddParent(parentString)
+        } else
+          Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
       case (1, Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
       case (1, Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
       case (_, Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
@@ -136,4 +143,41 @@ class WangXueExpert extends WangXueExpertBasic {
     }
   }
 
+  def getParentString(data: Sentence, state: WangXueTransitionState, amrMap: Map[String, Int]): String = {
+    def getCompositeNode(amrKey: String, acc: String): String = {
+      // we find the node, plus all unmapped nodes further up the tree iff there is a single line of ascent
+      // in other words, we stop once we hit a node that has other children, or which has more than one parent
+      val amr = data.amr.get
+      val parents = amr.parentsOf(amrKey)
+      val concept = amr.nodes(amrKey)
+      val unmappedParents = parents filterNot data.AMRToPosition.contains filterNot amrMap.contains
+      val newAcc = if (acc == "") amr.nodes(amrKey) else amr.nodes(amrKey) + ":" + acc
+      if (parents.isEmpty || parents.size > 1 || unmappedParents.isEmpty)
+        newAcc
+      else {
+        val relation = amr.arcs((unmappedParents(0), amrKey))
+        getCompositeNode(unmappedParents(0), relation + ":" + newAcc)
+      }
+    }
+    /*
+         * Possibilities are:
+         *  All the nodes in the fragment have the same parent, and this is unmapped
+         *      Ideal situation. AddParent with the correct composite node.
+         *  All the nodes in the fragment have the same parent, and it is mapped
+         *      Ideal if we have just one node - we use NoParent.
+         *      Non-ideal for more than one node. Not much we can do. Insert a name node, and hope for the best.
+         *  The nodes in the fragment do not have a common parent, but only one of them is unmapped
+         *      Non-ideal, but straightforward. Insert a composite node in line with the sole unmapped parent.
+         *  The nodes in the fragment do not have a common parent, and more than one is unmapped
+         *      Non-ideal. Pick the first unmapped parent, and insert the relevant composite node
+         *  The nodes in the fragment do not have a common parent, and all of them are mapped
+         *      Non-ideal. Not much we can do. Insert a name node, and hope for the best.
+         */
+    val fragmentNodes = state.nodesToProcess.head
+    val fragmentAMR = data.positionToAMR.getOrElse(fragmentNodes, "U") 
+    val fragmentParents = data.amr.get.parentsOf(fragmentAMR)
+    val unmappedFragmentParents = fragmentParents filterNot amrMap.contains
+
+    if (unmappedFragmentParents.isEmpty) "" else getCompositeNode(unmappedFragmentParents(0), "")
+  }
 }

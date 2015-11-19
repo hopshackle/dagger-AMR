@@ -206,15 +206,26 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           case (child, label) =>
             val childWord = state.currentGraph.nodes(child)
             val childLemma = state.currentGraph.nodeLemmas.getOrElse(child, "")
+            val childNER = state.currentGraph.nodeNER.getOrElse(child, "")
+            val childPOS = state.currentGraph.nodePOS.getOrElse(child, "")
             if (state.currentGraph.insertedNodes contains child) {
               add(hmap, "C-INS=" + childLemma)
               if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "S-C-BOTH-INSERTED")
             }
-            add(hmap, "C-S-LAB=" + label)
+            if (label != "") add(hmap, "C-S-LAB=" + label)
+            if (childPOS != "") add(hmap, "C-POS=" + childPOS)
+            if (childNER != "") add(hmap, "C-NER=" + childNER)
             if (childLemma != "") {
               add(hmap, "C-LEM-LAB=" + childLemma + "-" + label)
               add(hmap, "C-LEM=" + childLemma)
-              if (!quadraticTurbo) add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
+              if (!quadraticTurbo) {
+                add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
+                if (childLemma != "" && sigmaPOS != "") add(hmap, "P-LEM-S-POS=" + childLemma + "-" + sigmaPOS)
+                if (childPOS != "" && sigmaLemma != "") add(hmap, "P-POS-S-LEM=" + childPOS + "-" + sigmaLemma)
+                if (label != "" && sigmaLemma != "") add(hmap, "P-DL-S-LEM=" + label + "-" + sigmaLemma)
+                if (childLemma != "" && sigmaDL != "") add(hmap, "P-LEM-S-DL=" + childLemma + "-" + sigmaDL)
+                if (childNER != "" && sigmaNER != "") add(hmap, "P-S-NER=" + childNER + "-" + sigmaNER)
+              }
             }
             if (includeWords) add(hmap, "C-WRD=" + childWord)
 

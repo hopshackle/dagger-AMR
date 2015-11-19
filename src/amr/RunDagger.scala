@@ -100,6 +100,7 @@ object RunDagger {
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.reentrancePhase = reentrancePhase
+    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
 
@@ -150,7 +151,7 @@ object RunDagger {
         if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
       }
       val sortedFeatures = relevantFeatures.sortWith((a, b) => Math.abs(a._2) > Math.abs(b._2))
-      for (i <- 0 to Math.min(sortedFeatures.size - 1, 50)) {
+      for (i <- 0 to Math.min(sortedFeatures.size - 1, 100)) {
         val (feat, weight) = sortedFeatures(i)
         outputFile.write(feat + ", " + featureIndex.elem(feat) + ", " + f"$weight%.3f" + "\n")
       }
