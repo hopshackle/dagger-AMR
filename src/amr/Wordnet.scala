@@ -46,12 +46,34 @@ object Wordnet {
     return synonyms.distinct.sorted
   }
 
-
   def getRelatedWordsExcAntonyms(w: IWord): List[String] = {
     val s = w.getSynset.getWords
     //   s.getRelatedSynsets(Pointer.SIMILAR_TO)
     (s map (_.getLemma)).toList filter (a => !(a.contains("_")))
   }
 
+  def getUsefulStuff(word: String): Unit = {
+    for (pos <- POS.values) {
+      val iw = dict.getIndexWord(word, pos)
+      if (iw != null) {
+        for (x <- iw.getWordIDs) {
+          println(s"POS: $pos, WordID: ${x}, Lemma: ${x.getLemma}, Word: ${dict.getWord(x)}")
+          val ss = dict.getSynset(x.getSynsetID)
+          println("Synset: " + ss)
+          println("Hypernyms: ")
+          println(printHypernyms(ss, 1))
+          println
+        }
+      }
+    }
+  }
+
+  def printHypernyms(ss: ISynset, level: Int): String = {
+    val hypernyms = ss.getRelatedSynsets(Pointer.HYPERNYM) map dict.getSynset
+    if (hypernyms.nonEmpty) {
+      val h = hypernyms.head
+      h.getWord(1).getLemma + " : " + printHypernyms(h, level + 1)
+    } else ""
+  }
 }
 

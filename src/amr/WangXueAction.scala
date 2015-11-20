@@ -452,7 +452,7 @@ case object DoNothing extends WangXueAction {
     state.copy(nodesToProcess = state.nodesToProcess.tail, previousActions = this :: state.previousActions).fastForward
   }
 
-  override def isPermissible(state: WangXueTransitionState): Boolean = state.phase == 2 && state.nodesToProcess.nonEmpty
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.phase == 2 && state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty
   override def name: String = "DoNothing"
   override def toString: String = "DoNothing"
 }

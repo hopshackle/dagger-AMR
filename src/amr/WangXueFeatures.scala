@@ -241,7 +241,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val quadraticTurbo = options.contains("--quadratic")
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
-    val label = state.currentGraph.arcs((sigma, beta))
+    val label = state.currentGraph.arcs.getOrElse((sigma, beta), "")
+    if (!state.currentGraph.arcs.contains((sigma, beta))) {
+      println("No Sigma-Beta arc in : ")
+      println(state)
+    }
     val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     val betaDL = state.currentGraph.depLabels.getOrElse(beta, "") // state.startingDT.edgesToParents(beta) map state.startingDT.arcs
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
