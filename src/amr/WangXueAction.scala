@@ -16,13 +16,22 @@ object WangXueAction {
   def construct(name: String): WangXueAction = {
     name match {
       case x if x startsWith "NextEdge" =>
+        val label = x.replaceAll("NextEdge", "")
+        val exists = relationStringToIndex contains label
+        if (!exists) println("Unknown Edge " + label)
         val index = relationIndex(x.replaceAll("NextEdge", ""))
         NextEdge(index)
       case x if x startsWith "NextNode" =>
+        val concept = x.replaceAll("NextNode", "")
+        val exists = conceptStringToIndex contains concept
+        if (!exists) println("Unknown Concept " + concept)
         val index = conceptIndex(x.replaceAll("NextNode", ""))
         NextNode(index)
       case "DeleteNode" => DeleteNode
       case x if x startsWith "Insert" =>
+        val concept = x.replaceAll("Insert", "")
+        val exists = conceptStringToIndex contains concept
+        if (!exists) println("Unknown Concept " + concept)
         val index = conceptIndex(x.replaceAll("Insert", ""))
         Insert(index)
       case x if x startsWith "Reattach" =>
@@ -344,7 +353,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
 
 case object Reattach {
   val disableReattach = false;
-  val assertionChecking = false;
+  var assertionChecking = false;
   var REATTACH_RANGE = 6
 }
 
@@ -420,7 +429,7 @@ case object ReversePolarity extends WangXueAction {
 }
 
 case object Reentrance {
-  val assertionChecking = true
+  var assertionChecking = false
 }
 
 case class Reentrance(kappa: Int) extends WangXueAction with hasNodeAsParameter {

@@ -52,6 +52,28 @@ object Wordnet {
     (s map (_.getLemma)).toList filter (a => !(a.contains("_")))
   }
 
+  def getAncestors(lemma: String, partOfSpeech: String, limit: Int): Seq[String] = {
+    val firstChar = if (partOfSpeech == "") 'X' else partOfSpeech.charAt(0)
+    if (lemma == "") return Seq()
+    // J , N , R, V for Adjective, Noun, Adverb and Verb respectively
+    val pos: POS = firstChar match {
+      case 'N' => POS.NOUN
+      case 'J' => POS.ADJECTIVE
+      case 'V' => POS.VERB
+      case 'R' => POS.ADVERB
+      case _ => null
+    }
+    if (pos == null) return Seq()
+    val iw = dict.getIndexWord(lemma, pos)
+    if (iw != null) {
+      val x = iw.getWordIDs()(0)
+      getHypernyms(dict.getSynset(x.getSynsetID)).reverse.slice(0, limit)
+    } else {
+      Seq()
+    }
+
+  }
+
   def getUsefulStuff(word: String): Unit = {
     for (pos <- POS.values) {
       val iw = dict.getIndexWord(word, pos)
@@ -74,6 +96,14 @@ object Wordnet {
       val h = hypernyms.head
       h.getWord(1).getLemma + " : " + printHypernyms(h, level + 1)
     } else ""
+  }
+  
+  def getHypernyms(ss: ISynset): Seq[String] = {
+        val hypernyms = ss.getRelatedSynsets(Pointer.HYPERNYM) map dict.getSynset
+    if (hypernyms.nonEmpty) {
+      val h = hypernyms.head
+      h.getWord(1).getLemma +: getHypernyms(h)
+    } else Seq()
   }
 }
 
