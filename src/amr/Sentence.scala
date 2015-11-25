@@ -143,7 +143,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
       nodeSpans = this.nodeSpans + (newNode -> childSpan), arcs = newArcs,
-      nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "DUMMY")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "DUMMY")),
+      nodePOS = this.nodePOS + (newNode -> this.nodePOS.getOrElse(node, "")), depLabels = this.depLabels + (newNode -> this.depLabels.getOrElse(node, "")),
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {

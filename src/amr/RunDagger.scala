@@ -100,10 +100,16 @@ object RunDagger {
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.reentrancePhase = reentrancePhase
+    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
 
-    val startingClassifier = if (options.getBoolean("--startingClassifier", false)) {
+    val startingClassifier = if (options.contains("--prelimOracleRun")) {
+      val sc = oracleRun[A](options, featureIndex, filteredTrainingData, correctedDevData)
+      sc.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingClassifier.txt", x => x.name)
+      featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingFeatureIndex.txt")
+      sc
+    } else if (options.getBoolean("--startingClassifier", false)) {
       if (options.getBoolean("--WangXue", true)) {
         AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
       } else {
@@ -111,7 +117,7 @@ object RunDagger {
       }
     } else null
 
-    if (startingClassifier != null) {
+    if (featureIndex.array.isEmpty && startingClassifier != null) {
       featureIndex.initialiseFromFile(options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
     }
 
@@ -150,7 +156,7 @@ object RunDagger {
         if (weight != 0.0) relevantFeatures = (i, weight) :: relevantFeatures
       }
       val sortedFeatures = relevantFeatures.sortWith((a, b) => Math.abs(a._2) > Math.abs(b._2))
-      for (i <- 0 to Math.min(sortedFeatures.size - 1, 50)) {
+      for (i <- 0 to Math.min(sortedFeatures.size - 1, 100)) {
         val (feat, weight) = sortedFeatures(i)
         outputFile.write(feat + ", " + featureIndex.elem(feat) + ", " + f"$weight%.3f" + "\n")
       }
@@ -177,26 +183,24 @@ object RunDagger {
     ClassicFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
     WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
     WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
+    WangXueFeatures.includeWordNet = (options.getString("--WXfeatures", "") contains "H")
+    if (WangXueFeatures.includeWordNet) {
+      val fString = options.getString("--WXfeatures", "")
+      val limit = fString.charAt(fString.indexOf("H") + 1).toString.toInt
+      WangXueFeatures.hypernymLimit = limit
+    }
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
 
+    Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
+    Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
   }
 
   def main(args: Array[String]): Unit = {
-
-    //   val args = List("--dagger.output.path", "C:\\AMR\\daggerTest_",
-    //    "--dagger.iterations", "3",
-    //     "--debug", "true",
-    //     "--dagger.print.interval", "1",
-    //     "--train.data", "C:\\AMR\\initialTrainingSet.txt",
-    //     "--validation.data", "C:\\AMR\\initialValidationSet.txt").toArray
-
     val options = new DAGGEROptions(args)
-
     testDAGGERrun(options)
-
   }
 
   def replaceLemmasGlove(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
@@ -232,5 +236,39 @@ object RunDagger {
       replacedLemmas foreach { case (k, v) => println(s"New Lemma ${lemmas(k)} replaced with $v") }
       s.copy(dependencyTree = newDT)
     })
+  }
+
+  def oracleRun[A](options: DAGGEROptions, featureIndex: MapIndex, trainingData: Iterable[Sentence], devData: Iterable[Sentence]): MultiClassClassifier[A] = {
+    val newOptions = new DAGGEROptions(options.args)
+    newOptions.ORACLE_LOSS = true
+    newOptions.addOption("--reducedActions", "false")
+    newOptions.addOption("--fileCache", "false")
+    newOptions.addOption("--dagger.iterations", "1")
+    val lossToUse = options.getString("--lossFunction", "")
+
+    val (sc, aa) = if (options.getBoolean("--WangXue", true)) {
+      val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
+      val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
+      val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](newOptions)
+      val classifier = dagger.train(trainingData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore(newOptions),
+        actionToString = null,
+        stringToAction = null,
+        null,
+        null.asInstanceOf[MultiClassClassifier[WangXueAction]])
+      (classifier, WangXueTransitionSystem.actions ++
+        Array(Reattach(0)) ++ (if (WangXueTransitionSystem.reentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
+    } else {
+      val dagger = new DAGGER[Sentence, ClassicAction, ClassicTransitionState](newOptions)
+      val classicFeatures = new ClassicFeatureFactory(options, featureIndex)
+      val lossFunctionFactory = new ClassicLossFunctionFactory(lossToUse)
+      val classifier = dagger.train(trainingData, new ClassicExpert, classicFeatures, ClassicTransitionSystem, lossFunctionFactory, devData, corpusSmatchScore(newOptions),
+        actionToString = null,
+        stringToAction = null,
+        null,
+        null.asInstanceOf[MultiClassClassifier[ClassicAction]])
+      (classifier, ClassicTransitionSystem.actions ++ Array(AssignToFragment(0)))
+    }
+    val startingClassifier = sc.asInstanceOf[MultiClassClassifier[A]]
+    startingClassifier
   }
 }

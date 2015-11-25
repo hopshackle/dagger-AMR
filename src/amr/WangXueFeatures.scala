@@ -1,5 +1,7 @@
 package amr
 import scala.collection.Map
+import java.util.concurrent.ConcurrentHashMap
+
 import ImportConcepts.{ concept }
 import java.io._
 import scala.util.Random
@@ -7,6 +9,7 @@ import gnu.trove.map.hash.THashMap
 import dagger.ml.Instance
 import java.util.concurrent.atomic._
 import dagger.core._
+import Wordnet._
 
 class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
   override def newFeatureFunction: FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] = {
@@ -22,8 +25,9 @@ object WangXueFeatures {
   var includeActionHistory = false
   var includeWords = false
   var includeDeletions = false
+  var includeWordNet = false
+  var hypernymLimit = 3
   val idFountain = new AtomicLong(1)
-
 }
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
@@ -34,6 +38,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   val random = new Random()
   var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
   var cachedState: WangXueTransitionState = null
+  var hypernymMap = new ConcurrentHashMap[String, Seq[String]]();
 
   def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
@@ -103,7 +108,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       if (state.previousActions.size > 2) add(hmap, "LAST-B2-A=" + state.previousActions.tail.tail.head.name)
       if (state.previousActions.size > 3) add(hmap, "LAST-B3-A=" + state.previousActions.tail.tail.tail.head.name)
       if (state.previousActions.size > 1) add(hmap, "LAST-TWO-A=" + state.previousActions.head.name + state.previousActions.tail.head.name)
-      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-A=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+//      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-A=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     }
 
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
@@ -126,6 +131,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (sigmaInserted) add(hmap, "S-INSERTED")
     val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     add(hmap, "S-DL=" + sigmaDL)
+
+    if (includeWordNet) {
+      val hyper = getHypernyms(sigmaLemma, sigmaPOS)
+      hyper foreach { h => add(hmap, "S-HYP=" + h) }
+    }
 
     val mergedNodes = state.currentGraph.mergedNodes.get(sigma) match {
       case None => Nil
@@ -166,9 +176,19 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
               if (state.currentGraph.insertedNodes contains parent) add(hmap, "PARENT-SIGMA-BOTH-INSERTED")
             }
 
+            if (includeWordNet) {
+              val parentHypernyms = getHypernyms(parentLemma, parentPOS)
+              parentHypernyms foreach { h => add(hmap, "P-HYP=" + h) }
+            }
+
             sigmaGrandparents foreach { gp =>
-              if (state.currentGraph.nodeLemmas contains gp)
+              if (state.currentGraph.nodeLemmas contains gp) {
                 add(hmap, "GP-P-S=" + state.currentGraph.nodeLemmas(gp) + "-" + parentLemma + "-" + sigmaLemma)
+                if (includeWordNet) {
+                  val gpHypernyms = getHypernyms(state.currentGraph.nodeLemmas(gp), state.currentGraph.nodePOS.getOrElse(gp, ""))
+                  gpHypernyms foreach { h => add(hmap, "GP-HYP=" + h) }
+                }
+              }
             }
 
             if (!(sigmaDL contains label)) add(hmap, "P-S-LAB=" + label)
@@ -206,15 +226,30 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           case (child, label) =>
             val childWord = state.currentGraph.nodes(child)
             val childLemma = state.currentGraph.nodeLemmas.getOrElse(child, "")
+            val childNER = state.currentGraph.nodeNER.getOrElse(child, "")
+            val childPOS = state.currentGraph.nodePOS.getOrElse(child, "")
             if (state.currentGraph.insertedNodes contains child) {
               add(hmap, "C-INS=" + childLemma)
               if (!quadraticTurbo) if (state.currentGraph.insertedNodes contains sigma) add(hmap, "S-C-BOTH-INSERTED")
             }
-            add(hmap, "C-S-LAB=" + label)
+            if (label != "") add(hmap, "C-S-LAB=" + label)
+            if (childPOS != "") add(hmap, "C-POS=" + childPOS)
+            if (childNER != "") add(hmap, "C-NER=" + childNER)
             if (childLemma != "") {
               add(hmap, "C-LEM-LAB=" + childLemma + "-" + label)
               add(hmap, "C-LEM=" + childLemma)
-              if (!quadraticTurbo) add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
+              if (includeWordNet) {
+                val childHypernyms = getHypernyms(childLemma, childPOS)
+                childHypernyms foreach { h => add(hmap, "C-HYP=" + h) }
+              }
+              if (!quadraticTurbo) {
+                add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
+                if (childLemma != "" && sigmaPOS != "") add(hmap, "P-LEM-S-POS=" + childLemma + "-" + sigmaPOS)
+                if (childPOS != "" && sigmaLemma != "") add(hmap, "P-POS-S-LEM=" + childPOS + "-" + sigmaLemma)
+                if (label != "" && sigmaLemma != "") add(hmap, "P-DL-S-LEM=" + label + "-" + sigmaLemma)
+                if (childLemma != "" && sigmaDL != "") add(hmap, "P-LEM-S-DL=" + childLemma + "-" + sigmaDL)
+                if (childNER != "" && sigmaNER != "") add(hmap, "P-S-NER=" + childNER + "-" + sigmaNER)
+              }
             }
             if (includeWords) add(hmap, "C-WRD=" + childWord)
 
@@ -230,7 +265,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val quadraticTurbo = options.contains("--quadratic")
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
-    val label = state.currentGraph.arcs((sigma, beta))
+    val label = state.currentGraph.arcs.getOrElse((sigma, beta), "")
+    if (!state.currentGraph.arcs.contains((sigma, beta))) {
+      println("No Sigma-Beta arc in : ")
+      println(state)
+    }
     val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
     val betaDL = state.currentGraph.depLabels.getOrElse(beta, "") // state.startingDT.edgesToParents(beta) map state.startingDT.arcs
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
@@ -247,7 +286,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     val sigmaInserted = state.currentGraph.insertedNodes contains sigma
     val betaInserted = state.currentGraph.insertedNodes contains beta
-
+    if (includeWordNet) {
+      val betaHypernyms = getHypernyms(betaLemma, betaPOS)
+      betaHypernyms foreach { h => add(hmap, "B-HYP=" + h) }
+    }
     if (betaPosition > 0 && sigmaPosition > 0) {
       val sigmaDTNode = if (!sigmaInserted) sigma else {
         (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == sigmaPosition } map { case (node, (_, _)) => node }).toSeq(0)
@@ -268,11 +310,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     // WangXue features
     if (!quadraticTurbo) {
       if (sigmaLemma != "" && betaPOS != "") add(hmap, "S-LEM-B-POS=" + sigmaLemma + "-" + betaPOS)
-      if (sigmaLemma != "" && label != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + label)
+      if (sigmaLemma != "" && sigmaDL != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + sigmaDL)
       if (sigmaPOS != "" && betaLemma != "") add(hmap, "S-POS-B-LEM=" + sigmaPOS + "-" + betaLemma)
       if (sigmaDL != "" && betaLemma != "") add(hmap, "S-DL-B-LEM=" + sigmaDL + "-" + betaLemma)
       if (sigmaLemma != "" && betaDL != "") add(hmap, "B-DL-S-LEM=" + betaDL + "-" + betaLemma)
-      if (sigmaLemma != "" && label != "") add(hmap, "S-LEM-LAB=" + sigmaLemma + "-" + label)
+      if (sigmaLemma != "" && label != "" && label != sigmaDL) add(hmap, "S-LEM-LAB=" + sigmaLemma + "-" + label)
       if (betaLemma != "" && label != "") add(hmap, "LAB-B-LEM=" + label + "-" + betaLemma)
       if (sigmaNER != "" && betaNER != "") add(hmap, "S-B-NER=" + sigmaNER + "-" + betaNER)
     }
@@ -340,7 +382,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val kappaLabels = kappaParents map (state.currentGraph.arcs(_, parameterNode))
     for (kl <- kappaLabels) if (kl != kappaDL) add(hmap, "K-LAB=" + kl)
     if (kappaDL != "") add(hmap, "K-DL=" + kappaDL)
-
+    if (includeWordNet) {
+      val kappaHypernyms = getHypernyms(kappaLemma, kappaPOS)
+      kappaHypernyms foreach { h => add(hmap, "K-HYP=" + h) }
+    }
     betaOption match {
       case Some(beta) =>
         val betaWord = state.currentGraph.nodes(beta)
@@ -420,4 +465,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     (quadFeaturesByString map { case (s, v) => (dict.index(s) -> v) }).toMap
   }
 
+  def getHypernyms(lemma: String, pos: String) = {
+    val key = lemma + (if (pos == "") "" else pos.charAt(0))
+    if (hypernymMap.containsKey(key)) {
+      hypernymMap(key)
+    } else {
+      val hypernyms = getAncestors(lemma, pos, if (hypernymLimit ==0) 99 else hypernymLimit)
+      hypernymMap.put(key, hypernyms)
+      hypernyms
+    }
+  }
 }

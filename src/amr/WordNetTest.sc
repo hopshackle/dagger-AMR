@@ -15,4 +15,18 @@ Wordnet.synonyms("have")                          //> res5: List[String] = List(
                                                   //| ess, receive, stimulate, suffer, sustain, take, throw, undergo)
 Wordnet.stemmer("conceding")                      //> res6: List[String] = List(concede, conceding)
 Wordnet.synonyms("conceding")                     //> res7: List[String] = List(conceding, concession, yielding)
+
+Wordnet.getAncestors("crack", "NN")               //> res8: Seq[String] = List(opening, space, amorphous_shape, shape, attribute, 
+                                                  //| abstraction, abstract_entity, entity)
+Wordnet.getAncestors("crack", "VB")               //> res9: Seq[String] = List(change)
+Wordnet.getAncestors("crack", "RB")               //> res10: Seq[String] = List()
+Wordnet.getAncestors("crack", "DT")               //> res11: Seq[String] = List()
+Wordnet.getAncestors("crack", "")                 //> res12: Seq[String] = List()
+Wordnet.getAncestors("crack", "JJ")               //> res13: Seq[String] = List()
+
+
+Wordnet.getAncestors("observe", "VB")             //> res14: Seq[String] = List(sight, perceive)
+
+
+
 }

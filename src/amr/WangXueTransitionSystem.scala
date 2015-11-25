@@ -2,7 +2,7 @@ package amr
 
 import dagger.core.TransitionSystem
 
-import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertableConcepts, conceptIndex, concept }
+import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertableConcepts, conceptIndex, concept, compositeNodes }
 
 object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
@@ -10,13 +10,14 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var prohibition = true
   var reentrance = false
   var reentrancePhase = true
+  var useCompositeNodes = false
   var preferKnown = true
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN")
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++ Array(DoNothing) ++
-    Insert.all ++ NextNode.all ++ NextEdge.all
+    Insert.all ++ NextNode.all ++ NextEdge.all ++ AddParent.all
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
@@ -48,16 +49,23 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       possibleNodes map (Reattach(_))
     }).toArray
 
-    val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
-    val prohibitedNodes = if (prohibition && state.phase == 1) {
-      val parents = state.currentGraph.parentsOf(sigma)
-      val grandParents = parents flatMap state.currentGraph.parentsOf
-      val children = state.currentGraph.childrenOf(sigma)
-      val grandChildren = children flatMap state.currentGraph.childrenOf
-      ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
-    } else Set[String]()
-    val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
-    val insertActions = if (state.phase == 1) insertable map (Insert(_)) else Set[Insert]()
+    val insertActions: Set[WangXueAction] = if (useCompositeNodes) {
+      if (state.phase == 1 && Insert.isPermissible(state) && !(state.currentGraph.insertedNodes contains state.nodesToProcess.head)) {
+        val insertable = (state.currentGraph.nodeLemmas.values flatMap { lemma => compositeNodes.getOrElse(lemma, Set()) }).toSet
+        insertable map (AddParent(_))
+      } else Set()
+    } else {
+      val insertNodes = if (Insert.isPermissible(state)) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq()
+      val prohibitedNodes = if (prohibition && state.phase == 1) {
+        val parents = state.currentGraph.parentsOf(sigma)
+        val grandParents = parents flatMap state.currentGraph.parentsOf
+        val children = state.currentGraph.childrenOf(sigma)
+        val grandChildren = children flatMap state.currentGraph.childrenOf
+        ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
+      } else Set[String]()
+      val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
+      if (state.phase == 1) insertable map (Insert(_)) else Set()
+    }
     val wordIndex = conceptIndex(state.currentGraph.nodes(sigma))
     val permissibleConcepts = (beta, state.phase) match {
       case (Some(b), _) => Set()
