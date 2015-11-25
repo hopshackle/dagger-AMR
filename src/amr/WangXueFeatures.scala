@@ -108,7 +108,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       if (state.previousActions.size > 2) add(hmap, "LAST-B2-A=" + state.previousActions.tail.tail.head.name)
       if (state.previousActions.size > 3) add(hmap, "LAST-B3-A=" + state.previousActions.tail.tail.tail.head.name)
       if (state.previousActions.size > 1) add(hmap, "LAST-TWO-A=" + state.previousActions.head.name + state.previousActions.tail.head.name)
-      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-A=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
+//      if (state.previousActions.size > 2) add(hmap, "LAST-THREE-A=" + state.previousActions.head.name + state.previousActions.tail.head.name + state.previousActions.tail.tail.head.name)
     }
 
     val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
@@ -310,11 +310,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     // WangXue features
     if (!quadraticTurbo) {
       if (sigmaLemma != "" && betaPOS != "") add(hmap, "S-LEM-B-POS=" + sigmaLemma + "-" + betaPOS)
-      if (sigmaLemma != "" && label != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + label)
+      if (sigmaLemma != "" && sigmaDL != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + sigmaDL)
       if (sigmaPOS != "" && betaLemma != "") add(hmap, "S-POS-B-LEM=" + sigmaPOS + "-" + betaLemma)
       if (sigmaDL != "" && betaLemma != "") add(hmap, "S-DL-B-LEM=" + sigmaDL + "-" + betaLemma)
       if (sigmaLemma != "" && betaDL != "") add(hmap, "B-DL-S-LEM=" + betaDL + "-" + betaLemma)
-      if (sigmaLemma != "" && label != "") add(hmap, "S-LEM-LAB=" + sigmaLemma + "-" + label)
+      if (sigmaLemma != "" && label != "" && label != sigmaDL) add(hmap, "S-LEM-LAB=" + sigmaLemma + "-" + label)
       if (betaLemma != "" && label != "") add(hmap, "LAB-B-LEM=" + label + "-" + betaLemma)
       if (sigmaNER != "" && betaNER != "") add(hmap, "S-B-NER=" + sigmaNER + "-" + betaNER)
     }
@@ -470,7 +470,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (hypernymMap.containsKey(key)) {
       hypernymMap(key)
     } else {
-      val hypernyms = getAncestors(lemma, pos, hypernymLimit)
+      val hypernyms = getAncestors(lemma, pos, if (hypernymLimit ==0) 99 else hypernymLimit)
       hypernymMap.put(key, hypernyms)
       hypernyms
     }
