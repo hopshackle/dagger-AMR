@@ -44,7 +44,9 @@ A sample execution is:
   &> B010.txt &
 ```
 
-There is a load of output written to various files for `dot` representations of the end-results of each training instance. The key F-Scores are obtained by `grep` on the raw console output. ("Training" and "Validation" are useful searches.)
+There output in the specified output directory includes Smatch scores for each sentence at each iteration in the validation and training set, plus the AMR output for each. If debug is switched on, then the key log file is CollectInstances_debug_I.txt for iteration I. This contains information on the RollIn trajectory taken, plus the losses calculated for each RollOut action considered.
+
+The key F-Scores are obtained by `grep` on the raw console output. ("Training" and "Validation" are useful searches.)
 
 Key (non-obvious) parameters:
 * `lossFunction` can be any combination of `NaiveSmatch, Smatch, Penalty, Abs`, suitable concatenated in that order
@@ -63,4 +65,6 @@ Key (non-obvious) parameters:
 * `WangXue` should be set to `true`. `false` uses a different transition system that is not well tested.
 * `maxTrainingSize` will filter out any training instances with more than the specified number of AMR nodes. These tend to have long, noisy trajectories and their removal speeds up training at the cost of a reduction in final performance.
 * `instanceThreshold` specifies the alpha-bound to use in training. After this number of mis-classifications, the instance will be discarded from further training.
+* `coachingLambda` will be used to multiply the score from the learned classifier for an action, which will be added to the loss calculated during training.
+
 
