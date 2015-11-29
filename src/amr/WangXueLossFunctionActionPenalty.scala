@@ -6,7 +6,7 @@ class WangXueLossFunctionActionPenalty extends WangXueLossFunction {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
     }
-    1.0 - Smatch.fScore(gold.amr.get, testAMR, 2, 500)._1 + (testActions.size / 1000.0)
+    1.0 - Smatch.fScore(gold.amr.get, testAMR, 2, 500)._1 + ((testActions filterNot (a => a.ignoreAction) size) / 1000.0)
   }
 }
 

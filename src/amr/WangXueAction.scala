@@ -7,6 +7,7 @@ abstract class WangXueAction extends TransitionAction[WangXueTransitionState] {
   def isPermissible(state: WangXueTransitionState): Boolean
   def name: String
   def construct(name: String): WangXueAction = WangXueAction.construct(name)
+  def ignoreAction: Boolean = false
 }
 
 object WangXueAction {
@@ -464,5 +465,6 @@ case object DoNothing extends WangXueAction {
   override def isPermissible(state: WangXueTransitionState): Boolean = state.phase == 2 && state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty
   override def name: String = "DoNothing"
   override def toString: String = "DoNothing"
+  override def ignoreAction: Boolean = true
 }
 

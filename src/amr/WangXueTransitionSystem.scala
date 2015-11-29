@@ -17,7 +17,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++ Array(DoNothing) ++
-    Insert.all ++ NextNode.all ++ NextEdge.all ++ AddParent.all
+    Insert.all ++ NextNode.all ++ NextEdge.all ++ (if (useCompositeNodes) AddParent.all else Nil)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {

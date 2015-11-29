@@ -17,13 +17,14 @@ object FeatureAnalyser {
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
 
     val featureIndex = new MapIndex
-    val startingClassifier = AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
-    featureIndex.initialiseFromFile(options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
+    val classifierToUse = options.getString("--classifier", options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt")
+    val featuresToUse = options.getString("--featureIndex", options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
+    val startingClassifier = AROWClassifier.fromFile(classifierToUse, y => WangXueAction.construct(y))
+    featureIndex.initialiseFromFile(featuresToUse)
     val trainedPolicy = new ProbabilisticClassifierPolicy[Sentence, WangXueAction, WangXueTransitionState](startingClassifier)
     val baseResult = runPolicy(devData, options, featureIndex, trainedPolicy, "base")
 
     println(f"Baseline F-Score $baseResult%.3f")
-    trainedPolicy.classifier.writeToFile(options.DAGGER_OUTPUT_PATH + "/FA_Classifier.txt", x => x.name)
 
     import scala.collection.JavaConversions._
     val sortedByName: scala.collection.immutable.List[String] = featureIndex.map.keySet.toList.sorted
