@@ -40,15 +40,17 @@ object FeatureAnalyser {
 
     var stats = scala.collection.mutable.Map[String, (Int, Double, Double)]()
     for ((currentPrefix, count) <- byCount) {
+      def weightBelongsToCurrentPrefix(k: Int): Boolean = {
+        featureIndex.elem(k).startsWith(currentPrefix + "=") || featureIndex.elem(k) == currentPrefix
+      }
       var allNewWeights = new HashMap[WangXueAction, HashMap[Int, Float]]()
       var totalNumberRemoved = 0
       var totalValueRemoved = 0.0
       for ((action, actionWeights) <- startingClassifier.weights) {
-        val newWeights = actionWeights filterNot { case (k, v) => featureIndex.elem(k).startsWith(currentPrefix) }
-        val removedWeights = actionWeights filter { case (k, v) => featureIndex.elem(k).startsWith(currentPrefix) }
-        val difference = actionWeights.size - newWeights.size
+        val newWeights = actionWeights filterNot { case (k, v) => weightBelongsToCurrentPrefix(k) }
+        val removedWeights = actionWeights filter { case (k, v) => weightBelongsToCurrentPrefix(k) }
         val sumWeights = (removedWeights.values map math.abs).sum
-        totalNumberRemoved += difference
+        totalNumberRemoved += removedWeights.size
         totalValueRemoved += sumWeights
         allNewWeights.put(action, newWeights)
       }
