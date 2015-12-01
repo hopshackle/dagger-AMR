@@ -2,7 +2,7 @@ package amr
 
 import dagger.core.TransitionSystem
 
-import ImportConcepts.{ conceptsPerLemma, edgesPerLemma, relationIndex, insertableConcepts, conceptIndex, concept, compositeNodes }
+import ImportConcepts._
 
 object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction, WangXueTransitionState] {
 
@@ -12,6 +12,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var reentrancePhase = true
   var useCompositeNodes = false
   var preferKnown = true
+  var wikification = true
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN")
 
@@ -38,6 +39,11 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       val neighbouringTokens = state.currentGraph.nodes.keySet filter { n => math.abs(state.currentGraph.nodeSpans.getOrElse(n, (-100, -100))._1 - tokenPos) <= 2 }
       (state.currentGraph.getNeighbourhood(sigma, 4) ++ neighbouringTokens - sigma) map (Reentrance(_)) filter (_.isPermissible(state))
     } else Set[Reentrance]()
+
+    val wikifyActions = if (Wikify("FORWARD").isPermissible(state))
+      wikifications(state.currentGraph.nodes(sigma)) map { Wikify(_) } toArray
+    else
+      Array.empty[Wikify]
 
     val reattachActions = (if (state.phase == 2 || Reattach.disableReattach || state.childrenToProcess.isEmpty ||
       (state.currentGraph.reattachedNodes contains beta.get)) {
@@ -84,7 +90,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 
-    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ wikifyActions ++
       (Array(DeleteNode, ReplaceHead, Swap, ReversePolarity, DoNothing)).filter(action => isPermissible(action, state))
   }
 
@@ -113,11 +119,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
   override def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
 
-  override def isTerminal(state: WangXueTransitionState): Boolean = (reentrance, reentrancePhase) match {
-    case (true, true) => state.nodesToProcess.isEmpty && state.phase == 2
-    case (true, false) => state.phase == 2
-    case _ => state.phase == 2
-  }
+  override def isTerminal(state: WangXueTransitionState): Boolean = state.nodesToProcess.isEmpty && state.phase == 2
 
   override def permissibleActions(state: WangXueTransitionState): Array[WangXueAction] = {
     actions(state)

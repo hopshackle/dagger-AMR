@@ -302,7 +302,7 @@ object Smatch {
 
     val newNodes = for {
       (n, v) <- input.nodes
-      if !(input .isLeafNode(n) && input.parentsOf(n) == 1 && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
+      if !(input.isLeafNode(n) && input.parentsOf(n) == 1 && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
     } yield (n, quote.replaceAllIn(v, ""))
 
     val arcsToUse = if (input.originalArcs.isEmpty) input.arcs else input.originalArcs

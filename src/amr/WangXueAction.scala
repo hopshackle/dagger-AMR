@@ -56,6 +56,9 @@ object WangXueAction {
       case x if x startsWith "AddParent" =>
         val parentString = x.replaceAll("AddParent", "")
         AddParent(parentString)
+      case x if x startsWith "Wikify" =>
+        val wikiString = x.replaceAll("Wikify", "")
+        Wikify(wikiString)
     }
   }
 }
@@ -468,3 +471,55 @@ case object DoNothing extends WangXueAction {
   override def ignoreAction: Boolean = true
 }
 
+case class Wikify(wikiString: String) extends WangXueAction {
+  import Wikify._
+  def apply(conf: WangXueTransitionState): WangXueTransitionState = {
+    val stringToUse = wikiString match {
+      case "FORWARD" => forwardWikiString(conf)
+      case "BACKWARD" => backwardWikiString(conf)
+      case _ => wikiString
+    }
+    val (newNode, tree) = conf.currentGraph.insertNodeBelow(conf.nodesToProcess.head, stringToUse, "", "wiki")
+    conf.copy(currentGraph = tree, previousActions = this :: conf.previousActions, processedEdges = conf.processedEdges + ((conf.nodesToProcess.head, newNode)),
+      processedNodes = conf.processedNodes + newNode).fastForward
+  }
+  override def toString: String = "Wikify: " + wikiString
+  override def name: String = "Wikify:" + wikiString
+  override def isPermissible(state: WangXueTransitionState): Boolean = WangXueTransitionSystem.wikification &&
+    state.phase == 2 && state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && !isWikified(state) && {
+      state.currentGraph.arcs exists { case ((from, to), edgeName) => from == state.nodesToProcess.head && edgeName == "name" }
+    }
+}
+
+object Wikify {
+  val quoteString = """""""
+  def all(): Array[WangXueAction] = {
+    wikifications.values.flatten map { Wikify(_) } toArray
+  }
+  def isWikified(state: WangXueTransitionState): Boolean = {
+    state.nodesToProcess.headOption match {
+      case None => true
+      case Some(sigma) =>
+        state.currentGraph.edgesToChildren(sigma) map state.currentGraph.arcs contains "wiki"
+    }
+  }
+  def forwardWikiString(conf: WangXueTransitionState): String = wikiString(conf, false)
+  def backwardWikiString(conf: WangXueTransitionState): String = wikiString(conf, true)
+  private def wikiString(conf: WangXueTransitionState, reverse: Boolean): String = {
+    val sortedNodes = sortedNameNodes(conf.currentGraph, conf.nodesToProcess.head)
+    quoteString + ((if (reverse) sortedNodes.reverse else sortedNodes) map conf.currentGraph.nodes mkString ("_")) + quoteString
+  }
+  def isConcatenationOfNameArgs(amr: AMRGraph, node: String, wikification: String): Boolean = {
+    (wikification == forwardConcatenationOfNameArgs(amr, node) || wikification == backwardConcatenationOfNameArgs(amr, node))
+  }
+  def forwardConcatenationOfNameArgs(amr: AMRGraph, node: String): String = {
+    quoteString + (sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll(quoteString, "")) + quoteString
+  }
+  def backwardConcatenationOfNameArgs(amr: AMRGraph, node: String): String = {
+     quoteString + (sortedNameNodes(amr, node).reverse map amr.nodes mkString ("_") replaceAll(quoteString, "")) + quoteString
+  }
+  private def sortedNameNodes[K](graph: Graph[K], node: K): Seq[K] = {
+    val nameNodes = graph.childrenOf(node) filter (graph.nodes(_) == "name") flatMap graph.childrenOf
+    nameNodes.sortBy { x => graph.nodeSpans(x)._1 }
+  }
+}

@@ -147,12 +147,15 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       insertedNodes = newInsertedNodes))
   }
   def insertNodeBelow(node: Int, conceptIndex: Int, otherRef: String, label: String = ""): (Int, DependencyTree) = {
+    insertNodeBelow(node, concept(conceptIndex), otherRef, label)
+  }
+  def insertNodeBelow(node: Int, concept: String, otherRef: String, label: String): (Int, DependencyTree) = {
     val newNode = getNextNodeToInsert
     val parentSpan = nodeSpans.getOrElse(node, (0, 0))
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
-    val labelToUse = if (label != "") label else concept(conceptIndex) + "#" // label made up for use as feature
+    val labelToUse = if (label != "") label else concept + "#" // label made up for use as feature
     val newEdgeToNode = ((node, newNode), labelToUse)
-    (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
+    (newNode, this.copy(nodes = this.nodes + (newNode -> concept), nodeLemmas = this.nodeLemmas + (newNode -> concept),
       nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs + newEdgeToNode,
       insertedNodes = newInsertedNodes))
   }

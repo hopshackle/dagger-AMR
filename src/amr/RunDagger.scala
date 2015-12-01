@@ -100,6 +100,7 @@ object RunDagger {
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.reentrancePhase = reentrancePhase
+    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
     WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)

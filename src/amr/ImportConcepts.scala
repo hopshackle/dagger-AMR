@@ -43,7 +43,7 @@ object ImportConcepts {
   lazy val insertableConcepts = loadInsertableConcepts
 
   lazy val compositeNodes = loadCompositeNodes
-  lazy val leafRelations = loadLeafRelations
+  lazy val wikifications = loadWikifications
 
   def initialise(fileName: String): Unit = {
     amrFile = fileName
@@ -91,7 +91,7 @@ object ImportConcepts {
     val sentenceTotal = stage1.size
     val commonLemmaProportion = 0.10
     val lemmaCountsBySentence = (stage1 flatMap (_._1.toList) groupBy identity mapValues (_.size)) - "##"
-    
+
     val limitOfCompositesNodesPerLemma = 1000
     val output = (for {
       (lemmas, composites) <- stage1
@@ -105,14 +105,20 @@ object ImportConcepts {
     output
   }
 
-  private def loadLeafRelations: Set[String] = {
+  private def loadWikifications: Map[String, List[String]] = {
+    import Wikify.isConcatenationOfNameArgs
     val output = (for {
       (original, _) <- expertResults
-      unmappedAMR <- original.amr.get.nodes.keys filterNot original.AMRToPosition.contains
-      mappedLeafChildrenOfUnmappedAMR = original.amr.get.childrenOf(unmappedAMR) filter original.AMRToPosition.contains filter original.amr.get.isLeafNode
-    } yield mappedLeafChildrenOfUnmappedAMR).flatten.toSet
-    val lr = new FileWriter(amrFile + "_lr")
-    output foreach (x => lr.write(x + "\n"))
+      val amr = original.amr.get
+      conceptsToWikiAttributes = amr.arcs.toSeq filter
+        { case (_, edgeType) => edgeType == "wiki" } map
+        { case ((from, to), _) => (from, amr.nodes(to)) } filterNot
+        { case (node, wikification) => wikification == "-" || isConcatenationOfNameArgs(amr, node, wikification) } map
+        { case (from, wikiString) => (amr.nodes(from), wikiString) }
+
+    } yield conceptsToWikiAttributes).flatten.groupBy(_._1).mapValues(seq => (seq map (_._2) distinct).toList)
+    val lr = new FileWriter(amrFile + "_wiki")
+    output foreach (x => lr.write(x._1 + "\t:\t" + x._2.mkString(" : ")))
     lr.close
 
     output

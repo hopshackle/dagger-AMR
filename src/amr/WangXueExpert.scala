@@ -66,8 +66,13 @@ class WangXueExpert extends WangXueExpertBasic {
     //    if (debug) println(unmatchedParents)
     val unmatchedParentLabels = unmatchedParents map (data.amr.get.nodes(_))
     //    if (debug) println(unmatchedParentLabels)
-    val unmatchedChildrenLabels = unmatchedChildren map (data.amr.get.nodes(_))
+    val unmatchedChildrenLabels = unmatchedChildren filterNot (c => data.amr.get.arcs((SIGMAAMR.get, c)) == "wiki") map (data.amr.get.nodes(_))
     val unmatchedPolarityChild = unmatchedChildrenLabels contains "-"
+
+    val needsToBeWikified = SIGMAAMR match {
+      case None => false
+      case Some(sigma) => WangXueTransitionSystem.wikification && !Wikify.isWikified(state) && getWikiString(data.amr.get, sigma) != ""
+    }
 
     val kappa = unlinkedAMRChildren.toList map fullMapAMRtoDT filter state.currentGraph.nodes.contains filter (Reentrance(_).isPermissible(state))
 
@@ -90,11 +95,12 @@ class WangXueExpert extends WangXueExpertBasic {
       case (1, Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) =>
         if (useCompositeNodes) {
           val parentString = getParentString(data, state, fullMapAMRtoDT)
-           AddParent(parentString)
+          AddParent(parentString)
         } else
           Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
       case (1, Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
       case (1, Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
+      case (2, Some(sigmaAMR), _, -1, _, _) if needsToBeWikified => Wikify(getWikiString(data.amr.get, sigmaAMR))
       case (_, Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
       case (1, Some(sigmaAMR), _, -1, _, _) =>
         val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
@@ -174,10 +180,29 @@ class WangXueExpert extends WangXueExpertBasic {
          *      Non-ideal. Not much we can do. Insert a name node, and hope for the best.
          */
     val fragmentNodes = state.nodesToProcess.head
-    val fragmentAMR = data.positionToAMR.getOrElse(fragmentNodes, "U") 
+    val fragmentAMR = data.positionToAMR.getOrElse(fragmentNodes, "U")
     val fragmentParents = data.amr.get.parentsOf(fragmentAMR)
     val unmappedFragmentParents = fragmentParents filterNot amrMap.contains
 
     if (unmappedFragmentParents.isEmpty) "" else getCompositeNode(unmappedFragmentParents(0), "")
+  }
+
+  def getWikiString(amr: AMRGraph, node: String): String = {
+    val wikiAttributes = amr.edgesToChildren(node) filter { amr.arcs(_) == "wiki" } map (_._2) map amr.nodes
+    val fullWikiString = wikiAttributes.size match {
+      case 0 => ""
+      case 1 => wikiAttributes(0)
+      case _ => assert(false, "Too many wiki attributes on node " + node + "in AMR: \n" + amr); ""
+    }
+    println("Full wikiString = " + fullWikiString)
+    val forward = Wikify.forwardConcatenationOfNameArgs(amr, node)
+    println("ForwardConcat = " +forward)
+    val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
+    fullWikiString match {
+      case "" => ""
+      case `forward` => "FORWARD"
+      case `backward` => "BACKWARD"
+      case _ => fullWikiString
+    }
   }
 }
