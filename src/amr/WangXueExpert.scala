@@ -194,14 +194,14 @@ class WangXueExpert extends WangXueExpertBasic {
       case 1 => wikiAttributes(0)
       case _ => assert(false, "Too many wiki attributes on node " + node + "in AMR: \n" + amr); ""
     }
-    println("Full wikiString = " + fullWikiString)
+ //   println("Full wikiString = " + fullWikiString)
     val forward = Wikify.forwardConcatenationOfNameArgs(amr, node)
-    println("ForwardConcat = " +forward)
-    val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
+ //   println("ForwardConcat = " +forward)
+ //   val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
     fullWikiString match {
       case "" => ""
       case `forward` => "FORWARD"
-      case `backward` => "BACKWARD"
+  //    case `backward` => "BACKWARD"
       case _ => fullWikiString
     }
   }

@@ -494,7 +494,7 @@ case class Wikify(wikiString: String) extends WangXueAction {
 object Wikify {
   val quoteString = """""""
   def all(): Array[WangXueAction] = {
-    wikifications.values.flatten map { Wikify(_) } toArray
+    (wikifications.values.flatten ++ Seq("FORWARD", "-")) map { Wikify(_) } toArray
   }
   def isWikified(state: WangXueTransitionState): Boolean = {
     state.nodesToProcess.headOption match {
@@ -510,13 +510,13 @@ object Wikify {
     quoteString + ((if (reverse) sortedNodes.reverse else sortedNodes) map conf.currentGraph.nodes mkString ("_")) + quoteString
   }
   def isConcatenationOfNameArgs(amr: AMRGraph, node: String, wikification: String): Boolean = {
-    (wikification == forwardConcatenationOfNameArgs(amr, node) || wikification == backwardConcatenationOfNameArgs(amr, node))
+    (wikification == forwardConcatenationOfNameArgs(amr, node)) //|| wikification == backwardConcatenationOfNameArgs(amr, node))
   }
   def forwardConcatenationOfNameArgs(amr: AMRGraph, node: String): String = {
-    quoteString + (sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll(quoteString, "")) + quoteString
+    quoteString + (sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll (quoteString, "")) + quoteString
   }
   def backwardConcatenationOfNameArgs(amr: AMRGraph, node: String): String = {
-     quoteString + (sortedNameNodes(amr, node).reverse map amr.nodes mkString ("_") replaceAll(quoteString, "")) + quoteString
+    quoteString + (sortedNameNodes(amr, node).reverse map amr.nodes mkString ("_") replaceAll (quoteString, "")) + quoteString
   }
   private def sortedNameNodes[K](graph: Graph[K], node: K): Seq[K] = {
     val nameNodes = graph.childrenOf(node) filter (graph.nodes(_) == "name") flatMap graph.childrenOf

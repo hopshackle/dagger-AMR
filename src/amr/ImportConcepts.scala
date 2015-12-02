@@ -118,7 +118,7 @@ object ImportConcepts {
 
     } yield conceptsToWikiAttributes).flatten.groupBy(_._1).mapValues(seq => (seq map (_._2) distinct).toList)
     val lr = new FileWriter(amrFile + "_wiki")
-    output foreach (x => lr.write(x._1 + "\t:\t" + x._2.mkString(" : ")))
+    output foreach (x => lr.write(x._1 + "\t:\t" + x._2.mkString(" : ") + "\n"))
     lr.close
 
     output
@@ -156,6 +156,7 @@ object ImportConcepts {
       val interimConcepts = for {
         ((_, s), a) <- (expertResults zip allAMR)
         (node, amr) <- s.dependencyTree.insertedNodes.toList
+        if amr != ""
         name = a.nodes(amr)
         lemma <- (s.dependencyTree.childrenOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
       } yield (lemma, name)

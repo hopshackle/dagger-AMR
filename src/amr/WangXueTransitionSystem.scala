@@ -41,7 +41,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     } else Set[Reentrance]()
 
     val wikifyActions = if (Wikify("FORWARD").isPermissible(state))
-      wikifications(state.currentGraph.nodes(sigma)) map { Wikify(_) } toArray
+      (wikifications.getOrElse(state.currentGraph.nodes(sigma), List()) ++ List("FORWARD", "-")) map { Wikify(_) } toArray
     else
       Array.empty[Wikify]
 
