@@ -448,7 +448,7 @@ case class InsertBelow(conceptIndex: Int, otherRef: String = "") extends WangXue
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean = {
-    state.phase == 1 && state.nodesToProcess.nonEmpty && {
+    WangXueTransitionSystem.insertBelow && state.phase == 1 && state.nodesToProcess.nonEmpty && {
       val newConcept = concept(conceptIndex)
       val sigma = state.nodesToProcess.head
       !(state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains newConcept)
@@ -509,9 +509,12 @@ case object DoNothing extends WangXueAction {
 case class Wikify(wikiString: String) extends WangXueAction {
   import Wikify._
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
+    val sigma = conf.nodesToProcess.head
+    val graph = conf.currentGraph
     val stringToUse = wikiString match {
       case "FORWARD" => forwardWikiString(conf)
       case "BACKWARD" => backwardWikiString(conf)
+      case "DEFAULT" => wikifications.getOrElse(graph.nodes(sigma) + ":" + forwardConcatenationOfNameArgs(graph, sigma), "-")
       case _ => wikiString
     }
     val (newNode, tree) = conf.currentGraph.insertNodeBelow(conf.nodesToProcess.head, stringToUse, "", "wiki")
@@ -529,7 +532,12 @@ case class Wikify(wikiString: String) extends WangXueAction {
 object Wikify {
   val quoteString = """""""
   def all(): Array[WangXueAction] = {
-    (wikifications.values.flatten ++ Seq("FORWARD", "-")) map { Wikify(_) } toArray
+    (Seq("FORWARD", "-")) map { Wikify(_) } toArray
+  }
+  def hasExactMatch(state: WangXueTransitionState): Boolean = {
+    val sigma = state.nodesToProcess.head
+    val graph = state.currentGraph
+    wikifications contains (graph.nodes(sigma) + ":" + forwardConcatenationOfNameArgs(graph, sigma))
   }
   def isWikified(state: WangXueTransitionState): Boolean = {
     state.nodesToProcess.headOption match {
@@ -547,10 +555,10 @@ object Wikify {
   def isConcatenationOfNameArgs(amr: AMRGraph, node: String, wikification: String): Boolean = {
     (wikification == forwardConcatenationOfNameArgs(amr, node)) //|| wikification == backwardConcatenationOfNameArgs(amr, node))
   }
-  def forwardConcatenationOfNameArgs(amr: AMRGraph, node: String): String = {
+  def forwardConcatenationOfNameArgs[K](amr: Graph[K], node: K): String = {
     quoteString + (sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll (quoteString, "")) + quoteString
   }
-  def backwardConcatenationOfNameArgs(amr: AMRGraph, node: String): String = {
+  def backwardConcatenationOfNameArgs[K](amr: Graph[K], node: K): String = {
     quoteString + (sortedNameNodes(amr, node).reverse map amr.nodes mkString ("_") replaceAll (quoteString, "")) + quoteString
   }
   private def sortedNameNodes[K](graph: Graph[K], node: K): Seq[K] = {

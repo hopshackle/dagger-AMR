@@ -69,7 +69,7 @@ abstract class Graph[K] {
   }
 
   private def subGraph(node: K, acc: Int): Set[K] = {
-    if (acc > 50) { println("Depth of subgraph exceeds 50 from " + node + (if (debug) " : \n" + this.toString)); Set(node) } else {
+    if (acc > 50) { if (assertionChecking) println("Depth of subgraph exceeds 50 from " + node + (if (debug) " : \n" + this.toString)); Set(node) } else {
       if (isLeafNode(node)) Set(node)
       else (childrenOf(node) flatMap (subGraph(_, acc + 1))).toSet + node
     }

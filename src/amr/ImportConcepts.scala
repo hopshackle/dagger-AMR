@@ -107,8 +107,8 @@ object ImportConcepts {
     output
   }
 
-  private def loadWikifications: Map[String, List[String]] = {
-    import Wikify.isConcatenationOfNameArgs
+  private def loadWikifications: Map[String, String] = {
+    import Wikify.{isConcatenationOfNameArgs, forwardConcatenationOfNameArgs}
     val output = (for {
       (original, _) <- expertResults
       val amr = original.amr.get
@@ -116,9 +116,9 @@ object ImportConcepts {
         { case (_, edgeType) => edgeType == "wiki" } map
         { case ((from, to), _) => (from, amr.nodes(to)) } filterNot
         { case (node, wikification) => wikification == "-" || isConcatenationOfNameArgs(amr, node, wikification) } map
-        { case (from, wikiString) => (amr.nodes(from), wikiString) }
+        { case (from, wikiString) => (amr.nodes(from) + ":" + forwardConcatenationOfNameArgs(amr, from), wikiString) }
 
-    } yield conceptsToWikiAttributes).flatten.groupBy(_._1).mapValues(seq => (seq map (_._2) distinct).toList)
+    } yield conceptsToWikiAttributes).flatten.toMap //.groupBy(_._1).mapValues(seq => (seq map (_._2) distinct).toList)
     val lr = new FileWriter(amrFile + "_wiki")
     output foreach (x => lr.write(x._1 + "\t:\t" + x._2.mkString(" : ") + "\n"))
     lr.close

@@ -13,6 +13,7 @@ case class WangXueTransitionState(nodesToProcess: List[Int], childrenToProcess: 
       val ffState = (sigmaOption, betaOption, phase) match {
         case (Some(sigma), Some(beta), _) => if (processedEdges contains (sigma, beta)) NextEdge(relationIndex(currentGraph.arcs((sigma, beta))))(this).fastForward else this
         case (Some(sigma), None, 1) => if (processedNodes contains sigma) NextNode(0)(this).fastForward else this
+        case (Some(sigma), None, 2) if WangXueTransitionSystem.wikification && Wikify.hasExactMatch(this) => Wikify("DEFAULT")(this).fastForward
         case (_, _, _) => this
       }
       ffState

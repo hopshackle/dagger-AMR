@@ -13,6 +13,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var useCompositeNodes = false
   var preferKnown = true
   var wikification = true
+  var insertBelow = true
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN")
 
@@ -41,11 +42,11 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     } else Set[Reentrance]()
 
     val wikifyActions = if (Wikify("FORWARD").isPermissible(state))
-      (wikifications.getOrElse(state.currentGraph.nodes(sigma), List()) ++ List("FORWARD", "-")) map { Wikify(_) } toArray
+      List("FORWARD", "-") map { Wikify(_) } toArray
     else
       Array.empty[Wikify]
 
-    val subInsertNodes = if (state.phase == 1) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq.empty[Int]
+    val subInsertNodes = if (WangXueTransitionSystem.insertBelow && state.phase == 1) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq.empty[Int]
     val subInsertable = ((subInsertNodes map state.currentGraph.nodeLemmas flatMap { lemma => subInsertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet map conceptIndex)
     val subInsertActions = subInsertable filterNot (state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains _) map { InsertBelow(_, "") }
 

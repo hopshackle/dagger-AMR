@@ -185,6 +185,7 @@ object RunDagger {
     WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
     WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
     WangXueFeatures.includeWordNet = (options.getString("--WXfeatures", "") contains "H")
+    WangXueTransitionSystem.insertBelow = options.getBoolean("--insertBelow", true)
     if (WangXueFeatures.includeWordNet) {
       val fString = options.getString("--WXfeatures", "")
       val limit = fString.charAt(fString.indexOf("H") + 1).toString.toInt
