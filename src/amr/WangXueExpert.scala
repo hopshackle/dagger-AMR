@@ -44,6 +44,10 @@ class WangXueExpert extends WangXueExpertBasic {
       case Some(sigma) => data.amr.get.getAncestors(Seq(sigma)).toSet
       case None => Set[String]()
     }
+    val sigmaAMRDescendants = SIGMAAMR match {
+      case Some(sigma) => data.amr.get.getDescendants(Seq(sigma)).toSet
+      case None => Set[String]()
+    }
 
     if (debug) println(sigmaAMRAncestors)
 
@@ -62,13 +66,14 @@ class WangXueExpert extends WangXueExpertBasic {
 
     val unmatchedParents = sigmaAMRParents filter { x => !fullMapAMRtoDT.contains(x) }
 
-    val unmatchedChildren = sigmaAMRChildren filter { x => !fullMapAMRtoDT.contains(x) }
+    val unmatchedChildren = sigmaAMRChildren filter data.amr.get.isLeafNode filter { x => !fullMapAMRtoDT.contains(x) }
     //    if (debug) println(unmatchedParents)
     val unmatchedParentLabels = unmatchedParents map (data.amr.get.nodes(_))
     //    if (debug) println(unmatchedParentLabels)
-    val unmatchedChildrenLabels = unmatchedChildren filterNot (c => data.amr.get.arcs((SIGMAAMR.get, c)) == "wiki") map (data.amr.get.nodes(_))
-    val unmatchedPolarityChild = unmatchedChildrenLabels contains "-"
+    val (unmatchedPolarityChildren, unmatchedOtherChildren) = unmatchedChildren filter (c => data.amr.get.arcs((SIGMAAMR.get, c)) != "wiki") partition (c => data.amr.get.nodes(c) == "-")
+    val insertableChildren = unmatchedOtherChildren filter (c => InsertBelow(conceptIndex(data.amr.get.nodes(c))).isPermissible(state))
 
+    
     val needsToBeWikified = SIGMAAMR match {
       case None => false
       case Some(sigma) => WangXueTransitionSystem.wikification && !Wikify.isWikified(state) && getWikiString(data.amr.get, sigma) != ""
@@ -91,15 +96,26 @@ class WangXueExpert extends WangXueExpertBasic {
       //      happen if Classifier policy has been making some decisions, even if it would never happen with only this expert policy.
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
-      case (1, Some(sigmaAMR), _, beta, Some(betaAMR), true) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
+      case (1, Some(sigmaAMR), _, beta, Some(betaAMR), true) if (sigmaAMR != "" &&
+        (sigmaAMRAncestors contains betaAMR) &&
+        !(sigmaAMRDescendants contains betaAMR) &&
+        Swap.isPermissible(state)) => Swap
       case (1, Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) =>
         if (useCompositeNodes) {
           val parentString = getParentString(data, state, fullMapAMRtoDT)
           AddParent(parentString)
         } else
           Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
-      case (1, Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChild) => ReversePolarity
-      case (1, Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" && (sigmaAMRAncestors contains betaAMR) && Swap.isPermissible(state)) => Swap
+      case (1, Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChildren nonEmpty) => ReversePolarity
+      case (1, Some(sigmaAMR), _, _, _, _) if (insertableChildren nonEmpty) =>
+        val amrRef = insertableChildren.head
+        val conceptToInsert = data.amr.get.nodes(amrRef)
+        assert(InsertBelow(conceptIndex(conceptToInsert)).isPermissible(state), "Invalid " + conceptToInsert + "(" + conceptIndex(conceptToInsert) + ") in \n" + state)
+        InsertBelow(conceptIndex(conceptToInsert), amrRef)
+      case (1, Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" &&
+        (sigmaAMRAncestors contains betaAMR) &&
+        !(sigmaAMRDescendants contains betaAMR) &&
+        Swap.isPermissible(state)) => Swap
       case (2, Some(sigmaAMR), _, -1, _, _) if needsToBeWikified => Wikify(getWikiString(data.amr.get, sigmaAMR))
       case (_, Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
       case (1, Some(sigmaAMR), _, -1, _, _) =>
@@ -116,9 +132,15 @@ class WangXueExpert extends WangXueExpertBasic {
           val relationRequired = relationIndex(relationText)
           //        val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
           NextEdge(relationRequired)
-        } else if (allNodesAMR contains betaAMRParents.head) {
-          val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
-          if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
+        } else if (allNodesAMR intersect betaAMRParents.toSet nonEmpty) {
+
+          def edgeIsWrongWayRound: Boolean = data.amr.get.arcs contains (betaAMR, sigmaAMR)
+
+          if (edgeIsWrongWayRound && Swap.isPermissible(state)) Swap else {
+            val parentAMRNodes = allNodesAMR intersect betaAMRParents.toSet
+            val parentIndices = parentAMRNodes map fullMapAMRtoDT filter { Reattach(_).isPermissible(state) }
+            if (parentIndices.nonEmpty) Reattach(parentIndices.head) else NextEdge(0)
+          }
         } else NextEdge(0)
       case (_, None, _, beta, Some(betaAMR), false) =>
         if (allNodesAMR contains betaAMRParents.head) {
@@ -194,15 +216,16 @@ class WangXueExpert extends WangXueExpertBasic {
       case 1 => wikiAttributes(0)
       case _ => assert(false, "Too many wiki attributes on node " + node + "in AMR: \n" + amr); ""
     }
- //   println("Full wikiString = " + fullWikiString)
+    //   println("Full wikiString = " + fullWikiString)
     val forward = Wikify.forwardConcatenationOfNameArgs(amr, node)
- //   println("ForwardConcat = " +forward)
- //   val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
+    //   println("ForwardConcat = " +forward)
+    //   val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
     fullWikiString match {
       case "" => ""
       case `forward` => "FORWARD"
-  //    case `backward` => "BACKWARD"
+      //    case `backward` => "BACKWARD"
       case _ => fullWikiString
     }
   }
+
 }

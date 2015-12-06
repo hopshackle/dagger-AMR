@@ -45,6 +45,10 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     else
       Array.empty[Wikify]
 
+    val subInsertNodes = if (state.phase == 1) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq.empty[Int]
+    val subInsertable = ((subInsertNodes map state.currentGraph.nodeLemmas flatMap { lemma => subInsertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet map conceptIndex)
+    val subInsertActions = subInsertable filterNot (state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains _) map { InsertBelow(_, "") }
+
     val reattachActions = (if (state.phase == 2 || Reattach.disableReattach || state.childrenToProcess.isEmpty ||
       (state.currentGraph.reattachedNodes contains beta.get)) {
       Set[Reattach]()
@@ -90,7 +94,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 
-    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ wikifyActions ++
+    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ wikifyActions ++ subInsertActions ++
       (Array(DeleteNode, ReplaceHead, Swap, ReversePolarity, DoNothing)).filter(action => isPermissible(action, state))
   }
 

@@ -1,24 +1,9 @@
 package amr
 import edu.cmu.lti.nlp.amr._
 object AlignTest {
-  
+
   val quote = """"""".r
   val frameEnding = "-0[1-9]$".r
-
-  def main(args: Array[String]): Unit = {
-
-    val sample = AMRGraph.importFile("C://AMR//Borderless.txt")
-    sample foreach {
-      case s @ (sentence, amr) =>
-        println(sentence)
-        println
-        println(amr)
-        println
-        val out = AMRGraph(amr, sentence)
-        println(out)
-
-    }
-  }
 
   private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
   type Graph = edu.cmu.lti.nlp.amr.Graph
@@ -47,21 +32,22 @@ object AlignTest {
     val dt = DependencyTree(rawSentence)
     // This populates nodes and arcs. We now need to update the NodeSpan component based on alignment to sentence 
     // (as encapsulated in the Dependency Tree)
-    
+
     val dtNodeFromWordOrder = Seq(0) ++ dt.nodes.keys.toSeq.sorted
     val sentenceLength = dt.nodes.size
     // the Dependency Tree Nodes are always in ascending order moving left to right across the sentence
     // but will have missing numbers (for punctuation marks, which we usually remove)
     // Now, for wordIndex of i, we find the dt node key using dtNodeFromWordOrder(i)
     // We add Seq(0) at the front for the i = 0 case
-    
+
     var possibleMatches = scala.collection.mutable.Map[Int, List[String]]()
     // Key is word position, Value is list of AMR node key matches
     // Why not just map DT node to AMR node directly?? All this is a relic of JAMR.
     // Hmm...because currently Sentence assumes it is fed a mapping of AMR concepts to sentence positions
     // ...so to keep up with that interface I need to do it this way (as I want to keep JAMR working)
     // even though Sentence will replicate part of this logic.
-    val modifiedConcepts = amrGraph.nodes map { case (k, v) => (k, quote.replaceAllIn(frameEnding.replaceAllIn(v, ""), "")) }
+    val removedWikiConcepts = amrGraph.nodes filterNot { case (k, v) => amrGraph.edgesToParents(k) map amrGraph.arcs contains "wiki" }
+    val modifiedConcepts = removedWikiConcepts map { case (k, v) => (k, quote.replaceAllIn(frameEnding.replaceAllIn(v, ""), "")) }
 
     for (node <- modifiedConcepts) {
       val concept = node._2.toLowerCase
@@ -79,7 +65,7 @@ object AlignTest {
         }
       }
     }
-   // possibleMatches foreach println
+    // possibleMatches foreach println
     val reverseMatches = possibleMatches.toList.flatMap { case (k, v) => for { s <- v } yield (s, k) }.groupBy(_._1).mapValues(_.map(_._2))
     // We now have a list of possible matches for each word (in both directions)
 
@@ -95,7 +81,7 @@ object AlignTest {
           val word = dtNodes(dtNodeFromWordOrder(wordIndex)).toLowerCase
           val amrConcept = modifiedConcepts(amrId).toLowerCase
           val jaro = JaroMetric.compare(word, amrConcept).getOrElse(0.0)
-      //    val d = println(f"Jaro for ${word} and ${amrConcept} is ${jaro}%.2f")
+          //    val d = println(f"Jaro for ${word} and ${amrConcept} is ${jaro}%.2f")
           val s1 = 1.0 + 10.0 / topologicalDissimilarity(dtNodeFromWordOrder(wordIndex), amrId, dt, amrGraph, bestMapping)
           val s2 = 1.0 + 10.0 * (if (jaro == 1.0) 2.0 else 1.0) * Math.pow(jaro, 5)
           val similarity = s1 * s2
@@ -108,9 +94,9 @@ object AlignTest {
         var amrMapped = scala.collection.mutable.Set[String]()
 
         for ((wordIndex, amrId, similarity, s1, s2) <- similarities) {
-  //                    println(f"Similarity between ${amrGraph.nodes(amrId)} and ${dt.nodes(wordIndex)} is $similarity%.2f (topological = $s1%.2f; jaro = $s2%.2f")
+          //                    println(f"Similarity between ${amrGraph.nodes(amrId)} and ${dt.nodes(wordIndex)} is $similarity%.2f (topological = $s1%.2f; jaro = $s2%.2f")
           if (!(wordMapped contains wordIndex) && !(amrMapped contains amrId)) {
-       //     println(f"Similarity between ${amrGraph.nodes(amrId)} and ${dt.nodes(wordIndex)} is $similarity%.2f (topological = $s1%.2f; jaro = $s2%.2f")
+            //     println(f"Similarity between ${amrGraph.nodes(amrId)} and ${dt.nodes(wordIndex)} is $similarity%.2f (topological = $s1%.2f; jaro = $s2%.2f")
             wordMapped.add(wordIndex)
             amrMapped.add(amrId)
             mappings.put(wordIndex, amrId)
@@ -157,9 +143,9 @@ object AlignTest {
     }
 
     // Now to populate the NodeSpans in the AMRGraph
-    val nodeSpans = bestMapping map { x => (x._2, (x._1, x._1 + 1))}
-    
+    val nodeSpans = bestMapping map { x => (x._2, (x._1, x._1 + 1)) }
+
     AMRGraph(amrGraph.nodes, nodeSpans.toMap, amrGraph.arcs, amrGraph.originalArcs)
-     
+
   }
 }

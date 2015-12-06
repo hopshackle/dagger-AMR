@@ -6,50 +6,51 @@ object AlignmentImprovements {
 // val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\Riyadh-based.txt")(0)
 //  val (rawSentence, rawAMR) = AMRGraph.imprtFile("C:\\AMR\\CountryList.txt")(0)
 //  val (rawSentence, rawAMR) = AMRGraphimportFile("C:\\AMR\\Lavrov.txt")(0)
-  val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\TargetKazakh.txt")(0)
-                                                  //> rawSentence  : String = Kazakhstan also became a key U.S. partner in the Afg
-                                                  //| han war opening its airspace to military overflights.
-                                                  //| rawAMR  : String = (b / become-01 :ARG1 (c / country :name (n / name :op1 "K
-                                                  //| azakhstan") :ARG0-of (o / open-01 :ARG1 (a / airspace :poss c) :ARG3 (f / fl
-                                                  //| y-01 :ARG0 (m / military) :path (o2 / over :op1 c)))) :ARG2 (p / partner-01 
-                                                  //| :ARG0 c :ARG1 (c2 / country :name (n2 / name :op1 "U.S.")) :mod (k / key) :p
-                                                  //| urpose (w / war-01 :ARG1 (c3 / country :name (n3 / name :op1 "Afghanistan"))
-                                                  //| )) :mod (a2 / also))
+  val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\HammerTarget.txt")(0)
+                                                  //> rawSentence  : String = He looked at me there , with my hammer in my hand , 
+                                                  //| my fingers black with engine - grease , bending down over an object which se
+                                                  //| emed to him extremely ugly ...
+                                                  //| rawAMR  : String = (l / look-01 :ARG0 (h / he) :ARG1 (i / i :ARG0-of (b2 / b
+                                                  //| end-01 :destination (d / down) :location (o / object :mod (u / ugly :mod (s 
+                                                  //| / seem-01 :ARG2 h) :degree (e2 / extreme)))) :ARG0-of (h4 / have-03 :ARG1 (h
+                                                  //| 2 / hammer :poss i) :location (h3 / hand :part-of i)) :ARG0-of (h5 / have-03
+                                                  //|  :ARG1 (f / finger :part-of i :ARG1-of (b / black-04 :ARG0 (g / grease :mod 
+                                                  //| (e / engine)))))) :location (t / there))
 // val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\simpleDate.txt")(0)
 // val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\lobbying.tt")(0)
 
   //    val tokenisedSentence = rawSentence.split(" ")
-  val amr = Graph.parse(rawAMR)                   //> amr  : edu.cmu.lti.nlp.amr.Graph = Graph((become-01 :ARG1 (country :name (na
-                                                  //| me :op1 "Kazakhstan") :ARG0-of (open-01 :ARG1 (airspace :poss country) :ARG3
-                                                  //|  (fly-01 :ARG0 military :path (over :op1 country)))) :ARG2 (partner-01 :ARG1
-                                                  //|  (country :name (name :op1 "U.S.")) :mod key :purpose (war-01 :ARG1 (country
-                                                  //|  :name (name :op1 "Afghanistan"))) :ARG0 country) :mod also),ArrayBuffer(),M
-                                                  //| ap(0.0.0 -> (name :op1 "Kazakhstan"), 0.1.2.0.0 -> (name :op1 "Afghanistan")
-                                                  //| , 0.0.0.0 -> "Kazakhstan", 0.1.1 -> key, 0.1 -> (partner-01 :ARG1 (country :
-                                                  //| name (name :op1 "U.S.")) :mod key :purpose (war-01 :ARG1 (country :name (nam
-                                                  //| e :op1 "Afghanistan"))) :ARG0 country), 0.1.0.0 -> (name :op1 "U.S."), 0.0.1
-                                                  //| .1.1 -> (over :op1 country), 0.0.1.1 -> (fly-01 :ARG0 military :path (over :
-                                                  //| op1 country)), 0.1.2.0.0.0 -> "Afghanistan", 0.0 -> (country :name (name :op
-                                                  //| 1 "Kazakhstan") :ARG0-of (open-01 :ARG1 (airspace :poss country) :ARG3 (fly-
-                                                  //| 01 :ARG0 military :path (over :op1 country)))), 0.1.0 -> (country :name (nam
-                                                  //| e :op1 "U.S.")), 0.0.1 -> (open-01 :ARG1 (airspace :poss country) :ARG3 (fly
-                                                  //| -01 :ARG0 military :path (over :op1 country))), 0.1.0.0.0 -> "U.S.", 0.1.2.0
-                                                  //|  -> (country :name (name :op1 "Afghanistan")), 0 -> (become-01 :ARG1 (countr
-                                                  //| y :name (name :op1 "Kazakhstan") :ARG0-of (open-01 :ARG1 (airspace :poss cou
-                                                  //| ntry) :ARG3 (fly-01 :ARG0 military :path (over :op1 country)))) :ARG2 (partn
-                                                  //| er-01 :ARG1 (country :name (name :op1 "U.S.")) :mod key :purpose (war-01 :AR
-                                                  //| G1 (country :name (name :op1 "Afghanistan"))) :ARG0 country) :mod also), 0.0
-                                                  //| .1.0 -> (airspace :poss country), 0.0.1.1.0 -> military, 0.1.2 -> (war-01 :A
-                                                  //| RG1 (country :name (name :op1 "Afghanistan"))), 0.2 -> also),Map(n -> (name 
-                                                  //| :op1 "Kazakhstan"), w -> (war-01 :ARG1 (country :name (name :op1 "Afghanista
-                                                  //| n"))), b -> (become-01 :ARG1 (country :name (name :op1 "Kazakhstan") :ARG0-o
-                                                  //| f (open-01 :ARG1 (airspace :poss country) :ARG3 (fly-01 :ARG0 military :path
-                                                  //|  (over :op1 country)))) :ARG2 (partner-01 :ARG1 (country :name (name :op1 "U
-                                                  //| .S.")) :mod key :purpose (war-01 :ARG1 (country :name (name :op1 "Afghanista
-                                                  //| n"))) :ARG0 country) :mod also), k -> key, m -> military, p -> (partner-01 :
-                                                  //| ARG1 (country :name (name :op1 "U.S.")) :mod key :purpose (war-01 :ARG1 (cou
-                                                  //| ntry :name (name :op1 "Afghanistan"))) :ARG0 country), n3 -> (name :op1 "Afg
-                                                  //| hanistan"), c3 -> (country :name (name :op1 "Afghanistan")), a -> 
+  val amr = Graph.parse(rawAMR)                   //> amr  : edu.cmu.lti.nlp.amr.Graph = Graph((look-01 :ARG0 he :ARG1 (i :ARG0-of
+                                                  //|  (bend-01 :destination down :location (object :mod (ugly :mod (seem-01 :ARG2
+                                                  //|  he) :degree extreme))) :ARG0-of (have-03 :ARG1 (hammer :poss i) :location (
+                                                  //| hand :part-of i)) :ARG0-of (have-03 :ARG1 (finger :ARG1-of (black-04 :ARG0 (
+                                                  //| grease :mod engine)) :part-of i))) :location there),ArrayBuffer(),Map(0.1.0.
+                                                  //| 1.0.1 -> extreme, 0.1.0.1 -> (object :mod (ugly :mod (seem-01 :ARG2 he) :deg
+                                                  //| ree extreme)), 0.1.1.0 -> (hammer :poss i), 0.1.2.0.0 -> (black-04 :ARG0 (gr
+                                                  //| ease :mod engine)), 0.1 -> (i :ARG0-of (bend-01 :destination down :location 
+                                                  //| (object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))) :ARG0-of (have
+                                                  //| -03 :ARG1 (hammer :poss i) :location (hand :part-of i)) :ARG0-of (have-03 :A
+                                                  //| RG1 (finger :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part-of i))), 0.
+                                                  //| 1.1 -> (have-03 :ARG1 (hammer :poss i) :location (hand :part-of i)), 0.1.0.0
+                                                  //|  -> down, 0.1.0.1.0 -> (ugly :mod (seem-01 :ARG2 he) :degree extreme), 0.1.0
+                                                  //| .1.0.0 -> (seem-01 :ARG2 he), 0.1.2.0.0.0.0 -> engine, 0.1.2.0.0.0 -> (greas
+                                                  //| e :mod engine), 0.0 -> he, 0.1.0 -> (bend-01 :destination down :location (ob
+                                                  //| ject :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))), 0.1.2.0 -> (fing
+                                                  //| er :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part-of i), 0 -> (look-01
+                                                  //|  :ARG0 he :ARG1 (i :ARG0-of (bend-01 :destination down :location (object :mo
+                                                  //| d (ugly :mod (seem-01 :ARG2 he) :degree extreme))) :ARG0-of (have-03 :ARG1 (
+                                                  //| hammer :poss i) :location (hand :part-of i)) :ARG0-of (have-03 :ARG1 (finger
+                                                  //|  :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part-of i))) :location ther
+                                                  //| e), 0.1.1.1 -> (hand :part-of i), 0.1.2 -> (have-03 :ARG1 (finger :ARG1-of (
+                                                  //| black-04 :ARG0 (grease :mod engine)) :part-of i)), 0.2 -> there),Map(e -> en
+                                                  //| gine, h5 -> (have-03 :ARG1 (finger :ARG1-of (black-04 :ARG0 (grease :mod eng
+                                                  //| ine)) :part-of i)), h -> he, h2 -> (hammer :poss i), t -> there, b -> (black
+                                                  //| -04 :ARG0 (grease :mod engine)), b2 -> (bend-01 :destination down :location 
+                                                  //| (object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))), e2 -> extreme
+                                                  //| , s -> (seem-01 :ARG2 he), h4 -> (have-03 :ARG1 (hammer :poss i) :location (
+                                                  //| hand :part-of i)), d -> down, g -> (grease :mod engine), i -> (i :ARG0-of (b
+                                                  //| end-01 :destination down :location (object :mod (ugly :mod (seem-01 :ARG2 he
+                                                  //| ) :degree extreme))) :ARG0-of (have-03 :ARG1 (hammer :poss i) :loc
                                                   //| Output exceeds cutoff limit.
                                                   // ee-01 :ARG0 (person :ARG0-of (have-org-role-91 :ARG1 (organization :name (na
 
@@ -59,128 +60,147 @@ object AlignmentImprovements {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.2 sec].
+                                                  //| hPCFG.ser.gz ... done [1.3 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [4.0 sec].
+                                                  //| im.crf.ser.gz ... done [4.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [3.4 sec].
+                                                  //| im.crf.ser.gz ... done [2.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [2.8 sec].
-                                                  //| tokenisedSentence  : List[String] = List(Kazakhstan, also, became, a, key, U
-                                                  //| .S., partner, in, the, Afghan, war, opening, its, airspace, to, military, ov
-                                                  //| erflights)
+                                                  //| tsim.crf.ser.gz ... done [4.2 sec].
+                                                  //| tokenisedSentence  : List[String] = List(He, looked, at, me, there, with, my
+                                                  //| , hammer, in, my, hand, my, fingers, black, with, engine-grease, bending, do
+                                                  //| wn, over, an, object, which, seemed, to, him, extremely, ugly)
   
   val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-                                                  //> wordAlignments  : Array[Option[edu.cmu.lti.nlp.amr.Node]] = Array(Some("Kaza
-                                                  //| khstan"), Some(also), Some((become-01 :ARG1 (country :name (name :op1 "Kazak
-                                                  //| hstan") :ARG0-of (open-01 :ARG1 (airspace :poss country) :ARG3 (fly-01 :ARG0
-                                                  //|  military :path (over :op1 country)))) :ARG2 (partner-01 :ARG1 (country :nam
-                                                  //| e (name :op1 "U.S.")) :mod key :purpose (war-01 :ARG1 (country :name (name :
-                                                  //| op1 "Afghanistan"))) :ARG0 country) :mod also)), None, Some(key), Some("U.S.
-                                                  //| "), Some((partner-01 :ARG1 (country :name (name :op1 "U.S.")) :mod key :purp
-                                                  //| ose (war-01 :ARG1 (country :name (name :op1 "Afghanistan"))) :ARG0 country))
-                                                  //| , None, None, Some("Afghanistan"), Some((war-01 :ARG1 (country :name (name :
-                                                  //| op1 "Afghanistan")))), Some((open-01 :ARG1 (airspace :poss country) :ARG3 (f
-                                                  //| ly-01 :ARG0 military :path (over :op1 country)))), None, Some((airspace :pos
-                                                  //| s country)), None, Some(military), Some((over :op1 country)))
+                                                  //> wordAlignments  : Array[Option[edu.cmu.lti.nlp.amr.Node]] = Array(Some(he), 
+                                                  //| Some((look-01 :ARG0 he :ARG1 (i :ARG0-of (bend-01 :destination down :locatio
+                                                  //| n (object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))) :ARG0-of (ha
+                                                  //| ve-03 :ARG1 (hammer :poss i) :location (hand :part-of i)) :ARG0-of (have-03 
+                                                  //| :ARG1 (finger :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part-of i))) :
+                                                  //| location there)), None, None, Some(there), None, None, Some((hammer :poss i)
+                                                  //| ), None, None, Some((hand :part-of i)), None, Some((finger :ARG1-of (black-0
+                                                  //| 4 :ARG0 (grease :mod engine)) :part-of i)), Some((black-04 :ARG0 (grease :mo
+                                                  //| d engine))), None, Some(engine), Some((bend-01 :destination down :location (
+                                                  //| object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme)))), Some(down), N
+                                                  //| one, None, Some((object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))
+                                                  //| ), None, Some((seem-01 :ARG2 he)), None, None, Some(extreme), Some((ugly :mo
+                                                  //| d (seem-01 :ARG2 he) :degree extreme)))
  // amrGraph.nodes foreach {case (k, v) => println(k + ":" + v + " -> " + amrGraph.nodeSpans.getOrElse(k, (-1, -1)._1))}
                                                
                                             
- wordAlignments foreach println                   //> Some("Kazakhstan")
-                                                  //| Some(also)
-                                                  //| Some((become-01 :ARG1 (country :name (name :op1 "Kazakhstan") :ARG0-of (ope
-                                                  //| n-01 :ARG1 (airspace :poss country) :ARG3 (fly-01 :ARG0 military :path (ove
-                                                  //| r :op1 country)))) :ARG2 (partner-01 :ARG1 (country :name (name :op1 "U.S."
-                                                  //| )) :mod key :purpose (war-01 :ARG1 (country :name (name :op1 "Afghanistan")
-                                                  //| )) :ARG0 country) :mod also))
-                                                  //| None
-                                                  //| Some(key)
-                                                  //| Some("U.S.")
-                                                  //| Some((partner-01 :ARG1 (country :name (name :op1 "U.S.")) :mod key :purpose
-                                                  //|  (war-01 :ARG1 (country :name (name :op1 "Afghanistan"))) :ARG0 country))
+ wordAlignments foreach println                   //> Some(he)
+                                                  //| Some((look-01 :ARG0 he :ARG1 (i :ARG0-of (bend-01 :destination down :locati
+                                                  //| on (object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))) :ARG0-of (
+                                                  //| have-03 :ARG1 (hammer :poss i) :location (hand :part-of i)) :ARG0-of (have-
+                                                  //| 03 :ARG1 (finger :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part-of i)
+                                                  //| )) :location there))
                                                   //| None
                                                   //| None
-                                                  //| Some("Afghanistan")
-                                                  //| Some((war-01 :ARG1 (country :name (name :op1 "Afghanistan"))))
-                                                  //| Some((open-01 :ARG1 (airspace :poss country) :ARG3 (fly-01 :ARG0 military :
-                                                  //| path (over :op1 country))))
+                                                  //| Some(there)
                                                   //| None
-                                                  //| Some((airspace :poss country))
                                                   //| None
-                                                  //| Some(military)
-                                                  //| Some((over :op1 country))
+                                                  //| Some((hammer :poss i))
+                                                  //| None
+                                                  //| None
+                                                  //| Some((hand :part-of i))
+                                                  //| None
+                                                  //| Some((finger :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part-of i))
+                                                  //| Some((black-04 :ARG0 (grease :mod engine)))
+                                                  //| None
+                                                  //| Some(engine)
+                                                  //| Some((bend-01 :destination down :location (object :mod (ugly :mod (seem-01 
+                                                  //| :ARG2 he) :degree extreme))))
+                                                  //| Some(down)
+                                                  //| None
+                                                  //| None
+                                                  //| Some((object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme)))
+                                                  //| None
+                                                  //| Some((seem-01 :ARG2 he))
+                                                  //| None
+                                                  //| None
+                                                  //| Some(extreme)
+                                                  //| Some((ugly :mod (seem-01 :ARG2 he) :degree extreme))
                                             
   AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments) zip wordAlignments foreach println
-                                                  //> (Some(1),Some("Kazakhstan"))
-                                                  //| (Some(10),Some(also))
-                                                  //| (Some(0),Some((become-01 :ARG1 (country :name (name :op1 "Kazakhstan") :ARG
-                                                  //| 0-of (open-01 :ARG1 (airspace :poss country) :ARG3 (fly-01 :ARG0 military :
-                                                  //| path (over :op1 country)))) :ARG2 (partner-01 :ARG1 (country :name (name :o
-                                                  //| p1 "U.S.")) :mod key :purpose (war-01 :ARG1 (country :name (name :op1 "Afgh
-                                                  //| anistan"))) :ARG0 country) :mod also)))
-                                                  //| (None,None)
-                                                  //| (Some(7),Some(key))
-                                                  //| (Some(6),Some("U.S."))
-                                                  //| (Some(5),Some((partner-01 :ARG1 (country :name (name :op1 "U.S.")) :mod key
-                                                  //|  :purpose (war-01 :ARG1 (country :name (name :op1 "Afghanistan"))) :ARG0 co
-                                                  //| untry)))
+                                                  //> (Some(1),Some(he))
+                                                  //| (Some(0),Some((look-01 :ARG0 he :ARG1 (i :ARG0-of (bend-01 :destination dow
+                                                  //| n :location (object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme))) :
+                                                  //| ARG0-of (have-03 :ARG1 (hammer :poss i) :location (hand :part-of i)) :ARG0-
+                                                  //| of (have-03 :ARG1 (finger :ARG1-of (black-04 :ARG0 (grease :mod engine)) :p
+                                                  //| art-of i))) :location there)))
                                                   //| (None,None)
                                                   //| (None,None)
-                                                  //| (Some(9),Some("Afghanistan"))
-                                                  //| (Some(8),Some((war-01 :ARG1 (country :name (name :op1 "Afghanistan")))))
-                                                  //| (Some(1),Some((open-01 :ARG1 (airspace :poss country) :ARG3 (fly-01 :ARG0 m
-                                                  //| ilitary :path (over :op1 country)))))
+                                                  //| (Some(13),Some(there))
                                                   //| (None,None)
-                                                  //| (Some(2),Some((airspace :poss country)))
                                                   //| (None,None)
-                                                  //| (Some(3),Some(military))
-                                                  //| (Some(4),Some((over :op1 country)))
- val amrG =  AMRGraph(amr)                        //> amrG  : amr.AMRGraph = AMRGraph(Map(0.1 -> partner-01, 0.0.0 -> name, 0.0.1
-                                                  //| .1.0 -> military, 0.1.2.0.0 -> name, 0.1.0 -> country, 0.0.1.0 -> airspace,
-                                                  //|  0.1.0.0.0 -> "U.S.", 0.0 -> country, 0.0.0.0 -> "Kazakhstan", 0.1.2.0.0.0 
-                                                  //| -> "Afghanistan", 0.0.1.1 -> fly-01, 0.0.1 -> open-01, 0.1.0.0 -> name, 0.1
-                                                  //| .2.0 -> country, 0 -> become-01, 0.1.2 -> war-01, 0.0.1.1.1 -> over, 0.2 ->
-                                                  //|  also, 0.1.1 -> key),Map(0.1 -> (7,8), 0.0.0 -> (1,13), 0.0.1.1.0 -> (16,17
-                                                  //| ), 0.1.2.0.0 -> (10,11), 0.1.0 -> (6,7), 0.0.1.0 -> (14,15), 0.1.0.0.0 -> (
-                                                  //| 6,7), 0.0 -> (1,13), 0.0.0.0 -> (1,13), 0.1.2.0.0.0 -> (10,11), 0.0.1 -> (1
-                                                  //| ,13), 0.1.0.0 -> (6,7), 0.1.2.0 -> (10,11), 0 -> (3,4), 0.1.2 -> (11,12), 0
-                                                  //| .0.1.1.1 -> (17,18), 0.2 -> (2,3), 0.1.1 -> (5,6)),Map((0.0,0.0.0) -> name,
-                                                  //|  (0.0.1.1.1,0.0) -> opN, (0.0.0,0.0.0.0) -> opN, (0.1,0.1.0) -> ARG1, (0.1,
-                                                  //| 0.1.2) -> purpose, (0.1.2.0,0.1.2.0.0) -> name, (0.0.1.0,0.0) -> poss, (0.1
-                                                  //| .0,0.1.0.0) -> name, (0,0.2) -> mod, (0,0.1) -> ARG2, (0.0.1,0.0.1.1) -> AR
-                                                  //| G3, (0.1.0.0,0.1.0.0.0) -> opN, (0.1,0.0) -> ARG0, (0.0.1.1,0.0.1.1.0) -> A
-                                                  //| RG0, (0,0.0) -> ARG1, (0.0.1,0.0.1.0) -> ARG1, (0.1.2,0.1.2.0) -> ARG1, (0.
-                                                  //| 0.1.1,0.0.1.1.1) -> path, (0.1.2.0.0,0.1.2.0.0.0) -> opN, (0.0,0.0.1) -> AR
-                                                  //| G0-of, (0.1,0.1.1) -> mod),Map((0.0,0.0.0) -> name, (0.0.1.1.1,0.0) -> op1,
-                                                  //|  (0.0.0,0.0.0.0) -> op1, (0.1,0.1.0) -> ARG1, (0.1,0.1.2) -> purpose, (0.1.
-                                                  //| 2.0,0.1.2.0.0) -> name, (0.0.1.0,0.0) -> poss, (0.1.0,0.1.0.0) -> name, (0,
-                                                  //| 0.2) -> mod, (0,0.1) -> ARG2, (0.0.1,0.0.1.1) -> ARG3, (0.1.0.0,0.1.0.0.0) 
-                                                  //| -> op1, (0.1,0.0) -> ARG0, (0.0.1.1,0.0.1.1.0) -> ARG0, (0,0.0) -> ARG1, (0
-                                                  //| .0.1,0.0.1.0) -> ARG1, (0.1.2,0.1.2.0) -> ARG1, (0.0.1.1,0.0.1.1.1) -> path
-                                                  //| , (0.1.2.0.0,0.1.2.0.0.0) -> op1, (0.0,0.0.1) -> ARG0-of, (0.1,0.1.1) -> mo
-                                                  //| d),List())
+                                                  //| (Some(8),Some((hammer :poss i)))
+                                                  //| (None,None)
+                                                  //| (None,None)
+                                                  //| (Some(9),Some((hand :part-of i)))
+                                                  //| (None,None)
+                                                  //| (Some(10),Some((finger :ARG1-of (black-04 :ARG0 (grease :mod engine)) :part
+                                                  //| -of i)))
+                                                  //| (Some(11),Some((black-04 :ARG0 (grease :mod engine))))
+                                                  //| (None,None)
+                                                  //| (Some(12),Some(engine))
+                                                  //| (Some(2),Some((bend-01 :destination down :location (object :mod (ugly :mod 
+                                                  //| (seem-01 :ARG2 he) :degree extreme)))))
+                                                  //| (Some(3),Some(down))
+                                                  //| (None,None)
+                                                  //| (None,None)
+                                                  //| (Some(4),Some((object :mod (ugly :mod (seem-01 :ARG2 he) :degree extreme)))
+                                                  //| )
+                                                  //| (None,None)
+                                                  //| (Some(6),Some((seem-01 :ARG2 he)))
+                                                  //| (None,None)
+                                                  //| (None,None)
+                                                  //| (Some(7),Some(extreme))
+                                                  //| (Some(5),Some((ugly :mod (seem-01 :ARG2 he) :degree extreme)))
+ val amrG =  AMRGraph(amr)                        //> amrG  : amr.AMRGraph = AMRGraph(Map(0.1 -> i, 0.1.0.1.0.0 -> seem-01, 0.1.2
+                                                  //| .0.0.0.0 -> engine, 0.1.2.0.0 -> black-04, 0.1.0 -> bend-01, 0.1.0.1 -> obj
+                                                  //| ect, 0.0 -> he, 0.1.2.0.0.0 -> grease, 0.1.0.0 -> down, 0.1.2.0 -> finger, 
+                                                  //| 0 -> look-01, 0.1.2 -> have-03, 0.2 -> there, 0.1.1.1 -> hand, 0.1.1.0 -> h
+                                                  //| ammer, 0.1.0.1.0 -> ugly, 0.1.1 -> have-03, 0.1.0.1.0.1 -> extreme),Map(0.1
+                                                  //| .0.1.0.0 -> (23,24), 0.1.2.0.0.0.0 -> (16,17), 0.1.2.0.0 -> (14,15), 0.1.0 
+                                                  //| -> (17,18), 0.1.0.1 -> (21,22), 0.0 -> (1,2), 0.1.0.0 -> (18,19), 0.1.2.0 -
+                                                  //| > (13,14), 0 -> (2,3), 0.2 -> (5,6), 0.1.1.1 -> (11,12), 0.1.1.0 -> (8,9), 
+                                                  //| 0.1.0.1.0 -> (27,28), 0.1.0.1.0.1 -> (26,27)),Map((0.1.0.1.0.0,0.0) -> ARG2
+                                                  //| , (0.1,0.1.0) -> ARG0-of, (0.1,0.1.2) -> ARG0-of, (0.1.2.0,0.1.2.0.0) -> AR
+                                                  //| G1-of, (0.1.0,0.1.0.0) -> destination, (0.1.2.0.0.0,0.1.2.0.0.0.0) -> mod, 
+                                                  //| (0,0.2) -> location, (0,0.1) -> ARG1, (0.1.0.1.0,0.1.0.1.0.0) -> mod, (0.1.
+                                                  //| 1,0.1.1.1) -> location, (0.1.0.1.0,0.1.0.1.0.1) -> degree, (0.1.0,0.1.0.1) 
+                                                  //| -> location, (0.1.2.0,0.1) -> part-of, (0.1.1,0.1.1.0) -> ARG1, (0,0.0) -> 
+                                                  //| ARG0, (0.1.0.1,0.1.0.1.0) -> mod, (0.1.1.1,0.1) -> part-of, (0.1.2,0.1.2.0)
+                                                  //|  -> ARG1, (0.1.1.0,0.1) -> poss, (0.1.2.0.0,0.1.2.0.0.0) -> ARG0, (0.1,0.1.
+                                                  //| 1) -> ARG0-of),Map((0.1.0.1.0.0,0.0) -> ARG2, (0.1,0.1.0) -> ARG0-of, (0.1,
+                                                  //| 0.1.2) -> ARG0-of, (0.1.2.0,0.1.2.0.0) -> ARG1-of, (0.1.0,0.1.0.0) -> desti
+                                                  //| nation, (0.1.2.0.0.0,0.1.2.0.0.0.0) -> mod, (0,0.2) -> location, (0,0.1) ->
+                                                  //|  ARG1, (0.1.0.1.0,0.1.0.1.0.0) -> mod, (0.1.1,0.1.1.1) -> location, (0.1.0.
+                                                  //| 1.0,0.1.0.1.0.1) -> degree, (0.1.0,0.1.0.1) -> location, (0.1.2.0,0.1) -> p
+                                                  //| art-of, (0.1.1,0.1.1.0) -> ARG1, (0,0.0) -> ARG0, (0.1.0.1,0.1.0.1.0) -> mo
+                                                  //| d, (0.1.1.1,0.1) -> part-of, (0.1.2,0.1.2.0) -> ARG1, (0.1.1.0,0.1) -> poss
+                                                  //| , (0.1.2.0.0,0.1.2.0.0.0) -> ARG0, (0.1,0.1.1) -> ARG0-of),List())
  amrG.nodes.keys.toList.sorted foreach (x => println(s"${x}\t\t${amrG.nodes(x)}\t\t${amrG.nodeSpans.getOrElse(x, "No Mapping")}"))
-                                                  //> 0		become-01		(3,4)
-                                                  //| 0.0		country		(1,13)
-                                                  //| 0.0.0		name		(1,13)
-                                                  //| 0.0.0.0		"Kazakhstan"		(1,13)
-                                                  //| 0.0.1		open-01		(1,13)
-                                                  //| 0.0.1.0		airspace		(14,15)
-                                                  //| 0.0.1.1		fly-01		No Mapping
-                                                  //| 0.0.1.1.0		military		(16,17)
-                                                  //| 0.0.1.1.1		over		(17,18)
-                                                  //| 0.1		partner-01		(7,8)
-                                                  //| 0.1.0		country		(6,7)
-                                                  //| 0.1.0.0		name		(6,7)
-                                                  //| 0.1.0.0.0		"U.S."		(6,7)
-                                                  //| 0.1.1		key		(5,6)
-                                                  //| 0.1.2		war-01		(11,12)
-                                                  //| 0.1.2.0		country		(10,11)
-                                                  //| 0.1.2.0.0		name		(10,11)
-                                                  //| 0.1.2.0.0.0		"Afghanistan"		(10,11)
-                                                  //| 0.2		also		(2,3)
+                                                  //> 0		look-01		(2,3)
+                                                  //| 0.0		he		(1,2)
+                                                  //| 0.1		i		No Mapping
+                                                  //| 0.1.0		bend-01		(17,18)
+                                                  //| 0.1.0.0		down		(18,19)
+                                                  //| 0.1.0.1		object		(21,22)
+                                                  //| 0.1.0.1.0		ugly		(27,28)
+                                                  //| 0.1.0.1.0.0		seem-01		(23,24)
+                                                  //| 0.1.0.1.0.1		extreme		(26,27)
+                                                  //| 0.1.1		have-03		No Mapping
+                                                  //| 0.1.1.0		hammer		(8,9)
+                                                  //| 0.1.1.1		hand		(11,12)
+                                                  //| 0.1.2		have-03		No Mapping
+                                                  //| 0.1.2.0		finger		(13,14)
+                                                  //| 0.1.2.0.0		black-04		(14,15)
+                                                  //| 0.1.2.0.0.0		grease		No Mapping
+                                                  //| 0.1.2.0.0.0.0		engine		(16,17)
+                                                  //| 0.2		there		(5,6)
                                                                                                
                                                   
                                                   

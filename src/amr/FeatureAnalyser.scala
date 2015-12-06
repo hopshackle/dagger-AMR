@@ -98,6 +98,7 @@ object FeatureAnalyser {
     WangXueTransitionSystem.reentrancePhase = options.getBoolean("--reentrancePhase", true)
     WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
   }
 
   def runPolicy(devData: Iterable[Sentence], options: DAGGEROptions, featureIndex: MapIndex,

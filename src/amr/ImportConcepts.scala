@@ -24,7 +24,8 @@ object ImportConcepts {
     val output = for {
       ((sentence, _), amr) <- allSentencesAndAMR zip allAMR
       val s = Sentence(sentence, Some(amr))
-    } yield (s, RunDagger.sampleTrajectory(s, "", expert, WangXueTransitionSystem))
+      val result = RunDagger.sampleTrajectory(s, "", expert, WangXueTransitionSystem)
+    } yield (s, result)
     output
   }
   lazy val allSentencesAndAMR = importFile(amrFile)
@@ -41,6 +42,7 @@ object ImportConcepts {
   lazy val edgesPerConcept = loadEdgesPerConcept
 
   lazy val insertableConcepts = loadInsertableConcepts
+  lazy val subInsertableConcepts = loadSubInsertions
 
   lazy val compositeNodes = loadCompositeNodes
   lazy val wikifications = loadWikifications
@@ -122,6 +124,28 @@ object ImportConcepts {
     lr.close
 
     output
+  }
+
+  private def loadSubInsertions: Map[String, Set[String]] = {
+      val interimConcepts = for {
+        ((_, s), a) <- (expertResults zip allAMR)
+        (node, amr) <- s.dependencyTree.insertedNodes.toList
+        if amr != ""
+        if s.dependencyTree.isLeafNode(node)
+        name = a.nodes(amr)
+        if numbers.replaceAllIn(name, "") != ""
+        lemma <- (s.dependencyTree.parentsOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
+      } yield (lemma, name)
+
+      val grouped = interimConcepts.groupBy(_._1)
+      val cleaned = grouped.mapValues(_.map(_._2))
+      val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
+      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-")) }
+      val ic = new FileWriter(amrFile + "_isubc")
+      insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + ":" + (x._2).mkString(":") + "\n"))
+      ic.close
+
+      insertableConcepts
   }
 
   private def allCompositesFrom(amrKey: String, sentence: Sentence): List[String] = {

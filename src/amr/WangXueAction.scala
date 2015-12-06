@@ -29,11 +29,17 @@ object WangXueAction {
         val index = conceptIndex(x.replaceAll("NextNode", ""))
         NextNode(index)
       case "DeleteNode" => DeleteNode
+      case x if x startsWith "InsertBelow" =>
+        val concept = x.replaceAll("InsertBelow", "")
+        val exists = conceptStringToIndex contains concept
+        if (!exists) println("Unknown Concept " + concept)
+        val index = conceptIndex(concept)
+        InsertBelow(index)
       case x if x startsWith "Insert" =>
         val concept = x.replaceAll("Insert", "")
         val exists = conceptStringToIndex contains concept
         if (!exists) println("Unknown Concept " + concept)
-        val index = conceptIndex(x.replaceAll("Insert", ""))
+        val index = conceptIndex(concept)
         Insert(index)
       case x if x startsWith "Reattach" =>
         val concept = x.replaceAll("Reattach", "")
@@ -164,7 +170,7 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
     val amrRef = if (otherRef == "") Insert.estimatedAMRRef(state, conceptIndex) else otherRef
     val (newNode, tree) = state.currentGraph.insertNodeAbove(state.nodesToProcess.head, conceptIndex, amrRef)
     state.copy(nodesToProcess = Insert.insertNodesIntoProcessList(List(newNode), tree, state.nodesToProcess), currentGraph = tree,
-      previousActions = this :: state.previousActions).fastForward
+      processedNodes = state.processedNodes + newNode, previousActions = this :: state.previousActions).fastForward
   }
 
   override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state)
@@ -185,17 +191,13 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
 object Insert {
   val transSystem = WangXueTransitionSystem
 
-  // we can Insert a node as long as we have no edges
-  // We also apply a restriction that we can only insert a node if this is the first time we are visiting sigma
-  // We also hard-code a restriction that the inserted concept cannot be within two arcs of sigma (to avoid one form of pathology)
   def isPermissible(state: WangXueTransitionState): Boolean = {
-    (state.phase == 1 && (state.previousActions.isEmpty || (state.previousActions.head match {
-      case NextNode(_) => true
-      case ReplaceHead => true
-      case Swap => true
-      case DeleteNode => true
-      case _ => false
-    })))
+    state.phase == 1 &&
+      {
+        val sigma = state.nodesToProcess.head
+        val graph = state.currentGraph
+        (graph.parentsOf(sigma) intersect graph.insertedNodes.keys.toSeq) isEmpty
+      }
   }
   def insertNodesIntoProcessList(nodes: List[Int], tree: DependencyTree, currentList: List[Int]): List[Int] = {
     // we create the nodesToProcess list de novo
@@ -432,6 +434,39 @@ case object ReversePolarity extends WangXueAction {
   override def toString: String = "ReversePolarity"
 }
 
+case class InsertBelow(conceptIndex: Int, otherRef: String = "") extends WangXueAction {
+
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
+    // We create a new node, and insert it as parent of this node (this includes providing the concept - which could be overridden,
+    // but we need to not add the node to the processed list as we might want to put some Reentrant arcs in)
+    // We then continue processing the current node
+    // We try a few heuristics to match up AMR node to the newly inserted node
+    val amrRef = if (otherRef == "") Insert.estimatedAMRRef(state, conceptIndex) else otherRef
+    val (newNode, tree) = state.currentGraph.insertNodeBelow(state.nodesToProcess.head, conceptIndex, amrRef)
+    state.copy(currentGraph = tree, childrenToProcess = newNode :: state.childrenToProcess,
+      processedNodes = state.processedNodes + newNode, previousActions = this :: state.previousActions).fastForward
+  }
+
+  override def isPermissible(state: WangXueTransitionState): Boolean = {
+    state.phase == 1 && state.nodesToProcess.nonEmpty && {
+      val newConcept = concept(conceptIndex)
+      val sigma = state.nodesToProcess.head
+      !(state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains newConcept)
+    }
+  }
+  override def name: String = "InsertBelow" + concept(conceptIndex)
+  override def toString: String = "InsertBelow: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
+  override def equals(other: Any): Boolean = {
+    other match {
+      case InsertBelow(i, ref) => i == conceptIndex // as ref is just used for expert tracking
+      case _ => false
+    }
+  }
+  override def hashCode: Int = {
+    conceptIndex
+  }
+}
+
 case object Reentrance {
   var assertionChecking = false
 }
@@ -520,6 +555,6 @@ object Wikify {
   }
   private def sortedNameNodes[K](graph: Graph[K], node: K): Seq[K] = {
     val nameNodes = graph.childrenOf(node) filter (graph.nodes(_) == "name") flatMap graph.childrenOf
-    nameNodes.sortBy { x => graph.nodeSpans(x)._1 }
+    nameNodes.sortBy { x => graph.nodeSpans.getOrElse(x, (0, 0))._1 }
   }
 }

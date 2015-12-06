@@ -61,7 +61,7 @@ object WangXueExpertCheck {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     val options = new DAGGEROptions(Array("--dagger.output.path", "C:\\AMR\\"))
-    AMRGraph.setAligner("improved")
+    AMRGraph.setAligner("JAMR")
     WangXueTransitionSystem.prohibition = false
     WangXueTransitionSystem.reentrance = true
     //    Reattach.REATTACH_RANGE = 20
@@ -72,6 +72,8 @@ object WangXueExpertCheck {
     var allScores = List[Double]()
     val allAMR = rawData map {
       case (original, processed) =>
+        //       val d = println(original.amr.get)
+        //       val e = println(processed.amr.get)
         val fScore = Smatch.naiveFScore(original.amr.get, processed.amr.get)
         allScores = fScore._1 :: allScores
         println(f"${fScore._1}%.2f" + "\t" + original.rawText)
@@ -118,7 +120,7 @@ object WangXueExpertCheck {
     println(f"Corpus level precision of ${scores(1)._2}%.3f in $timer5")
     println(f"Corpus level recall of ${scores(2)._2}%.3f in $timer5")
     timer5.stop
-        val timer6 = new Timer()
+    val timer6 = new Timer()
     timer6.start
     // vanilla Smatch
     Smatch.useImprovedMapping = false

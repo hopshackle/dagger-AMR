@@ -6,6 +6,7 @@ import scala.collection.SortedMap
 import amr.ImportConcepts.{ concept, relation, conceptIndex }
 
 abstract class Graph[K] {
+  var assertionChecking = false
   def nodes: Map[K, String]
   def nodeSpans: Map[K, (Int, Int)]
   def arcs: Map[(K, K), String]
@@ -13,8 +14,8 @@ abstract class Graph[K] {
   val debug = false
   def depth(node: K): Int = {
     def depthHelper(nodes: Seq[K], accum: Int): Int = {
-      if (accum > 50) { println("Depth of tree exceeds 50: " + (if (debug) "\n" + this.toString)); accum } else {
-        val nextNodes = (nodes map edgesToParents flatten) map { case (parent, child) => parent }
+      if (accum > 50) { if (assertionChecking) println("Depth of tree exceeds 50: " + (if (debug) "\n" + this.toString)); accum } else {
+        val nextNodes = ((nodes map edgesToParents flatten) map { case (parent, child) => parent }).distinct
         if (nextNodes exists isRoot) accum else depthHelper(nextNodes, accum + 1)
       }
     }
@@ -40,7 +41,7 @@ abstract class Graph[K] {
   def getNodesBetween(node1: K, node2: K): Seq[K] = {
     def findPathTo(currentPaths: Seq[Seq[K]], target: K, acc: Int): Seq[K] = {
       if (acc > 30) {
-        println("Path search has exceeded 30 nodes between " + node1 + " and " + node2 + ". Giving up." + (if (debug) "\n" + this.toString));
+        if (assertionChecking) println("Path search has exceeded 30 nodes between " + node1 + " and " + node2 + ". Giving up." + (if (debug) "\n" + this.toString));
         Seq()
       } else {
         val o = for {
@@ -102,6 +103,8 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 
     "# ::AMRGraph\n" + nodeOutput.mkString + arcOutput.mkString
   }
+
+  override def isRoot(node: String): Boolean = super.isRoot(node) || node == "0"
 }
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
@@ -123,10 +126,11 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     assert(isLeafNode(node))
     val edgesToRemove = edgesToParents(node)
     val parent = parentsOf(node).getOrElse(0, -1)
+    val deletionLinks = this.deletedNodes.getOrElse(node, List())
     val alreadyDeletedNodes = this.deletedNodes.get(parent) match { case None => List(); case Some(deletedNodes) => deletedNodes }
-    val newDeletedNodes = (node, this.nodes(node)) :: alreadyDeletedNodes
+    val newDeletedNodes = (node, this.nodes(node)) :: alreadyDeletedNodes ++ deletionLinks
     this.copy(nodes = this.nodes - node, nodeSpans = this.nodeSpans - node, arcs = this.arcs -- edgesToRemove,
-      deletedNodes = this.deletedNodes + (parent -> newDeletedNodes))
+      deletedNodes = this.deletedNodes + (parent -> newDeletedNodes) - node)
   }
 
   def insertNodeAbove(node: Int, conceptIndex: Int, otherRef: String, addArc: Boolean = true): (Int, DependencyTree) = {
@@ -138,7 +142,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
-    val newEdgeFromNode = ((newNode, node), concept(conceptIndex) + "#") // dependency label made up for use as feature
+    val newEdgeFromNode = ((newNode, node), "#insert#") // dependency label made up for use as feature
     val newArcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent ++ (if (addArc) Map(newEdgeFromNode) else Map())
 
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept(conceptIndex)), nodeLemmas = this.nodeLemmas + (newNode -> concept(conceptIndex)),
@@ -153,7 +157,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newNode = getNextNodeToInsert
     val parentSpan = nodeSpans.getOrElse(node, (0, 0))
     val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
-    val labelToUse = if (label != "") label else concept + "#" // label made up for use as feature
+    val labelToUse = if (label != "") label else "#insert#" // label made up for use as feature
     val newEdgeToNode = ((node, newNode), labelToUse)
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept), nodeLemmas = this.nodeLemmas + (newNode -> concept),
       nodeSpans = this.nodeSpans + (newNode -> parentSpan), arcs = this.arcs + newEdgeToNode,
@@ -325,7 +329,7 @@ object Sentence {
       //     val d = println(allDTIndices)
     } yield (allAMRWithSameSpan(start, end, amr), allDTIndices.toSeq)
 
-    //  amrToWordIndices foreach println
+    //   amrToWordIndices foreach println
 
     (amrToWordIndices map { case (amrKeys, wordIndices) => mapAMRtoDTNodes(amrKeys, wordIndices, amr, dt) }).flatten.toMap
   }
@@ -388,8 +392,8 @@ object DependencyTree {
   val numbers = "[0-9.,]".r
 
   def preProcess(sentence: String): List[String] = {
-    val parsedForDates = extractNumbers(extractDates(sentence))
-    val stanfordTree = (processor.parse(parsedForDates).head) filter (if (excludePunctuation) (x => x.deprel.getOrElse("") != "punct") else (_ => true))
+    val parsedForDates = extractNumbers(extractDates(rehyphenate(sentence)))
+    val stanfordTree = (processor.parse(parsedForDates)) filter (if (excludePunctuation) (x => x.deprel.getOrElse("") != "punct") else (_ => true))
     stanfordTree map {
       case ConllToken(_, form, _, _, _, _, _, _, _, _) => form.getOrElse("")
     }
@@ -397,8 +401,8 @@ object DependencyTree {
 
   def apply(sentence: String): DependencyTree = {
 
-    val parsedForDates = extractNumbers(extractDates(sentence))
-    val stanfordTree = (processor.parse(parsedForDates).head) filter (if (excludePunctuation) (x => x.deprel.getOrElse("") != "punct") else (_ => true))
+    val parsedForDates = extractNumbers(extractDates(rehyphenate(sentence)))
+    val stanfordTree = (processor.parse(parsedForDates)) filter (if (excludePunctuation) (x => x.deprel.getOrElse("") != "punct") else (_ => true))
     val monthFiddledTree = stanfordTree map {
       case full @ ConllToken(_, form, _, _, _, _, _, _, _, ner) if (ner.getOrElse("") == "DATE") => { full.copy(form = convertMonth(form)) }
       case full => full
@@ -432,6 +436,7 @@ object DependencyTree {
     } yield (index -> ner)).toMap
 
     val depLabels = arcs map { case ((from, to), label) => (to, label) } // as we have a tree at this point
+
     DependencyTree(nodes, nodeLemmas, nodePOS, nodeNER, nodeSpans, arcs, depLabels, List(), Map(), Map(), Set(), Map())
   }
 
@@ -498,6 +503,8 @@ object DependencyTree {
     val dollars = """\$""".r
     dollars.replaceAllIn(output, "dollars ")
   }
+
+  def rehyphenate(text: String): String = text.replaceAll(" - ", "-")
 }
 
 object AMRGraph {
@@ -552,11 +559,13 @@ object AMRGraph {
   }
 
   def importFile(fileName: String): IndexedSeq[(String, String)] = {
-    val input = Source.fromFile(fileName).getLines().toList.map(_.trim)
-    val sentenceIndices = for {
-      (line, i) <- input.zipWithIndex
+    val source = Source.fromFile(fileName)("UTF-8").getLines()
+    val sentenceIndices = (for {
+      (line, i) <- source.map(_.trim).zipWithIndex
       if line.matches("^# ::snt .*")
-    } yield i
+      //    val d = println(line)
+    } yield i).toList
+    val input = Source.fromFile(fileName)("UTF-8").getLines().toList.map(_.trim)
     val startIndices = sentenceIndices.map(_ + 2)
     val endIndices = if (sentenceIndices.size > 1)
       sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
