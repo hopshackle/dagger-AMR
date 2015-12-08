@@ -72,7 +72,7 @@ object ClassicTransitionSystem extends TransitionSystem[Sentence, ClassicAction,
 
   def construct(state: ClassicTransitionState, datum: Sentence): Sentence = {
     Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.copy(nodes = state.currentGraph.nodes,
-      arcs = state.currentGraph.arcs).toAMR))
+      arcs = state.currentGraph.arcs).toAMR), datum.id)
   }
   def expertApprox(datum: Sentence, state: ClassicTransitionState): amr.Sentence = ???
 

@@ -23,9 +23,13 @@ object AMROutput {
       case _ => (0.0, 0.0, 0.0, 0.0, 0, 0, 0)
     }
     val fileP = new FileWriter(outputFileP, true)
+    fileP.write(prediction.id + "\n")
+    fileP.write("# ::snt " + prediction.rawText + "\n")
     fileP.write(asStringP + "\n\n")
     fileP.close
     val fileT = new FileWriter(outputFileT, true)
+    fileT.write(target.id + "\n")
+    fileT.write("# ::snt " + target.rawText + "\n")
     fileT.write(asStringT + "\n\n")
     fileT.close
     val smatchFile = new FileWriter(summaryFile, true)
@@ -46,7 +50,7 @@ object AMROutput {
       case false =>
         var newlyProcessedNodes = Seq(node)
         val outString = {
-          val attributes = amr.attributes filter { case (attributeNode, label, value) => attributeNode == node && label != "ROOT"} sortBy (_._2)
+          val attributes = amr.attributes filter { case (attributeNode, label, value) => attributeNode == node && label != "ROOT" } sortBy (_._2)
           val attributeString = attributes map { a => ":" + a._2 + " " + a._3 } mkString (" ")
           val output = new StringBuffer("( " + nodeCode(node))
           output.append(" / " + amr.nodes(node) + " " + attributeString)

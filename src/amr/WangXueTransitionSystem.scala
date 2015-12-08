@@ -103,7 +103,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   def chooseTransition(datum: Sentence, state: WangXueTransitionState): WangXueAction = expert.chooseTransition(datum, state)
 
   def construct(state: WangXueTransitionState, datum: Sentence): Sentence = {
-    Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.toAMR))
+    Sentence(datum.rawText, state.currentGraph, Some(state.currentGraph.toAMR), datum.id)
   }
 
   def expertApprox(datum: Sentence, state: WangXueTransitionState): Sentence = ???
@@ -120,7 +120,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   }
 
   // helper method - as we don't always have the full Sentence
-  def init(datum: DependencyTree): WangXueTransitionState = init(Sentence("", datum, None))
+  def init(datum: DependencyTree): WangXueTransitionState = init(Sentence("", datum, None, ""))
 
   override def isPermissible(action: WangXueAction, state: WangXueTransitionState): Boolean = action.isPermissible(state)
 

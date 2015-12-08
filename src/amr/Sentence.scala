@@ -256,7 +256,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   }
 }
 
-case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String]) {
+case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String], id: String) {
   val AMRToPosition: Map[String, Int] = positionToAMR map { case (i, s) => (s -> i) }
   def unmatchedAMRNodesByConcept: Map[String, String] = amr match {
     case None => Map()
@@ -272,21 +272,28 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
       val finalResult = filterForInsertedMatches map { case (key, concept) => (concept -> key) }
       finalResult
   }
+  override def toString: String = {
+    id + "\n" +
+    rawText + "\n" +
+    dependencyTree.toString + "\n" +
+    (amr match { case None => "No AMR"; case Some(a) => a.toString()}) + "\n" +
+    positionToAMR + "\n"
+  }
 }
 
 object Sentence {
   val debug = false
   def apply(sentence: String): Sentence = {
-    Sentence(sentence, DependencyTree(sentence), None, Map[Int, String]())
+    Sentence(sentence, DependencyTree(sentence), None, Map[Int, String](), "")
   }
-  def apply(sentence: String, rawAMR: String): Sentence = {
-    Sentence(sentence, DependencyTree(sentence), Some(AMRGraph(rawAMR, sentence)))
+  def apply(sentence: String, rawAMR: String, id: String): Sentence = {
+    Sentence(sentence, DependencyTree(sentence), Some(AMRGraph(rawAMR, sentence)), id)
   }
-  def apply(sentence: String, amr: Option[AMRGraph]): Sentence = {
-    Sentence(sentence, DependencyTree(sentence), amr)
+  def apply(sentence: String, amr: Option[AMRGraph], id: String): Sentence = {
+    Sentence(sentence, DependencyTree(sentence), amr, id)
   }
-  def apply(sentence: String, dt: DependencyTree, amr: Option[AMRGraph]): Sentence = {
-    Sentence(sentence, dt, amr, positionToAMR(amr, dt))
+  def apply(sentence: String, dt: DependencyTree, amr: Option[AMRGraph], id: String): Sentence = {
+    Sentence(sentence, dt, amr, positionToAMR(amr, dt), id)
   }
 
   def positionToAMR(amr: Option[AMRGraph], dt: DependencyTree): Map[Int, String] = {
@@ -565,12 +572,11 @@ object AMRGraph {
     }
   }
 
-  def importFile(fileName: String): IndexedSeq[(String, String)] = {
+  def importFile(fileName: String): IndexedSeq[(String, String, String)] = {
     val source = Source.fromFile(fileName)("UTF-8").getLines()
     val sentenceIndices = (for {
       (line, i) <- source.map(_.trim).zipWithIndex
       if line.matches("^# ::snt .*")
-      //    val d = println(line)
     } yield i).toList
     val input = Source.fromFile(fileName)("UTF-8").getLines().toList.map(_.trim)
     val startIndices = sentenceIndices.map(_ + 2)
@@ -583,7 +589,8 @@ object AMRGraph {
       i <- 0 until sentenceIndices.size
       val english = input(sentenceIndices(i)).substring(8)
       val amr = (for (j <- startIndices(i) to endIndices(i)) yield input(j)).toList.mkString(" ")
-    } yield (english, amr)
+      val id = input(sentenceIndices(i) - 1)
+    } yield (english, amr, id)
   }
 
 }

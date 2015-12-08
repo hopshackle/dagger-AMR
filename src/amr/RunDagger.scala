@@ -80,7 +80,7 @@ object RunDagger {
     val filteredTrainingData = trainData filter { s => s.amr.get.nodes.size <= maxNodesForTraining }
 
     val devFile = options.getString("--validation.data", "")
-    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
+    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr, id) => Sentence(english, amr, id) }
 
     val lemmaReplacement = options.getString("--lemmaReplace", "None")
     val correctedDevData = lemmaReplacement match {
@@ -201,7 +201,7 @@ object RunDagger {
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
+    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
   }
 
   def main(args: Array[String]): Unit = {

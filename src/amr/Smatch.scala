@@ -295,16 +295,27 @@ object Smatch {
     //  - numeric
     //  - -
     //  - in quotes
+    //  - is a 'mode' relationship
     // is not treated as a node in its own right, but as an attribute of the node it is linked to
     // (if it's not a leaf node, then we can't do this, and have to leave it as an incorrect node)
 
     // So what we do here, is remove any leaf nodes from the graph that have only one parent and meet any
     // of the above three criteria, and store their values in an attribute list for the node
+
+    val arcsToUse = if (input.originalArcs.isEmpty) input.arcs else input.originalArcs
+
+    def isAttributeNode(n: String): Boolean = {
+      val v = input.nodes(n)
+      input.isLeafNode(n) && input.parentsOf(n).size == 1 && (
+        numbers.replaceAllIn(v, "") == ""
+        || quote.findFirstIn(v) != None
+        || v == "-"
+        || (input.edgesToParents(n) map arcsToUse contains "mode"))
+    }
     val newNodes = for {
       (n, v) <- input.nodes
-      if !(input.isLeafNode(n) && input.parentsOf(n).size == 1 && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
+      if !isAttributeNode(n)
     } yield (n, quote.replaceAllIn(v, ""))
-    val arcsToUse = if (input.originalArcs.isEmpty) input.arcs else input.originalArcs
 
     val arcsWithOpN = arcsToUse map {
       case ((source, dest), relation) if relation != "opN" => ((source, dest), relation)

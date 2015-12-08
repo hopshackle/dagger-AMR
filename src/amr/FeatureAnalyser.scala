@@ -57,7 +57,7 @@ object FeatureAnalyser {
   def analyserRun(options: DAGGEROptions): Unit = {
     initialise(options)
     val devFile = options.getString("--validation.data", "")
-    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
+    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr, id) => Sentence(english, amr, id) }
 
     val featureIndex = new MapIndex
     val classifierToUse = options.getString("--classifier", options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt")
@@ -76,7 +76,7 @@ object FeatureAnalyser {
     AMRGraph.setAligner(alignerToUse)
 
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
+    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
 
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
