@@ -33,43 +33,37 @@ object AMROutput {
     smatchFile.close
   }
 
-  def convertToString(sample: AMRGraph): String = {
+  def convertToString(inputGraph: AMRGraph): String = {
+    val sample = Smatch.reduceAMR(inputGraph)
     val processedNodes: Set[String] = Set.empty[String]
     val output = sample.getRoots map { c => printNode(c, sample, processedNodes, 0)._1 }
     output.mkString("\n")
   }
 
-  def printNode(node: String, sample: AMRGraph, processedNodes: Set[String], tab: Integer): (StringBuffer, Set[String]) = {
-    val amr = sample
-    val isNumeric = numbers.replaceAllIn(amr.nodes(node), "") == ""
-    val isQuoted = amr.nodes(node).contains(quote)
-    val isLeaf = amr.isLeafNode(node)
-    val isPolarity = amr.nodes(node) == "-"
-    if (isLeaf && (isNumeric || isQuoted || isPolarity))
-      return (new StringBuffer(amr.nodes(node)), processedNodes)
-
-    val arcsToUse = if (sample.originalArcs.isEmpty) amr.arcs else amr.originalArcs
-    var newlyProcessedNodes = Seq(node)
-    val outString = if (processedNodes contains node) new StringBuffer(" " + nodeCode(node) + " ") else {
-      val output = new StringBuffer("( " + nodeCode(node))
-      output.append(" / " + amr.nodes(node))
-      var opCount = 0
-      for ((_, child) <- amr.edgesToChildren(node).sortWith(sortByPositionInSentence(sample))) {
-        val relation = if (arcsToUse((node, child)) != "opN")
-          arcsToUse((node, child))
-        else {
-          opCount += 1
-          "op" + opCount
+  def printNode(node: String, amr: AMRGraph, processedNodes: Set[String], tab: Integer): (StringBuffer, Set[String]) = {
+    (processedNodes contains node) match {
+      case true => (new StringBuffer(" " + nodeCode(node) + " "), processedNodes)
+      case false =>
+        var newlyProcessedNodes = Seq(node)
+        val outString = {
+          val attributes = amr.attributes filter { case (attributeNode, label, value) => attributeNode == node && label != "ROOT"} sortBy (_._2)
+          val attributeString = attributes map { a => ":" + a._2 + " " + a._3 } mkString (" ")
+          val output = new StringBuffer("( " + nodeCode(node))
+          output.append(" / " + amr.nodes(node) + " " + attributeString)
+          for ((_, child) <- amr.edgesToChildren(node).sortWith(sortByPositionInSentence(amr))) {
+            val relation = amr.arcs((node, child))
+            output.append("\n")
+            for (i <- 0 to tab) output.append("\t")
+            val (prettyStuff, nodesUsed) = printNode(child, amr, processedNodes ++ newlyProcessedNodes, tab + 1)
+            output.append(":" + relation + " " + prettyStuff.toString)
+            newlyProcessedNodes = newlyProcessedNodes ++ nodesUsed
+          }
+          output.append(")")
         }
-        output.append("\n")
-        for (i <- 0 to tab) output.append("\t")
-        val (prettyStuff, nodesUsed) = printNode(child, sample, processedNodes ++ newlyProcessedNodes, tab + 1)
-        output.append(":" + relation + " " + prettyStuff.toString)
-        newlyProcessedNodes = newlyProcessedNodes ++ nodesUsed
-      }
-      output.append(")")
+        (outString, processedNodes ++ newlyProcessedNodes)
     }
-    (outString, processedNodes ++ newlyProcessedNodes)
+
+    //  val arcsToUse = if (amr.originalArcs.isEmpty) amr.arcs else amr.originalArcs 
   }
 
   def sortByPositionInSentence(amr: AMRGraph)(a: (String, String), b: (String, String)): Boolean = {

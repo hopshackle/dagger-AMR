@@ -109,7 +109,8 @@ case class AMRGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int
 
 case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String], nodePOS: Map[Int, String], nodeNER: Map[Int, String],
   nodeSpans: Map[Int, (Int, Int)], arcs: Map[(Int, Int), String], depLabels: Map[Int, String], reattachedNodes: List[Int],
-  insertedNodes: Map[Int, String], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)], deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
+  insertedNodes: Map[Int, (Int, String)], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)],
+  deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
@@ -141,7 +142,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newNode = getNextNodeToInsert
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
     val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
-    val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
+    val newInsertedNodes = this.insertedNodes + (newNode -> (node, otherRef))
     val newEdgeFromNode = ((newNode, node), "#insert#") // dependency label made up for use as feature
     val newArcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent ++ (if (addArc) Map(newEdgeFromNode) else Map())
 
@@ -156,7 +157,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   def insertNodeBelow(node: Int, concept: String, otherRef: String, label: String): (Int, DependencyTree) = {
     val newNode = getNextNodeToInsert
     val parentSpan = nodeSpans.getOrElse(node, (0, 0))
-    val newInsertedNodes = this.insertedNodes + (newNode -> otherRef)
+    val newInsertedNodes = this.insertedNodes + (newNode -> (node, otherRef))
     val labelToUse = if (label != "") label else "#insert#" // label made up for use as feature
     val newEdgeToNode = ((node, newNode), labelToUse)
     (newNode, this.copy(nodes = this.nodes + (newNode -> concept), nodeLemmas = this.nodeLemmas + (newNode -> concept),
@@ -510,6 +511,7 @@ object DependencyTree {
 object AMRGraph {
   // We then use the JAMR functionality here
   val opN = "^op[0-9]+$".r
+  val sntN = "^snt[0-9]+$".r
   var useImprovedAligner = false
   var useWordNet = false
   def setAligner(code: String): Unit = {
@@ -536,6 +538,11 @@ object AMRGraph {
       case (k, v) => opN.findFirstIn(v) match {
         case None => (k, v)
         case Some(_) => (k, "opN")
+      }
+    } map {
+      case (k, v) => sntN.findFirstIn(v) match {
+        case None => (k, v)
+        case Some(_) => (k, "sntN")
       }
     }
 

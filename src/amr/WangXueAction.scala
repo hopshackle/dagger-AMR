@@ -196,7 +196,7 @@ object Insert {
       {
         val sigma = state.nodesToProcess.head
         val graph = state.currentGraph
-        (graph.parentsOf(sigma) intersect graph.insertedNodes.keys.toSeq) isEmpty
+        (graph.parentsOf(sigma) intersect graph.insertedNodes.mapValues(_._1).toSeq) isEmpty
       }
   }
   def insertNodesIntoProcessList(nodes: List[Int], tree: DependencyTree, currentList: List[Int]): List[Int] = {
@@ -225,7 +225,8 @@ object Insert {
     if (state.originalInput.isEmpty || state.originalInput.get.amr.isEmpty) "" else {
       val conceptToMatch = concept(conceptIndex)
       val amr = state.originalInput.get.amr.get
-      val fullMapDTtoAMR = state.originalInput.get.positionToAMR ++ (state.currentGraph.insertedNodes filter { case (i, ref) => ref != "" })
+      val fullMapDTtoAMR = state.originalInput.get.positionToAMR ++ (state.currentGraph.insertedNodes map
+        { case (i, (_, ref)) => (i, ref) } filter { _._2 != "" })
       val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
       val currentNode = state.nodesToProcess.head
       val currentParents = if (currentNode == 0) List() else state.currentGraph.parentsOf(currentNode)
@@ -434,6 +435,12 @@ case object ReversePolarity extends WangXueAction {
   override def toString: String = "ReversePolarity"
 }
 
+object InsertBelow {
+    def all(): Array[WangXueAction] = {
+    (subInsertableConcepts.values.flatten.toList.distinct.map(i => Insert(conceptIndex(i)))).toArray
+  }
+}
+
 case class InsertBelow(conceptIndex: Int, otherRef: String = "") extends WangXueAction {
 
   def apply(state: WangXueTransitionState): WangXueTransitionState = {
@@ -513,11 +520,10 @@ case class Wikify(wikiString: String) extends WangXueAction {
     val graph = conf.currentGraph
     val stringToUse = wikiString match {
       case "FORWARD" => forwardWikiString(conf)
-      case "BACKWARD" => backwardWikiString(conf)
       case "DEFAULT" => wikifications.getOrElse(graph.nodes(sigma) + ":" + forwardConcatenationOfNameArgs(graph, sigma), "-")
-      case _ => wikiString
+      case _ => wikiString.replaceAll(quoteString, "")
     }
-    val (newNode, tree) = conf.currentGraph.insertNodeBelow(conf.nodesToProcess.head, stringToUse, "", "wiki")
+    val (newNode, tree) = conf.currentGraph.insertNodeBelow(conf.nodesToProcess.head, quoteString + stringToUse + quoteString, "", "wiki")
     conf.copy(currentGraph = tree, previousActions = this :: conf.previousActions, processedEdges = conf.processedEdges + ((conf.nodesToProcess.head, newNode)),
       processedNodes = conf.processedNodes + newNode).fastForward
   }
@@ -547,20 +553,17 @@ object Wikify {
     }
   }
   def forwardWikiString(conf: WangXueTransitionState): String = wikiString(conf, false)
-  def backwardWikiString(conf: WangXueTransitionState): String = wikiString(conf, true)
   private def wikiString(conf: WangXueTransitionState, reverse: Boolean): String = {
     val sortedNodes = sortedNameNodes(conf.currentGraph, conf.nodesToProcess.head)
-    quoteString + ((if (reverse) sortedNodes.reverse else sortedNodes) map conf.currentGraph.nodes mkString ("_")) + quoteString
+    (if (reverse) sortedNodes.reverse else sortedNodes) map conf.currentGraph.nodes mkString ("_")
   }
   def isConcatenationOfNameArgs(amr: AMRGraph, node: String, wikification: String): Boolean = {
-    (wikification == forwardConcatenationOfNameArgs(amr, node)) //|| wikification == backwardConcatenationOfNameArgs(amr, node))
+    (wikification.replaceAll(quoteString, "") == forwardConcatenationOfNameArgs(amr, node)) 
   }
   def forwardConcatenationOfNameArgs[K](amr: Graph[K], node: K): String = {
-    quoteString + (sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll (quoteString, "")) + quoteString
+    sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll (quoteString, "")
   }
-  def backwardConcatenationOfNameArgs[K](amr: Graph[K], node: K): String = {
-    quoteString + (sortedNameNodes(amr, node).reverse map amr.nodes mkString ("_") replaceAll (quoteString, "")) + quoteString
-  }
+
   private def sortedNameNodes[K](graph: Graph[K], node: K): Seq[K] = {
     val nameNodes = graph.childrenOf(node) filter (graph.nodes(_) == "name") flatMap graph.childrenOf
     nameNodes.sortBy { x => graph.nodeSpans.getOrElse(x, (0, 0))._1 }

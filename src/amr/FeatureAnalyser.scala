@@ -11,16 +11,7 @@ object FeatureAnalyser {
     analyserRun(options)
   }
 
-  def analyserRun(options: DAGGEROptions): Unit = {
-    initialise(options)
-    val devFile = options.getString("--validation.data", "")
-    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
-
-    val featureIndex = new MapIndex
-    val classifierToUse = options.getString("--classifier", options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt")
-    val featuresToUse = options.getString("--featureIndex", options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
-    val startingClassifier = AROWClassifier.fromFile(classifierToUse, y => WangXueAction.construct(y))
-    featureIndex.initialiseFromFile(featuresToUse)
+  def analyserRun(options: DAGGEROptions, devData: Iterable[Sentence], startingClassifier: AROWClassifier[WangXueAction], featureIndex: MapIndex): Unit = {
     val trainedPolicy = new ProbabilisticClassifierPolicy[Sentence, WangXueAction, WangXueTransitionState](startingClassifier)
     val baseResult = runPolicy(devData, options, featureIndex, trainedPolicy, "base")
 
@@ -37,31 +28,43 @@ object FeatureAnalyser {
     byCount foreach {
       i => println(s"Prefix: ${i._1}, count: ${i._2}")
     }
-
-    var stats = scala.collection.mutable.Map[String, (Int, Double, Double)]()
+    val countMap = byCount.toMap
+    val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureAnalysis.txt", true)
+    outputFile.write(f"Baseline $baseResult%.3f + \n")
     for ((currentPrefix, count) <- byCount) {
       def weightBelongsToCurrentPrefix(k: Int): Boolean = {
         featureIndex.elem(k).startsWith(currentPrefix + "=") || featureIndex.elem(k) == currentPrefix
       }
       var allNewWeights = new HashMap[WangXueAction, HashMap[Int, Float]]()
       var totalNumberRemoved = 0
-      var totalValueRemoved = 0.0
       for ((action, actionWeights) <- startingClassifier.weights) {
         val newWeights = actionWeights filterNot { case (k, v) => weightBelongsToCurrentPrefix(k) }
         val removedWeights = actionWeights filter { case (k, v) => weightBelongsToCurrentPrefix(k) }
         val sumWeights = (removedWeights.values map math.abs).sum
         totalNumberRemoved += removedWeights.size
-        totalValueRemoved += sumWeights
         allNewWeights.put(action, newWeights)
       }
 
       val newClassifier = AROWClassifier[WangXueAction](allNewWeights)
       val newPolicy = ProbabilisticClassifierPolicy[Sentence, WangXueAction, WangXueTransitionState](newClassifier)
       val newResult = runPolicy(devData, options, featureIndex, newPolicy, "")
-      stats.put(currentPrefix, (totalNumberRemoved, totalValueRemoved, baseResult - newResult))
-      println(f"Removing $currentPrefix features gives decrease of ${baseResult - newResult}%.3f with the removal of $totalNumberRemoved weights with a total value of $totalValueRemoved%.3f")
+      println(f"Removing $currentPrefix features gives decrease of ${baseResult - newResult}%.3f with the removal of $totalNumberRemoved weights")
+      outputFile.write(f"$currentPrefix\t${countMap(currentPrefix)}\t${baseResult - newResult}%.3f\t$totalNumberRemoved\n")
     }
+    outputFile.close
+  }
 
+  def analyserRun(options: DAGGEROptions): Unit = {
+    initialise(options)
+    val devFile = options.getString("--validation.data", "")
+    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr) => Sentence(english, amr) }
+
+    val featureIndex = new MapIndex
+    val classifierToUse = options.getString("--classifier", options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt")
+    val featuresToUse = options.getString("--featureIndex", options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
+    val startingClassifier = AROWClassifier.fromFile(classifierToUse, y => WangXueAction.construct(y))
+    featureIndex.initialiseFromFile(featuresToUse)
+    analyserRun(options, devData, startingClassifier, featureIndex)
   }
 
   def initialise(options: DAGGEROptions): Unit = {
@@ -91,8 +94,7 @@ object FeatureAnalyser {
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
-    ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1)))
+
     WangXueTransitionSystem.prohibition = options.getBoolean("--insertProhibition", true)
     WangXueTransitionSystem.reentrance = options.getBoolean("--reentrance", false)
     WangXueTransitionSystem.reentrancePhase = options.getBoolean("--reentrancePhase", true)

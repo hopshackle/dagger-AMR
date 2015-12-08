@@ -167,6 +167,10 @@ object RunDagger {
 
     finalClassifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
     featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
+    (options.getBoolean("--WangXue", true), finalClassifier) match {
+      case (true, classifier: AROWClassifier[WangXueAction]) => FeatureAnalyser.analyserRun(options, devData, classifier, featureIndex)
+      case _ =>
+    }
   }
 
   def initialiseAndGetTrainingData(options: DAGGEROptions): IndexedSeq[Sentence] = {

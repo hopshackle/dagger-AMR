@@ -40,6 +40,7 @@ object ImportConcepts {
   lazy val conceptsPerLemma = loadConceptsPerLemmaReduced
   lazy val edgesPerLemma = loadEdgesPerLemma
   lazy val edgesPerConcept = loadEdgesPerConcept
+  private var loadCompleted = false
 
   lazy val insertableConcepts = loadInsertableConcepts
   lazy val subInsertableConcepts = loadSubInsertions
@@ -110,17 +111,17 @@ object ImportConcepts {
   private def loadWikifications: Map[String, String] = {
     import Wikify.{isConcatenationOfNameArgs, forwardConcatenationOfNameArgs}
     val output = (for {
-      (original, _) <- expertResults
-      val amr = original.amr.get
+      amr <- allAMR
       conceptsToWikiAttributes = amr.arcs.toSeq filter
         { case (_, edgeType) => edgeType == "wiki" } map
         { case ((from, to), _) => (from, amr.nodes(to)) } filterNot
         { case (node, wikification) => wikification == "-" || isConcatenationOfNameArgs(amr, node, wikification) } map
-        { case (from, wikiString) => (amr.nodes(from) + ":" + forwardConcatenationOfNameArgs(amr, from), wikiString) }
+        { case (from, wikiString) => 
+          (amr.nodes(from) + ":" + forwardConcatenationOfNameArgs(amr, from), wikiString.replaceAll(Wikify.quoteString, "")) }
 
     } yield conceptsToWikiAttributes).flatten.toMap //.groupBy(_._1).mapValues(seq => (seq map (_._2) distinct).toList)
     val lr = new FileWriter(amrFile + "_wiki")
-    output foreach (x => lr.write(x._1 + "\t:\t" + x._2.mkString(" : ") + "\n"))
+    output foreach (x => lr.write(x._1 + "\t:\t" + x._2 + "\n"))
     lr.close
 
     output
@@ -129,7 +130,7 @@ object ImportConcepts {
   private def loadSubInsertions: Map[String, Set[String]] = {
       val interimConcepts = for {
         ((_, s), a) <- (expertResults zip allAMR)
-        (node, amr) <- s.dependencyTree.insertedNodes.toList
+        (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
         if amr != ""
         if s.dependencyTree.isLeafNode(node)
         name = a.nodes(amr)
@@ -179,7 +180,7 @@ object ImportConcepts {
 
       val interimConcepts = for {
         ((_, s), a) <- (expertResults zip allAMR)
-        (node, amr) <- s.dependencyTree.insertedNodes.toList
+        (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
         if amr != ""
         name = a.nodes(amr)
         lemma <- (s.dependencyTree.childrenOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
@@ -246,7 +247,7 @@ object ImportConcepts {
         ((original, processed), a) <- (expertResults zip allAMR)
         (node, lemma) <- processed.dependencyTree.nodeLemmas
         if lemma != ""
-        ignorableEdges = Set("opN", "polarity", "UNKNOWN") // ++ original.dependencyTree.arcs.values
+        ignorableEdges = Set("opN", "polarity", "UNKNOWN", "sntN") // ++ original.dependencyTree.arcs.values
         relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
         relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
       } yield (lemma, relationsIn, relationsOut)).toList

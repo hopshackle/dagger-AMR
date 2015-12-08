@@ -10,6 +10,7 @@ object Smatch {
   val quote = """"""".r
   val numbers = "[0-9.,]".r
   val op = "^op[0-9]+$".r
+  val snt = "^snt[0-9]+$".r
   val ARGof = "-of$".r
 
   def fScore(AMR1: AMRGraph, AMR2: AMRGraph, attempts: Int = 4, movesToConsider: Int = 500): (Double, Double, Double, Double, Int, Int, Int) = {
@@ -299,12 +300,10 @@ object Smatch {
 
     // So what we do here, is remove any leaf nodes from the graph that have only one parent and meet any
     // of the above three criteria, and store their values in an attribute list for the node
-
     val newNodes = for {
       (n, v) <- input.nodes
-      if !(input.isLeafNode(n) && input.parentsOf(n) == 1 && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
+      if !(input.isLeafNode(n) && input.parentsOf(n).size == 1 && (numbers.replaceAllIn(v, "") == "" || quote.findFirstIn(v) != None || v == "-"))
     } yield (n, quote.replaceAllIn(v, ""))
-
     val arcsToUse = if (input.originalArcs.isEmpty) input.arcs else input.originalArcs
 
     val arcsWithOpN = arcsToUse map {
@@ -313,6 +312,12 @@ object Smatch {
         val opEdges = input.edgesToChildren(source).filter(e => input.arcs(e) == "opN").
           sortWith(AMROutput.sortByPositionInSentence(input)).zipWithIndex.toMap
         ((source, dest), "op" + (opEdges((source, dest)) + 1))
+    } map {
+      case ((source, dest), relation) if relation != "sntN" => ((source, dest), relation)
+      case ((source, dest), relation) =>
+        val opEdges = input.edgesToChildren(source).filter(e => input.arcs(e) == "sntN").
+          sortWith(AMROutput.sortByPositionInSentence(input)).zipWithIndex.toMap
+        ((source, dest), "snt" + (opEdges((source, dest)) + 1))
     }
 
     val attributeNodes = input.nodes filter {

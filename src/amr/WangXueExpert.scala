@@ -27,7 +27,8 @@ class WangXueExpert extends WangXueExpertBasic {
 
     // nodes inserted without an AMR ref are ignored by the expert - if AMR exists, then we estimate
     // the AMR ref of a node Inserted by a non-expert policy at the time of insertion
-    val fullMapDTtoAMR = (state.currentGraph.insertedNodes filter { case (i, ref) => ref != "" }) ++ data.positionToAMR
+    val fullMapDTtoAMR = (state.currentGraph.insertedNodes map
+      { case (i, (_, ref)) => (i, ref) } filter { _._2 != "" }) ++ data.positionToAMR
     val fullMapAMRtoDT = fullMapDTtoAMR map { case (key, value) => (value -> key) }
 
     val sigma = state.nodesToProcess.head
@@ -73,15 +74,14 @@ class WangXueExpert extends WangXueExpertBasic {
     val (unmatchedPolarityChildren, unmatchedOtherChildren) = unmatchedChildren filter (c => data.amr.get.arcs((SIGMAAMR.get, c)) != "wiki") partition (c => data.amr.get.nodes(c) == "-")
     val insertableChildren = unmatchedOtherChildren filter (c => InsertBelow(conceptIndex(data.amr.get.nodes(c))).isPermissible(state))
 
-    
     val needsToBeWikified = SIGMAAMR match {
       case None => false
       case Some(sigma) => WangXueTransitionSystem.wikification && !Wikify.isWikified(state) && getWikiString(data.amr.get, sigma) != ""
     }
 
     val kappa = unlinkedAMRChildren.toList map fullMapAMRtoDT filter state.currentGraph.nodes.contains filter (Reentrance(_).isPermissible(state))
-
-    val chosenAction = (state.phase, SIGMAAMR, unmatchedParentLabels.isEmpty, BETA, BETAAMR, betaAMRParents.isEmpty) match {
+//    println(s"Sigma: $sigma, $SIGMAAMR, Beta: $BETA, BetaParent: $betaAMRParents")
+    val chosenAction = (state.phase, SIGMAAMR, unmatchedParentLabels.isEmpty, BETA, BETAAMR) match {
       // cases to cover: no beta - Delete, Insert or NextNode
       //    If sigmaAMR and the parent AMR node is unmatched to DT, then we InsertNode
       //    If sigmaAMR then we NextNode 
@@ -96,58 +96,47 @@ class WangXueExpert extends WangXueExpertBasic {
       //      happen if Classifier policy has been making some decisions, even if it would never happen with only this expert policy.
       //      If beta has no children in this case, then we Reattach to the next node to be processed, with the intention of Deleting it later (a recovery action)
       //      If beta does have children, then currently irrecoverable. We NextEdge and move on.
-      case (1, Some(sigmaAMR), _, beta, Some(betaAMR), true) if (sigmaAMR != "" &&
+      case (1, Some(sigmaAMR), _, beta, Some(betaAMR)) if (sigmaAMR != "" &&
         (sigmaAMRAncestors contains betaAMR) &&
         !(sigmaAMRDescendants contains betaAMR) &&
         Swap.isPermissible(state)) => Swap
-      case (1, Some(sigmaAMR), false, _, _, _) if (Insert.isPermissible(state)) =>
+      case (1, Some(sigmaAMR), false, _, _) if (Insert.isPermissible(state)) =>
         if (useCompositeNodes) {
           val parentString = getParentString(data, state, fullMapAMRtoDT)
           AddParent(parentString)
         } else
           Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
-      case (1, Some(sigmaAMR), _, _, _, _) if (unmatchedPolarityChildren nonEmpty) => ReversePolarity
-      case (1, Some(sigmaAMR), _, _, _, _) if (insertableChildren nonEmpty) =>
+      case (1, Some(sigmaAMR), _, _, _) if (unmatchedPolarityChildren nonEmpty) => ReversePolarity
+      case (1, Some(sigmaAMR), _, _, _) if (insertableChildren nonEmpty) =>
         val amrRef = insertableChildren.head
         val conceptToInsert = data.amr.get.nodes(amrRef)
         assert(InsertBelow(conceptIndex(conceptToInsert)).isPermissible(state), "Invalid " + conceptToInsert + "(" + conceptIndex(conceptToInsert) + ") in \n" + state)
         InsertBelow(conceptIndex(conceptToInsert), amrRef)
-      case (1, Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "" &&
-        (sigmaAMRAncestors contains betaAMR) &&
-        !(sigmaAMRDescendants contains betaAMR) &&
-        Swap.isPermissible(state)) => Swap
-      case (2, Some(sigmaAMR), _, -1, _, _) if needsToBeWikified => Wikify(getWikiString(data.amr.get, sigmaAMR))
-      case (_, Some(sigmaAMR), _, -1, _, _) if kappa.nonEmpty => Reentrance(kappa(0))
-      case (1, Some(sigmaAMR), _, -1, _, _) =>
+      case (2, Some(sigmaAMR), _, -1, _) if needsToBeWikified => Wikify(getWikiString(data.amr.get, sigmaAMR))
+      case (_, Some(sigmaAMR), _, -1, _) if kappa.nonEmpty => Reentrance(kappa(0))
+      case (1, Some(sigmaAMR), _, -1, _) =>
         val concept = quote.replaceAllIn(data.amr.get.nodes.getOrElse(sigmaAMR, "UNKNOWN"), "")
         if (concept == "UNKNOWN") {
           println("AMR key not found: " + sigmaAMR + " for " + sigma + " -> " + state.currentGraph.nodes(sigma))
         }
         NextNode(conceptToUse(concept, state))
-      case (1, None, _, -1, _, _) if (DeleteNode.isPermissible(state)) => DeleteNode
-      case (1, None, _, beta, Some(betaAMR), _) if (ReplaceHead.isPermissible(state)) => ReplaceHead
-      case (_, Some(sigmaAMR), _, beta, Some(betaAMR), false) if (sigmaAMR != "") =>
-        if (betaAMRParents contains sigmaAMR) {
-          val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
-          val relationRequired = relationIndex(relationText)
-          //        val relationToUse = if (state.currentGraph.arcs((sigma, beta)) == relationText) 0 else relationRequired
-          NextEdge(relationRequired)
-        } else if (allNodesAMR intersect betaAMRParents.toSet nonEmpty) {
-
-          def edgeIsWrongWayRound: Boolean = data.amr.get.arcs contains (betaAMR, sigmaAMR)
-
-          if (edgeIsWrongWayRound && Swap.isPermissible(state)) Swap else {
-            val parentAMRNodes = allNodesAMR intersect betaAMRParents.toSet
-            val parentIndices = parentAMRNodes map fullMapAMRtoDT filter { Reattach(_).isPermissible(state) }
-            if (parentIndices.nonEmpty) Reattach(parentIndices.head) else NextEdge(0)
-          }
-        } else NextEdge(0)
-      case (_, None, _, beta, Some(betaAMR), false) =>
-        if (allNodesAMR contains betaAMRParents.head) {
-          val parentIndex = fullMapAMRtoDT(betaAMRParents.head)
-          if (Reattach(parentIndex).isPermissible(state)) Reattach(parentIndex) else NextEdge(0)
-        } else NextEdge(0)
-      case (_, _, _, beta, _, _) if beta > -1 => NextEdge(0)
+      case (1, None, _, -1, _) if (DeleteNode.isPermissible(state)) => DeleteNode
+      case (1, None, _, beta, Some(betaAMR)) if (ReplaceHead.isPermissible(state)) => ReplaceHead
+      case (_, Some(sigmaAMR), _, beta, Some(betaAMR)) if (betaAMRParents contains sigmaAMR) =>
+        val relationText = data.amr.get.labelsBetween(sigmaAMR, betaAMR)(0)
+        val relationRequired = relationIndex(relationText)
+        NextEdge(relationRequired)
+      case (_, _, _, beta, Some(betaAMR)) if (allNodesAMR intersect betaAMRParents.toSet nonEmpty) =>
+        def edgeIsWrongWayRound: Boolean = SIGMAAMR match {
+          case Some(sigmaAMR) => data.amr.get.arcs contains (betaAMR, sigmaAMR)
+          case None => false
+        }
+        if (edgeIsWrongWayRound && Swap.isPermissible(state)) Swap else {
+          val parentAMRNodes = allNodesAMR intersect betaAMRParents.toSet
+          val parentIndices = parentAMRNodes map fullMapAMRtoDT filter { Reattach(_).isPermissible(state) }
+          if (parentIndices.nonEmpty) Reattach(parentIndices.head) else NextEdge(0)
+        }
+      case (_, _, _, beta, _) if beta > -1 => NextEdge(0)
       case _ if state.phase == 1 => NextNode(0)
       case _ => DoNothing
     }
@@ -220,7 +209,8 @@ class WangXueExpert extends WangXueExpertBasic {
     val forward = Wikify.forwardConcatenationOfNameArgs(amr, node)
     //   println("ForwardConcat = " +forward)
     //   val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
-    fullWikiString match {
+    val quoteString = """""""
+    fullWikiString.replaceAll(quoteString, "") match {
       case "" => ""
       case `forward` => "FORWARD"
       //    case `backward` => "BACKWARD"

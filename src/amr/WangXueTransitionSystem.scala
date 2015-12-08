@@ -15,11 +15,11 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var wikification = true
   var insertBelow = true
   val alwaysInsertable = Set("name")
-  val alwaysEdgePossibilities = Set("opN")
+  val alwaysEdgePossibilities = Set("opN", "sntN")
 
   // We currently just use the whole flipping dictionary to define the full set of actions
   lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++ Array(DoNothing) ++
-    Insert.all ++ NextNode.all ++ NextEdge.all ++ (if (useCompositeNodes) AddParent.all else Nil)
+    Insert.all ++ InsertBelow.all ++ NextNode.all ++ NextEdge.all ++ (if (useCompositeNodes) AddParent.all else Nil)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
   def actions(state: WangXueTransitionState): Array[WangXueAction] = {
