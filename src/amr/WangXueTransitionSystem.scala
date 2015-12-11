@@ -47,8 +47,8 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       Array.empty[Wikify]
 
     val subInsertNodes = if (WangXueTransitionSystem.insertBelow && state.phase == 1) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq.empty[Int]
-    val subInsertable = ((subInsertNodes map state.currentGraph.nodeLemmas flatMap { lemma => subInsertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet map conceptIndex)
-    val subInsertActions = subInsertable filterNot (state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains _) map { InsertBelow(_, "") }
+    val subInsertable = (subInsertNodes map state.currentGraph.nodeLemmas flatMap { lemma => subInsertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet map conceptIndex
+    val subInsertActions = subInsertable map { InsertBelow(_, "") } filter (_.isPermissible(state))
 
     val reattachActions = (if (state.phase == 2 || Reattach.disableReattach || state.childrenToProcess.isEmpty ||
       (state.currentGraph.reattachedNodes contains beta.get)) {
@@ -72,7 +72,9 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
         val grandParents = parents flatMap state.currentGraph.parentsOf
         val children = state.currentGraph.childrenOf(sigma)
         val grandChildren = children flatMap state.currentGraph.childrenOf
-        ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet map state.currentGraph.nodes
+        val allInRange = ((sigma +: parents) ++ grandParents ++ children ++ grandChildren).toSet
+        if (allInRange map { state.currentGraph.nodes.getOrElse(_, "?!?") } contains "?!?") { println(state); println(allInRange) }
+        allInRange map state.currentGraph.nodes
       } else Set[String]()
       val insertable = ((insertNodes map state.currentGraph.nodeLemmas flatMap { lemma => insertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet ++ alwaysInsertable diff prohibitedNodes map conceptIndex)
       if (state.phase == 1) insertable map (Insert(_)) else Set()

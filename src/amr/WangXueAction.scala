@@ -458,6 +458,7 @@ case class InsertBelow(conceptIndex: Int, otherRef: String = "") extends WangXue
     WangXueTransitionSystem.insertBelow && state.phase == 1 && state.nodesToProcess.nonEmpty && {
       val newConcept = concept(conceptIndex)
       val sigma = state.nodesToProcess.head
+      val currentChildren = state.currentGraph.childrenOf(sigma)
       !(state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains newConcept)
     }
   }

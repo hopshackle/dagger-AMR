@@ -109,15 +109,17 @@ object ImportConcepts {
   }
 
   private def loadWikifications: Map[String, String] = {
-    import Wikify.{isConcatenationOfNameArgs, forwardConcatenationOfNameArgs}
+    import Wikify.{ isConcatenationOfNameArgs, forwardConcatenationOfNameArgs }
     val output = (for {
       amr <- allAMR
       conceptsToWikiAttributes = amr.arcs.toSeq filter
         { case (_, edgeType) => edgeType == "wiki" } map
         { case ((from, to), _) => (from, amr.nodes(to)) } filterNot
         { case (node, wikification) => wikification == "-" || isConcatenationOfNameArgs(amr, node, wikification) } map
-        { case (from, wikiString) => 
-          (amr.nodes(from) + ":" + forwardConcatenationOfNameArgs(amr, from), wikiString.replaceAll(Wikify.quoteString, "")) }
+        {
+          case (from, wikiString) =>
+            (amr.nodes(from) + ":" + forwardConcatenationOfNameArgs(amr, from), wikiString.replaceAll(Wikify.quoteString, ""))
+        }
 
     } yield conceptsToWikiAttributes).flatten.toMap //.groupBy(_._1).mapValues(seq => (seq map (_._2) distinct).toList)
     val lr = new FileWriter(amrFile + "_wiki")
@@ -128,25 +130,25 @@ object ImportConcepts {
   }
 
   private def loadSubInsertions: Map[String, Set[String]] = {
-      val interimConcepts = for {
-        ((_, s), a) <- (expertResults zip allAMR)
-        (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
-        if amr != ""
-        if s.dependencyTree.isLeafNode(node)
-        name = a.nodes(amr)
-        if numbers.replaceAllIn(name, "") != ""
-        lemma <- (s.dependencyTree.parentsOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
-      } yield (lemma, name)
+    val interimConcepts = for {
+      ((_, s), a) <- (expertResults zip allAMR)
+      (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
+      if amr != ""
+      if s.dependencyTree.isLeafNode(node)
+      name = a.nodes(amr)
+      if numbers.replaceAllIn(name, "") != ""
+      lemma <- (s.dependencyTree.parentsOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
+    } yield (lemma, name)
 
-      val grouped = interimConcepts.groupBy(_._1)
-      val cleaned = grouped.mapValues(_.map(_._2))
-      val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
-      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-")) }
-      val ic = new FileWriter(amrFile + "_isubc")
-      insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + ":" + (x._2).mkString(":") + "\n"))
-      ic.close
+    val grouped = interimConcepts.groupBy(_._1)
+    val cleaned = grouped.mapValues(_.map(_._2))
+    val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
+    val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-")) }
+    val ic = new FileWriter(amrFile + "_isubc")
+    insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + ":" + (x._2).mkString(":") + "\n"))
+    ic.close
 
-      insertableConcepts
+    insertableConcepts
   }
 
   private def allCompositesFrom(amrKey: String, sentence: Sentence): List[String] = {
@@ -167,133 +169,74 @@ object ImportConcepts {
   }
 
   private def loadInsertableConcepts: Map[String, Set[String]] = {
-    val conceptFileExists = {
-      try {
-        val fr = new FileReader(amrFile + "_ic")
-        true
-      } catch {
-        case e: FileNotFoundException => false
-      }
-    }
+    val interimConcepts = for {
+      ((_, s), a) <- (expertResults zip allAMR)
+      (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
+      if amr != ""
+      name = a.nodes(amr)
+      lemma <- (s.dependencyTree.childrenOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
+    } yield (lemma, name)
 
-    if (!conceptFileExists) {
+    val grouped = interimConcepts.groupBy(_._1)
+    val cleaned = grouped.mapValues(_.map(_._2))
+    val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
+    val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-" - "name")) }
 
-      val interimConcepts = for {
-        ((_, s), a) <- (expertResults zip allAMR)
-        (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
-        if amr != ""
-        name = a.nodes(amr)
-        lemma <- (s.dependencyTree.childrenOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
-      } yield (lemma, name)
+    val ic = new FileWriter(amrFile + "_ic")
+    insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + ":" + (x._2).mkString(":") + "\n"))
+    ic.close
 
-      val grouped = interimConcepts.groupBy(_._1)
-      val cleaned = grouped.mapValues(_.map(_._2))
-      val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
-      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-" - "name")) }
-
-      val lemmasToConcepts = (for {
-        (original, processed) <- expertResults
-        val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
-      } yield l).flatten.groupBy(_._1).mapValues(_.map(_._2))
-
-      val filteredLtoC = lemmasToConcepts map { case (k, v) => (k, (filterOutNumbersAndStripQuotes(v) toSet)) }
-
-      val ic = new FileWriter(amrFile + "_ic")
-      insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + ":" + (x._2).mkString(":") + "\n"))
-      ic.close
-
-      val lc = new FileWriter(amrFile + "_lc")
-      filteredLtoC filter (_._2.nonEmpty) foreach (x => lc.write(x._1 + ":" + x._2.mkString(":") + "\n"))
-      lc.close
-
-      insertableConcepts
-    } else {
-      val input = Source.fromFile(amrFile + "_ic").getLines
-      val lineSplit = input map (_.split(":").toList)
-      (lineSplit map (x => (x.head, x.tail.toSet))).toMap
-    }
+    insertableConcepts
   }
 
   private def loadConceptsPerLemmaReduced: Map[String, Set[Int]] = {
-    val conceptFileExists = {
-      try {
-        val fr = new FileReader(amrFile + "_lc")
-        true
-      } catch {
-        case e: FileNotFoundException => false
-      }
-    }
 
-    if (!conceptFileExists) insertableConcepts
-    // to load data
+    val lemmasToConcepts = (for {
+      (original, processed) <- expertResults
+      val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
+    } yield l).flatten.groupBy(_._1).mapValues(_.map(_._2))
 
-    val input = Source.fromFile(amrFile + "_lc").getLines
-    val lineSplit = input map (_.split(":").toList)
-    (lineSplit map (x => (x.head, x.tail map conceptIndex toSet))).toMap
+    val filteredLtoC = lemmasToConcepts map { case (k, v) => (k, (filterOutNumbersAndStripQuotes(v) toSet)) }
+
+    val lc = new FileWriter(amrFile + "_lc")
+    filteredLtoC filter (_._2.nonEmpty) foreach (x => lc.write(x._1 + ":" + x._2.mkString(":") + "\n"))
+    lc.close
+
+    filteredLtoC map { case (k, stringVals) => (k -> (stringVals map conceptIndex)) }
   }
 
   private def loadEdgesPerLemma: Map[String, Set[Int]] = {
-    val conceptFileExists = {
-      try {
-        val fr = new FileReader(amrFile + "_le")
-        true
-      } catch {
-        case e: FileNotFoundException => false
-      }
-    }
-
-    if (!conceptFileExists) {
-      val initial = (for {
-        ((original, processed), a) <- (expertResults zip allAMR)
-        (node, lemma) <- processed.dependencyTree.nodeLemmas
-        if lemma != ""
-        ignorableEdges = Set("opN", "polarity", "UNKNOWN", "sntN") // ++ original.dependencyTree.arcs.values
-        relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
-        relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
-      } yield (lemma, relationsIn, relationsOut)).toList
-      val grouped = initial.groupBy(_._1)
-      val cleanedIn = grouped.mapValues(_.map(_._2)) map { case (k, v) => (k + "-IN" -> v) }
-      val cleanedOut = grouped.mapValues(_.map(_._3)) map { case (k, v) => (k + "-OUT" -> v) }
-      val arcsByName = (cleanedIn ++ cleanedOut) map { case (key, listOfSets) => (key -> listOfSets.flatten.groupBy(identity).mapValues(_.size)) } map
-        { case (key, m) => (key -> m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet) }
-      val le = new FileWriter(amrFile + "_le")
-      arcsByName filter (_._2.nonEmpty) foreach (x => le.write(x._1 + ":" + x._2.mkString(":") + "\n"))
-      le.close
-      arcsByName map { case (k, v) => (k, v map relationIndex) }
-    } else {
-      val input = Source.fromFile(amrFile + "_le").getLines
-      val lineSplit = input map (_.split(":").toList)
-      (lineSplit map (x => (x.head, x.tail map relationIndex toSet))).toMap
-    }
+    val initial = (for {
+      ((original, processed), a) <- (expertResults zip allAMR)
+      (node, lemma) <- processed.dependencyTree.nodeLemmas
+      if lemma != ""
+      ignorableEdges = Set("opN", "polarity", "UNKNOWN", "sntN") // ++ original.dependencyTree.arcs.values
+      relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
+      relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
+    } yield (lemma, relationsIn, relationsOut)).toList
+    val grouped = initial.groupBy(_._1)
+    val cleanedIn = grouped.mapValues(_.map(_._2)) map { case (k, v) => (k + "-IN" -> v) }
+    val cleanedOut = grouped.mapValues(_.map(_._3)) map { case (k, v) => (k + "-OUT" -> v) }
+    val arcsByName = (cleanedIn ++ cleanedOut) map { case (key, listOfSets) => (key -> listOfSets.flatten.groupBy(identity).mapValues(_.size)) } map
+      { case (key, m) => (key -> m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet) }
+    val le = new FileWriter(amrFile + "_le")
+    arcsByName filter (_._2.nonEmpty) foreach (x => le.write(x._1 + ":" + x._2.mkString(":") + "\n"))
+    le.close
+    arcsByName map { case (k, v) => (k, v map relationIndex) }
   }
   private def loadEdgesPerConcept: Map[String, Set[Int]] = {
-    val conceptFileExists = {
-      try {
-        val fr = new FileReader(amrFile + "_ce")
-        true
-      } catch {
-        case e: FileNotFoundException => false
-      }
-    }
+    val edges = (for {
+      (original, _) <- expertResults
+      amr = original.amr.get
+      ((from, to), relation) <- amr.arcs
+      conceptFrom = if (numbers.replaceAllIn(amr.nodes(from), "") == "") "##" else amr.nodes(from)
+      conceptTo = if (numbers.replaceAllIn(amr.nodes(to), "") == "") "##" else amr.nodes(to)
+    } yield List((conceptFrom + "-OUT" -> relation), (conceptTo + "-IN" -> relation))).flatten.toSeq
 
-    if (!conceptFileExists) {
-      val edges = (for {
-        (original, _) <- expertResults
-        amr = original.amr.get
-        ((from, to), relation) <- amr.arcs
-        conceptFrom = if (numbers.replaceAllIn(amr.nodes(from), "") == "") "##" else amr.nodes(from)
-        conceptTo = if (numbers.replaceAllIn(amr.nodes(to), "") == "") "##" else amr.nodes(to)
-      } yield List((conceptFrom + "-OUT" -> relation), (conceptTo + "-IN" -> relation))).flatten.toSeq
-
-      val stuff = edges.groupBy(_._1).mapValues(seq => (seq map { i => relationIndex(i._2) }).toSet)
-      val ce = new FileWriter(amrFile + "_ce")
-      stuff filter (_._2.nonEmpty) foreach (x => ce.write(x._1 + ":" + (x._2 map relation).mkString(":") + "\n"))
-      ce.close
-      stuff
-    } else {
-      val input = Source.fromFile(amrFile + "_ce").getLines
-      val lineSplit = input map (_.split(":").toList)
-      (lineSplit map (x => (x.head, x.tail map relationIndex toSet))).toMap
-    }
+    val stuff = edges.groupBy(_._1).mapValues(seq => (seq map { i => relationIndex(i._2) }).toSet)
+    val ce = new FileWriter(amrFile + "_ce")
+    stuff filter (_._2.nonEmpty) foreach (x => ce.write(x._1 + ":" + (x._2 map relation).mkString(":") + "\n"))
+    ce.close
+    stuff
   }
 }
