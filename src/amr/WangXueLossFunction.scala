@@ -9,8 +9,8 @@ class WangXueLossFunctionFactory(lossToUse: String) extends LossFunctionFactory[
     case "Abs" => new WangXueLossFunctionAbs
     case "Hamming" => new WXHammingLoss
     case "NaivePenaltyAbs" => new WXNaiveAbsSmatchWithPenalty
-    case "NaiveAbs" => new WXNaiveAbsSmatch    
-    case "Naive" => new WXNaiveSmatch    
+    case "NaiveAbs" => new WXNaiveAbsSmatch
+    case "Naive" => new WXNaiveSmatch
     case "None" => new WXConstantLoss
     case _ => new WangXueLossFunction
   }
@@ -39,7 +39,8 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction], expertActions: Array[WangXueAction],
     trialAction: WangXueAction, lastExpertAction: WangXueAction): Double = {
-    
+
+    if (gold.amr == None) return 0.0
     def conceptNotInAMR(c: Int): Boolean = {
       if (c == 0 || c == -1 || c == -2) false else {
         gold.amr match {
@@ -93,6 +94,7 @@ class WangXueLossFunction extends LossFunction[Sentence, WangXueAction, WangXueT
   }
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
+    if (gold.amr == None) return 0.0
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph

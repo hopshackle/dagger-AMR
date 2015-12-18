@@ -35,7 +35,7 @@ class ClassicFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
   }
-
+  override def featureName(key: Int): String = dict.elem(key)
   override def features(sentence: Sentence, state: ClassicTransitionState, action: ClassicAction): gnu.trove.map.hash.THashMap[Int, Float] = {
 
     val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]

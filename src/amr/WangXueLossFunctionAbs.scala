@@ -7,7 +7,7 @@ class WangXueLossFunctionAbs extends WangXueLossFunction {
   // as the loss, rather than the F-Score
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
-
+    if (gold.amr == None) return 0.0
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
@@ -15,7 +15,7 @@ class WangXueLossFunctionAbs extends WangXueLossFunction {
 
     Smatch.fScore(gold.amr.get, testAMR, 2, 1000)._4
   }
-  
+
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence
   override def max(gold: Sentence): Double = gold.dependencyTree.nodes.size * 2
 
@@ -26,63 +26,65 @@ class WangXueLossFunctionAbsPenalty extends WangXueLossFunction {
   // as the loss, rather than the F-Score
 
   override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
-
+    if (gold.amr == None) return 0.0
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
     }
 
-    Smatch.fScore(gold.amr.get, testAMR, 2, 1000)._4 + ((testActions filterNot (a => a.ignoreAction) size)  / 5.0)
+    Smatch.fScore(gold.amr.get, testAMR, 2, 1000)._4 + ((testActions filterNot (a => a.ignoreAction) size) / 5.0)
   }
-  
+
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence
   override def max(gold: Sentence): Double = gold.dependencyTree.nodes.size * 2
 
 }
 
 class WXNaiveAbsSmatchWithPenalty extends WangXueLossFunction {
-    override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
+  override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
+
+    if (gold.amr == None) return 0.0
 
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
     }
 
-    Smatch.naiveFScore(gold.amr.get, testAMR, 1, 1000)._4 + ((testActions filterNot (a => a.ignoreAction) size)  / 5.0)
+    Smatch.naiveFScore(gold.amr.get, testAMR, 1, 1000)._4 + ((testActions filterNot (a => a.ignoreAction) size) / 5.0)
   }
-  
+
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence
   override def max(gold: Sentence): Double = gold.dependencyTree.nodes.size * 2
 
 }
 
 class WXNaiveAbsSmatch extends WangXueLossFunction {
-    override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
-
+  override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
+    if (gold.amr == None) return 0.0
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
     }
 
-    Smatch.naiveFScore(gold.amr.get, testAMR, 1, 1000)._4 
+    Smatch.naiveFScore(gold.amr.get, testAMR, 1, 1000)._4
   }
-  
+
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence
   override def max(gold: Sentence): Double = gold.dependencyTree.nodes.size * 2
 
 }
 
 class WXNaiveSmatch extends WangXueLossFunction {
-    override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
-
+  override def apply(gold: Sentence, test: Sentence, testActions: Array[WangXueAction]): Double = {
+    if (gold.amr == None) return 0.0
     val testAMR = test.amr match {
       case None => test.dependencyTree.toAMR
       case Some(graph) => graph
     }
 
-    1.0 - Smatch.naiveFScore(gold.amr.get, testAMR, 1, 1000)._1 
+    1.0 - Smatch.naiveFScore(gold.amr.get, testAMR, 1, 1000)._1
   }
-  
+
   // we set the maximum to be double the number of nodes in the dependency tree of the original sentence
   override def max(gold: Sentence): Double = 1.0
 

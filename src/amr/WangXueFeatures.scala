@@ -43,6 +43,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
   def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
   }
+  
+  override def featureName(key: Int): String = dict.elem(key)
 
   override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): gnu.trove.map.hash.THashMap[Int, Float] = {
     // if we have cached Features for this state, and the action does not have a node parameter,

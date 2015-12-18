@@ -250,6 +250,7 @@ object RunDagger {
     newOptions.addOption("--reducedActions", "false")
     newOptions.addOption("--fileCache", "false")
     newOptions.addOption("--dagger.iterations", "1")
+    newOptions.addOption("--algorithm", "Dagger")
     val lossToUse = options.getString("--lossFunction", "")
 
     val (sc, aa) = if (options.getBoolean("--WangXue", true)) {

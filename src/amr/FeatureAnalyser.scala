@@ -114,7 +114,7 @@ object FeatureAnalyser {
     val results = for {
       data <- devData
       val (result, actions, _) = dagger.unroll(data, new WangXueExpert, policy, WangXueTransitionSystem.init(data), WangXueTransitionSystem,
-        WXFeatures.features, 0.0, true)
+        WXFeatures, 0.0, true, debug)
       val t = if (options.DEBUG && text != "") {
         debug.write("Target = " + data + "\n")
         debug.write("Prediction = " + result + "\n")

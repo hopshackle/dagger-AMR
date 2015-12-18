@@ -177,10 +177,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     val newEdgesOut = edgesToChildren(nodeToRemove) map { case (from, to) => ((nodeToKeep, to), arcs((from, to))) }
     val oldEdges = edgesToParents(nodeToRemove) ++ edgesToChildren(nodeToRemove)
     // We also need to avoid over-writing any edges already processed
-    //   val newSpans = this.nodeSpans - nodeToRemove + (nodeToKeep -> mergedSpan(nodeToRemove, nodeToKeep))
     val alreadyMergedNodes = this.mergedNodes.get(nodeToKeep) match { case None => List(); case Some(mergedNodes) => mergedNodes }
     val newMergedNodes = (nodeToRemove, this.nodes(nodeToRemove)) :: alreadyMergedNodes
-    this.copy(nodes = this.nodes - nodeToRemove, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut ++ currentEdges - ((nodeToKeep, nodeToKeep)),
+    this.copy(nodes = this.nodes - nodeToRemove, arcs = this.arcs -- oldEdges ++ newEdgesIn ++ newEdgesOut ++ currentEdges -- List((nodeToKeep, nodeToKeep), (nodeToKeep, nodeToRemove)),
       mergedNodes = this.mergedNodes + (nodeToKeep -> newMergedNodes))
   }
 
@@ -274,10 +273,10 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
   }
   override def toString: String = {
     id + "\n" +
-    rawText + "\n" +
-    dependencyTree.toString + "\n" +
-    (amr match { case None => "No AMR"; case Some(a) => a.toString()}) + "\n" +
-    positionToAMR + "\n"
+      rawText + "\n" +
+      dependencyTree.toString + "\n" +
+      (amr match { case None => "No AMR"; case Some(a) => a.toString() }) + "\n" +
+      positionToAMR + "\n"
   }
 }
 
@@ -287,7 +286,8 @@ object Sentence {
     Sentence(sentence, DependencyTree(sentence), None, Map[Int, String](), "")
   }
   def apply(sentence: String, rawAMR: String, id: String): Sentence = {
-    Sentence(sentence, DependencyTree(sentence), Some(AMRGraph(rawAMR, sentence)), id)
+    val amr = if (rawAMR == "") None else Some(AMRGraph(rawAMR, sentence))
+    Sentence(sentence, DependencyTree(sentence), amr, id)
   }
   def apply(sentence: String, amr: Option[AMRGraph], id: String): Sentence = {
     Sentence(sentence, DependencyTree(sentence), amr, id)
@@ -558,27 +558,33 @@ object AMRGraph {
 
   def apply(rawAMR: String, rawSentence: String): AMRGraph = {
 
-    val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
-    // to avoid re-inventing the wheel
+    if (rawAMR == "") {
+      null.asInstanceOf[AMRGraph]
+    } else {
+      val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
+      // to avoid re-inventing the wheel
 
-    if (useImprovedAligner)
-      AlignTest.alignWords(rawSentence, amr, useWordNet)
-    else {
-      val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-      val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-      val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
+      if (useImprovedAligner)
+        AlignTest.alignWords(rawSentence, amr, useWordNet)
+      else {
+        val tokenisedSentence = DependencyTree.preProcess(rawSentence)
+        val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
+        val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
 
-      AMRGraph(amr)
+        AMRGraph(amr)
+      }
     }
   }
 
   def importFile(fileName: String): IndexedSeq[(String, String, String)] = {
-    val source = Source.fromFile(fileName)("UTF-8").getLines()
+    // ISO8859-1
+    val source = Source.fromFile(fileName)("ISO8859-1").getLines()
     val sentenceIndices = (for {
       (line, i) <- source.map(_.trim).zipWithIndex
-      if line.matches("^# ::snt .*")
+ //     val p = println(line)
+      if line.matches("^# ::(snt|tok) .*")
     } yield i).toList
-    val input = Source.fromFile(fileName)("UTF-8").getLines().toList.map(_.trim)
+    val input = Source.fromFile(fileName)("ISO8859-1").getLines().toList.map(_.trim)
     val startIndices = sentenceIndices.map(_ + 2)
     val endIndices = if (sentenceIndices.size > 1)
       sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
