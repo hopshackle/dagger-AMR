@@ -61,7 +61,7 @@ object WangXueExpertCheck {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     val options = new DAGGEROptions(Array("--dagger.output.path", "C:\\AMR\\"))
-    AMRGraph.setAligner("JAMR")
+    AMRGraph.setAligner("improved")
     WangXueTransitionSystem.prohibition = false
     WangXueTransitionSystem.reentrance = true
     //    Reattach.REATTACH_RANGE = 20

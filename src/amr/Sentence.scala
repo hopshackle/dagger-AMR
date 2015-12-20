@@ -286,7 +286,7 @@ object Sentence {
     Sentence(sentence, DependencyTree(sentence), None, Map[Int, String](), "")
   }
   def apply(sentence: String, rawAMR: String, id: String): Sentence = {
-    val amr = if (rawAMR == "") None else Some(AMRGraph(rawAMR, sentence))
+    val amr = if (rawAMR == "") None else Some(AMRGraph(rawAMR, sentence, id))
     Sentence(sentence, DependencyTree(sentence), amr, id)
   }
   def apply(sentence: String, amr: Option[AMRGraph], id: String): Sentence = {
@@ -480,11 +480,11 @@ object DependencyTree {
   }
 
   def extractNumbers(input: String): String = {
-    val regexStr = "(?i)(^$ | $ | $-| $[,.?!;:])"
+    val regexStr = "(?i)(^@ | @ | @-| @[,.?!;:]| @$ |^@$)"
     val numbers = List("one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen")
     var output = input
     for ((str, number) <- numbers.zipWithIndex) {
-      val regexToUse = """\$""".r.replaceAllIn(regexStr, str).r
+      val regexToUse = """\@""".r.replaceAllIn(regexStr, str).r
       output = regexToUse.replaceAllIn(output, " " + (number + 1) + " ")
     }
 
@@ -512,7 +512,7 @@ object DependencyTree {
     dollars.replaceAllIn(output, "dollars ")
   }
 
-  def rehyphenate(text: String): String = text.replaceAll(" - ", "-")
+  def rehyphenate(text: String): String = text.replaceAll(" - ", "-").replaceAll(" @-@ ", "-")
 }
 
 object AMRGraph {
@@ -520,9 +520,11 @@ object AMRGraph {
   val opN = "^op[0-9]+$".r
   val sntN = "^snt[0-9]+$".r
   var useImprovedAligner = false
+  var usePourdamghaniAligner = false
   var useWordNet = false
   def setAligner(code: String): Unit = {
     if (code == "improved") useImprovedAligner = true
+    if (code == "Pourdamghani") usePourdamghaniAligner = true
     if (code == "wordnet") { useImprovedAligner = true; useWordNet = true }
   }
   def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
@@ -556,18 +558,19 @@ object AMRGraph {
     AMRGraph(nodes, nodeSpans, arcs, originalArcs)
   }
 
-  def apply(rawAMR: String, rawSentence: String): AMRGraph = {
+  def apply(rawAMR: String, rawSentence: String, id: String): AMRGraph = {
 
     if (rawAMR == "") {
       null.asInstanceOf[AMRGraph]
     } else {
       val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
       // to avoid re-inventing the wheel
-
+        val tokenisedSentence = DependencyTree.preProcess(rawSentence)
       if (useImprovedAligner)
         AlignTest.alignWords(rawSentence, amr, useWordNet)
-      else {
-        val tokenisedSentence = DependencyTree.preProcess(rawSentence)
+      else if (usePourdamghaniAligner) {
+        PourdamghaniAligner(tokenisedSentence, AMRGraph(amr), id).mapToAMR
+      } else {
         val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
         val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
 
@@ -577,11 +580,11 @@ object AMRGraph {
   }
 
   def importFile(fileName: String): IndexedSeq[(String, String, String)] = {
-    // ISO8859-1
+    val idFinder = """(# ::id [^:]*) ::.*""".r
     val source = Source.fromFile(fileName)("ISO8859-1").getLines()
     val sentenceIndices = (for {
       (line, i) <- source.map(_.trim).zipWithIndex
- //     val p = println(line)
+      //     val p = println(line)
       if line.matches("^# ::(snt|tok) .*")
     } yield i).toList
     val input = Source.fromFile(fileName)("ISO8859-1").getLines().toList.map(_.trim)
@@ -595,7 +598,10 @@ object AMRGraph {
       i <- 0 until sentenceIndices.size
       val english = input(sentenceIndices(i)).substring(8)
       val amr = (for (j <- startIndices(i) to endIndices(i)) yield input(j)).toList.mkString(" ")
-      val id = input(sentenceIndices(i) - 1)
+      val id = input(sentenceIndices(i) - 1) match {
+        case idFinder(ref) => ref
+        case _ => ""
+      }
     } yield (english, amr, id)
   }
 

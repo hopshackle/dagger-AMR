@@ -6,7 +6,8 @@ object AlignmentImprovements {
 // val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\Riyadh-based.txt")(0)
 //  val (rawSentence, rawAMR) = AMRGraph.imprtFile("C:\\AMR\\CountryList.txt")(0)
 //  val (rawSentence, rawAMR) = AMRGraphimportFile("C:\\AMR\\Lavrov.txt")(0)
-  val (rawSentence, rawAMR) = AMRGraph.importFile("C:\\AMR\\VeniceTarget.txt")(0)
+AMRGraph.usePourdamghaniAligner = false
+  val (rawSentence, rawAMR, _) = AMRGraph.importFile("C:\\AMR\\VeniceTarget.txt")(0)
                                                   //> rawSentence  : String = Venice High School history teacher Craig Brandau
                                                   //| rawAMR  : String = (p / person :wiki - :name (n / name :op1 "Craig" :op2 "Br
                                                   //| andau") :ARG0-of (h2 / have-org-role-91 :ARG1 (s / school :wiki "Venice_High
@@ -48,15 +49,15 @@ object AlignmentImprovements {
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/englis
-                                                  //| hPCFG.ser.gz ... done [1.3 sec].
+                                                  //| hPCFG.ser.gz ... done [2.2 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dists
-                                                  //| im.crf.ser.gz ... done [5.2 sec].
+                                                  //| im.crf.ser.gz ... done [5.9 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dists
-                                                  //| im.crf.ser.gz ... done [2.2 sec].
+                                                  //| im.crf.ser.gz ... done [2.5 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.dis
-                                                  //| tsim.crf.ser.gz ... done [4.7 sec].
+                                                  //| tsim.crf.ser.gz ... done [5.3 sec].
                                                   //| amrGraph  : amr.AMRGraph = AMRGraph(Map(0.1 -> name, 0.1.0 -> "Craig", 0.2.0
                                                   //| .1.2 -> "School", 0.2.1 -> teach-01, 0.0 -> -, 0.2.0.1.1 -> "High", 0.2.0.1 
                                                   //| -> name, 0.2.0 -> school, 0.2.0.1.0 -> "Venice", 0 -> person, 0.2 -> have-or
@@ -77,10 +78,10 @@ object AlignmentImprovements {
                                                   //| her, Craig, Brandau)
   
   val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-                                                  //> wordAlignments  : Array[Option[edu.cmu.lti.nlp.amr.Node]] = Array(Some("Veni
-                                                  //| ce"), Some("High"), Some((school :wiki "Venice_High_School_(Los_Angeles)" :n
-                                                  //| ame (name :op1 "Venice" :op2 "High" :op3 "School"))), Some(history), Some((t
-                                                  //| each-01 :ARG1 history :ARG0 person)), Some("Craig"), Some("Brandau"))
+                                                  //> wordAlignments  : Array[Option[edu.cmu.lti.nlp.amr.Node]] = Array(Some("Ven
+                                                  //| ice"), Some("High"), Some((school :wiki "Venice_High_School_(Los_Angeles)" 
+                                                  //| :name (name :op1 "Venice" :op2 "High" :op3 "School"))), Some(history), Some
+                                                  //| ((teach-01 :ARG1 history :ARG0 person)), Some("Craig"), Some("Brandau"))
  amrGraph.nodes foreach {case (k, v) => println(k + ":" + v + " -> " + amrGraph.nodeSpans.getOrElse(k, (-1, -1)._1))}
                                                   //> 0.1:name -> -1
                                                   //| 0.1.0:"Craig" -> (6,7)

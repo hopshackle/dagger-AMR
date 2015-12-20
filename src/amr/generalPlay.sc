@@ -19,8 +19,9 @@ object generalPlay {
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
-                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
+                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
+                                                  //| , 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -140,5 +141,27 @@ classifier == null                                //> res25: Boolean = true
   comparator.findFirstIn("best")                  //> res38: Option[String] = Some(est)
   comparator.findFirstIn("nester")                //> res39: Option[String] = Some(er)
   comparator.findFirstIn("estevan")               //> res40: Option[String] = None
-        
+            val idFinder = """(# ::id [^:]*) ::.*""".r
+                                                  //> idFinder  : scala.util.matching.Regex = (# ::id [^:]*) ::.*
+            idFinder.findFirstIn("# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:07 ::annotator SDL-AMR-09 ::preferred")
+                                                  //> res41: Option[String] = Some(# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:0
+                                                  //| 7 ::annotator SDL-AMR-09 ::preferred)
+"# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:07 ::annotator SDL-AMR-09 ::preferred" match {
+case idFinder(id) => id
+}                                                 //> res42: String = # ::id wb.c2e_0008.1
+ DependencyTree.preProcess("two")                 //> Adding annotator tokenize
+                                                  //| Adding annotator ssplit
+                                                  //| Adding annotator parse
+                                                  //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
+                                                  //| shPCFG.ser.gz ... done [1.1 sec].
+                                                  //| Adding annotator lemma
+                                                  //| Adding annotator ner
+                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
+                                                  //| sim.crf.ser.gz ... done [4.5 sec].
+                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
+                                                  //| sim.crf.ser.gz ... done [2.0 sec].
+                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
+                                                  //| stsim.crf.ser.gz ... done [4.0 sec].
+                                                  //| res43: List[String] = List(2)
+   DependencyTree.preProcess("One")               //> res44: List[String] = List(1)
 }
