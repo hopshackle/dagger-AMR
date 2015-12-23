@@ -97,9 +97,9 @@ object Wordnet {
       h.getWord(1).getLemma + " : " + printHypernyms(h, level + 1)
     } else ""
   }
-  
+
   def getHypernyms(ss: ISynset): Seq[String] = {
-        val hypernyms = ss.getRelatedSynsets(Pointer.HYPERNYM) map dict.getSynset
+    val hypernyms = ss.getRelatedSynsets(Pointer.HYPERNYM) map dict.getSynset
     if (hypernyms.nonEmpty) {
       val h = hypernyms.head
       h.getWord(1).getLemma +: getHypernyms(h)

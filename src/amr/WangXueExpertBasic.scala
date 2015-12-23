@@ -61,9 +61,10 @@ object WangXueExpertCheck {
     val parsedArgs = new dagger.util.ArgParser(args)
     val fileName = parsedArgs.getString("-i", "C:\\AMR\\AMR2.txt")
     val options = new DAGGEROptions(Array("--dagger.output.path", "C:\\AMR\\"))
-    AMRGraph.setAligner("improved")
+    AMRGraph.setAligner("Pourdamghani")
     WangXueTransitionSystem.prohibition = false
     WangXueTransitionSystem.reentrance = true
+    WangXueTransitionSystem.insertBelow = false
     //    Reattach.REATTACH_RANGE = 20
     ImportConcepts.initialise(fileName)
     val rawData = ImportConcepts.expertResults
