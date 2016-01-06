@@ -459,7 +459,7 @@ case class InsertBelow(conceptIndex: Int, otherRef: String = "") extends WangXue
       val newConcept = concept(conceptIndex)
       val sigma = state.nodesToProcess.head
       val currentChildren = state.currentGraph.childrenOf(sigma)
-      !(state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains newConcept)
+      conceptIndex > 0 && !(state.currentGraph.childrenOf(sigma) map state.currentGraph.nodes contains newConcept)
     }
   }
   override def name: String = "InsertBelow" + concept(conceptIndex)
