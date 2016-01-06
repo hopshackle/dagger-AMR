@@ -60,7 +60,7 @@ object ImportConcepts {
   private def loadConcepts: Set[String] = {
     (for {
       graph <- allAMR
-      concept <- filterOutNumbersAndStripQuotes(graph.nodes.values.toSeq)
+      concept <- stripQuotes(graph.nodes.values.toSeq)
     } yield concept).toSet
   }
 
@@ -68,7 +68,10 @@ object ImportConcepts {
     input filter (x => (quote findFirstIn x) == None) filter (x => numbers.replaceAllIn(x, "") != "")
   }
   def filterOutNumbersAndStripQuotes(input: Seq[String]): Seq[String] = {
-    input filter (x => numbers.replaceAllIn(x, "") != "") map (quote.replaceAllIn(_, ""))
+    stripQuotes(input filter (x => numbers.replaceAllIn(x, "") != ""))
+  }
+  def stripQuotes(input: Seq[String]): Seq[String] = {
+    input map (quote.replaceAllIn(_, ""))
   }
 
   private def loadRelations: Set[String] = {
@@ -174,7 +177,7 @@ object ImportConcepts {
       (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
       if amr != ""
       name = a.nodes(amr)
-      lemma <- (s.dependencyTree.childrenOf(node) map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
+      lemma <- (s.dependencyTree.childrenOf(node) filterNot(s.dependencyTree.arcs(node, _) == "wiki") map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
     } yield (lemma, name)
 
     val grouped = interimConcepts.groupBy(_._1)
@@ -196,7 +199,10 @@ object ImportConcepts {
       val l = original.positionToAMR.toList filter (_._1 != 0) map { case (k, v) => (original.dependencyTree.nodeLemmas(k), original.amr.get.nodes(v)) }
     } yield l).flatten.groupBy(_._1).mapValues(_.map(_._2))
 
-    val filteredLtoC = lemmasToConcepts map { case (k, v) => (k, (filterOutNumbersAndStripQuotes(v) toSet)) }
+    val filteredLtoC = lemmasToConcepts map {
+      case (k, v) if k == "##" => (k, (filterOutNumbersAndStripQuotes(v) toSet))
+      case (k, v) => (k, (stripQuotes(v) toSet))
+    }
 
     val lc = new FileWriter(amrFile + "_lc")
     filteredLtoC filter (_._2.nonEmpty) foreach (x => lc.write(x._1 + ":" + x._2.mkString(":") + "\n"))
@@ -210,7 +216,7 @@ object ImportConcepts {
       ((original, processed), a) <- (expertResults zip allAMR)
       (node, lemma) <- processed.dependencyTree.nodeLemmas
       if lemma != ""
-      ignorableEdges = Set("opN", "polarity", "UNKNOWN", "sntN") // ++ original.dependencyTree.arcs.values
+      ignorableEdges = Set("opN", "polarity", "UNKNOWN", "sntN", "wiki") // ++ original.dependencyTree.arcs.values
       relationsIn = processed.dependencyTree.arcs filter (x => x._1._2 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
       relationsOut = processed.dependencyTree.arcs filter (x => x._1._1 == node) map ((_._2)) filter (!ignorableEdges.contains(_))
     } yield (lemma, relationsIn, relationsOut)).toList
@@ -228,7 +234,7 @@ object ImportConcepts {
     val edges = (for {
       (original, _) <- expertResults
       amr = original.amr.get
-      ((from, to), relation) <- amr.arcs
+      ((from, to), relation) <- amr.arcs filterNot (_._2 == "wiki")
       conceptFrom = if (numbers.replaceAllIn(amr.nodes(from), "") == "") "##" else amr.nodes(from)
       conceptTo = if (numbers.replaceAllIn(amr.nodes(to), "") == "") "##" else amr.nodes(to)
     } yield List((conceptFrom + "-OUT" -> relation), (conceptTo + "-IN" -> relation))).flatten.toSeq

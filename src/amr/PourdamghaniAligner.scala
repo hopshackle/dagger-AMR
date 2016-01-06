@@ -65,11 +65,14 @@ case class PourdamghaniAligner(tokenisedSentence: List[String], amr: AMRGraph, i
       currentMap
     } else {
       val m = map(tokens.head, currentSentence)
+      val allTokensForHead = tokens takeWhile (_._1 == tokens.head._1)
+      val tailMapping: Map[Int, String] = if (m == -1) Map() else Map((m + offset -> allTokensForHead.last._3))
       val headMapping: Map[Int, String] = if (m == -1) Map() else Map((m + offset -> tokens.head._3))
       if (debug) println(headMapping)
+      if (debug) println(tailMapping)
       val truncatedSentence = currentSentence.drop(m + 1)
       val availableTokens = tokens.tail filterNot { case (index, _, amrRef) => m != -1 && (amrRef == tokens.head._3 || index == tokens.head._1) }
-      map(availableTokens, truncatedSentence, currentMap ++ headMapping, offset + m + 1)
+      map(availableTokens, truncatedSentence, currentMap ++ tailMapping, offset + m + 1)
     }
   }
   def map(token: (Int, String, String), currentSentence: Array[String]): Int = {
