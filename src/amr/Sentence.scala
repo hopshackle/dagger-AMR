@@ -203,19 +203,20 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     (if (s == 999) 0 else s, if (e == 999) 0 else e)
   }
 
-  def getPathBetween(node1: Int, node2: Int): String = {
+  def getPathBetween(node1: Int, node2: Int, NER: Boolean = false, depLabels: Boolean = true): String = {
     if (!nodes.contains(node1) || !nodes.contains(node2)) return ""
     val path = getNodesBetween(node2, node1)
+    val featureType = if (NER) nodeNER else nodePOS
     if (path.nonEmpty) {
       val slidingPath = path.sliding(2)
-      val pathString = nodePOS.getOrElse(path.head, "XX") + "-" +
+      val pathString = featureType.getOrElse(path.head, "XX") + "-" +
         (for {
           a <- slidingPath
           val b = a match {
             case first :: second :: tail => {
               val label = if (labelsBetween(first, second).isEmpty) labelsBetween(second, first).head else labelsBetween(first, second).head
-              val pos = nodePOS.getOrElse(second, "XX")
-              label + "-" + pos
+              val feature = featureType.getOrElse(second, "XX")
+              if (depLabels) label + "-" + feature else feature
             }
             case _ => "ERR"
           }
@@ -559,21 +560,33 @@ object AMRGraph {
   }
 
   def apply(rawAMR: String, rawSentence: String, id: String): AMRGraph = {
+    doStuff(rawAMR, rawSentence, id)
+  }
+
+  def apply(rawAMR: String, rawSentence: String, id: String, alignWords: Boolean): AMRGraph = {
+    doStuff(rawAMR, rawSentence, id, alignWords)
+  }
+
+  private def doStuff(rawAMR: String, rawSentence: String, id: String, alignWords: Boolean = true): AMRGraph = {
 
     if (rawAMR == "") {
       null.asInstanceOf[AMRGraph]
     } else {
       val amr = Graph.parse(rawAMR) // We re-use the JAMR code for parsing rawAMR
       // to avoid re-inventing the wheel
-        val tokenisedSentence = DependencyTree.preProcess(rawSentence)
-      if (useImprovedAligner)
-        AlignTest.alignWords(rawSentence, amr, useWordNet)
-      else if (usePourdamghaniAligner) {
-        PourdamghaniAligner(tokenisedSentence, AMRGraph(amr), id).mapToAMR
-      } else {
-        val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
-        val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
+      val tokenisedSentence = DependencyTree.preProcess(rawSentence)
+      if (alignWords) {
+        if (useImprovedAligner)
+          AlignTest.alignWords(rawSentence, amr, useWordNet)
+        else if (usePourdamghaniAligner) {
+          PourdamghaniAligner(tokenisedSentence, AMRGraph(amr), id).mapToAMR
+        } else {
+          val wordAlignments = AlignWords.alignWords(tokenisedSentence.toArray, amr)
+          val spanAlignments = AlignSpans.alignSpans(tokenisedSentence.toArray, amr, wordAlignments)
 
+          AMRGraph(amr)
+        }
+      } else {
         AMRGraph(amr)
       }
     }

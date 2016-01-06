@@ -99,11 +99,20 @@ object Wordnet {
   }
 
   def getHypernyms(ss: ISynset): Seq[String] = {
-    val hypernyms = ss.getRelatedSynsets(Pointer.HYPERNYM) map dict.getSynset
-    if (hypernyms.nonEmpty) {
-      val h = hypernyms.head
-      h.getWord(1).getLemma +: getHypernyms(h)
-    } else Seq()
+    try {
+      val hypernyms = ss.getRelatedSynsets(Pointer.HYPERNYM) map dict.getSynset
+      if (hypernyms.nonEmpty) {
+        val h = hypernyms.head
+        h.getWord(1).getLemma +: getHypernyms(h)
+      } else Seq()
+
+    } catch {
+      case e: Exception =>
+        val g2 = println(e.toString())
+        val g = println(ss)
+        Seq()
+    }
+
   }
 }
 
