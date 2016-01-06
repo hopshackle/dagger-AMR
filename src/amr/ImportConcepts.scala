@@ -177,7 +177,7 @@ object ImportConcepts {
       (node, (_, amr)) <- s.dependencyTree.insertedNodes.toList
       if amr != ""
       name = a.nodes(amr)
-      lemma <- (s.dependencyTree.childrenOf(node) filterNot(s.dependencyTree.arcs(node, _) == "wiki")  map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
+      lemma <- (s.dependencyTree.childrenOf(node) filterNot(s.dependencyTree.arcs(node, _) == "wiki") map (s.dependencyTree.nodeLemmas.getOrElse(_, ""))) filter (_ != "")
     } yield (lemma, name)
 
     val grouped = interimConcepts.groupBy(_._1)
@@ -203,6 +203,7 @@ object ImportConcepts {
       case (k, v) if k == "##" => (k, (filterOutNumbersAndStripQuotes(v) toSet))
       case (k, v) => (k, (stripQuotes(v) toSet))
     }
+
     val lc = new FileWriter(amrFile + "_lc")
     filteredLtoC filter (_._2.nonEmpty) foreach (x => lc.write(x._1 + ":" + x._2.mkString(":") + "\n"))
     lc.close
