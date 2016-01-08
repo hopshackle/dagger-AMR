@@ -176,6 +176,7 @@ object RunDagger {
   def initialiseAndGetTrainingData(options: DAGGEROptions): IndexedSeq[Sentence] = {
     WangXueTransitionSystem.prohibition = false // temp value for lemma / concept extraction
     WangXueTransitionSystem.reentrance = true // temp value for lemma / concept extraction
+    PourdamghaniAligner.useHeadMapping = (options.getBoolean("--forwardPDG", true))
     val alignerToUse = options.getString("--aligner", "")
     Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
     DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)

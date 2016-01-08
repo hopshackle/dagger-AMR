@@ -4,6 +4,7 @@ import scala.io.Source
 object PourdamghaniAligner {
   lazy val tokenizationFile = ImportConcepts.amrFile + "_tok"
   lazy val tokenizations = importTokenization
+  var useHeadMapping = true
   val idFinder = """(# ::id [^:]*) ::.*""".r
 
   def importTokenization: Map[String, (String, String)] = {
@@ -28,6 +29,7 @@ object PourdamghaniAligner {
 
 case class PourdamghaniAligner(tokenisedSentence: List[String], amr: AMRGraph, id: String) {
   val debug = false
+  import PourdamghaniAligner.useHeadMapping
 
   def mapToAMR: AMRGraph = {
     val mapping = map(tokenization, tokenisedSentence.toArray, Map(), 0)
@@ -72,7 +74,7 @@ case class PourdamghaniAligner(tokenisedSentence: List[String], amr: AMRGraph, i
       if (debug) println(tailMapping)
       val truncatedSentence = currentSentence.drop(m + 1)
       val availableTokens = tokens.tail filterNot { case (index, _, amrRef) => m != -1 && (amrRef == tokens.head._3 || index == tokens.head._1) }
-      map(availableTokens, truncatedSentence, currentMap ++ tailMapping, offset + m + 1)
+      map(availableTokens, truncatedSentence, currentMap ++ (if (useHeadMapping) headMapping else tailMapping), offset + m + 1)
     }
   }
   def map(token: (Int, String, String), currentSentence: Array[String]): Int = {
