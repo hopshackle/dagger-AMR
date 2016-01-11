@@ -19,9 +19,8 @@ object generalPlay {
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
-                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
-                                                  //| , 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
+                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -153,15 +152,18 @@ case idFinder(id) => id
                                                   //| Adding annotator ssplit
                                                   //| Adding annotator parse
                                                   //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
-                                                  //| shPCFG.ser.gz ... done [1.1 sec].
+                                                  //| shPCFG.ser.gz ... done [1.7 sec].
                                                   //| Adding annotator lemma
                                                   //| Adding annotator ner
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
-                                                  //| sim.crf.ser.gz ... done [4.5 sec].
+                                                  //| sim.crf.ser.gz ... done [4.3 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
-                                                  //| sim.crf.ser.gz ... done [2.0 sec].
+                                                  //| sim.crf.ser.gz ... done [2.9 sec].
                                                   //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
-                                                  //| stsim.crf.ser.gz ... done [4.0 sec].
+                                                  //| stsim.crf.ser.gz ... done [7.5 sec].
                                                   //| res43: List[String] = List(2)
    DependencyTree.preProcess("One")               //> res44: List[String] = List(1)
+   
+   val mutaSeq = new Array[Int](5)                //> mutaSeq  : Array[Int] = Array(0, 0, 0, 0, 0)
+   mutaSeq(2) = 6
 }
