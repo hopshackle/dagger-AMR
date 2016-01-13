@@ -191,11 +191,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
               }
             }
 
-            if (!(sigmaDL contains label)) add(hmap, "P-S-LAB=" + label)
+  //          if (!(sigmaDL contains label)) add(hmap, "P-S-LAB=" + label)
             if (parentLemma != "") add(hmap, "P-LEM=" + parentLemma)
             if (parentLemma != parentWord && includeWords) add(hmap, "P-WRD=" + parentWord)
             //      if (parentPOS != "") add(hmap, "P-POS=" + parentPOS)
-            if (parentNER != "") add(hmap, "P-NER=" + parentNER)
+ //           if (parentNER != "") add(hmap, "P-NER=" + parentNER)
             //      add(hmap, "P-DL=" + parentDL)
 
             if (includeWords) add(hmap, "P-S-WRD=" + parentWord + "-" + sigmaWord)
@@ -203,7 +203,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             //         if (parentLemma != "" && sigmaPOS != "") add(hmap, "P-LEM-S-POS=" + parentLemma + "-" + sigmaPOS)
             if (parentPOS != "" && sigmaLemma != "") add(hmap, "P-POS-S-LEM=" + parentPOS + "-" + sigmaLemma)
             if (parentDL != "" && sigmaLemma != "") add(hmap, "P-DL-S-LEM=" + parentDL + "-" + sigmaLemma)
-            if (parentLemma != "" && sigmaDL != "") add(hmap, "P-LEM-S-DL=" + parentLemma + "-" + sigmaDL)
+//            if (parentLemma != "" && sigmaDL != "") add(hmap, "P-LEM-S-DL=" + parentLemma + "-" + sigmaDL)
             if (parentNER != "" && sigmaNER != "") add(hmap, "P-S-NER=" + parentNER + "-" + sigmaNER)
 
         }
@@ -228,10 +228,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             val childLemma = state.currentGraph.nodeLemmas.getOrElse(child, "")
             val childNER = state.currentGraph.nodeNER.getOrElse(child, "")
             val childPOS = state.currentGraph.nodePOS.getOrElse(child, "")
-            if (state.currentGraph.insertedNodes contains child) {
-              add(hmap, "C-INS=" + childLemma)
-              if (state.currentGraph.insertedNodes contains sigma) add(hmap, "S-C-BOTH-INSERTED")
-            }
+//            if (state.currentGraph.insertedNodes contains child) {
+//              add(hmap, "C-INS=" + childLemma)
+ //             if (state.currentGraph.insertedNodes contains sigma) add(hmap, "S-C-BOTH-INSERTED")
+ //           }
             if (label != "") add(hmap, "C-S-LAB=" + label)
             if (childPOS != "") add(hmap, "C-POS=" + childPOS)
             if (childNER != "") add(hmap, "C-NER=" + childNER)
@@ -243,7 +243,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
                 childHypernyms foreach { h => add(hmap, "C-HYP=" + h) }
               }
 
-              add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
+    //          add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
               if (childLemma != "" && sigmaPOS != "") add(hmap, "C-LEM-S-POS=" + childLemma + "-" + sigmaPOS)
               if (childPOS != "" && sigmaLemma != "") add(hmap, "C-POS-S-LEM=" + childPOS + "-" + sigmaLemma)
               if (label != "" && sigmaLemma != "") add(hmap, "C-DL-S-LEM=" + label + "-" + sigmaLemma)
@@ -341,7 +341,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         add(hmap, "B-SUFFIX=" + prefix(1))
       }
     }
-    if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")
+//    if (state.currentGraph.swappedArcs contains ((beta, sigma))) add(hmap, "SWAPPED-ARC")
 
     val mergedNodes = state.currentGraph.mergedNodes.get(beta) match {
       case None => Nil
@@ -385,7 +385,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val kappaParents = state.currentGraph.parentsOf(parameterNode)
     val kappaLabels = kappaParents map (state.currentGraph.arcs(_, parameterNode))
     for (kl <- kappaLabels) if (kl != kappaDL) add(hmap, "K-LAB=" + kl)
-    if (kappaDL != "") add(hmap, "K-DL=" + kappaDL)
+//    if (kappaDL != "") add(hmap, "K-DL=" + kappaDL)
     if (includeWordNet) {
       val kappaHypernyms = getHypernyms(kappaLemma, kappaPOS)
       kappaHypernyms foreach { h => add(hmap, "K-HYP=" + h) }
@@ -460,8 +460,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
         // WangXue features
         if (sigmaLemma != "" && kappaDL != "") add(hmap, "S-LEM-K-DL=" + sigmaLemma + "-" + kappaDL)
-        if (kappaPOS != "" && sigmaLemma != "") add(hmap, "K-POS-S-LEM=" + kappaPOS + "-" + sigmaLemma)
-        if (kappaLemma != "" && sigmaDL != "") add(hmap, "K-LEM-S-DL=" + kappaLemma + "-" + sigmaDL)
+  //      if (kappaPOS != "" && sigmaLemma != "") add(hmap, "K-POS-S-LEM=" + kappaPOS + "-" + sigmaLemma)
+  //      if (kappaLemma != "" && sigmaDL != "") add(hmap, "K-LEM-S-DL=" + kappaLemma + "-" + sigmaDL)
         if (kappaNER != "" && sigmaNER != "") add(hmap, "K-S-NER=" + kappaNER + "-" + sigmaNER)
     }
     hmap
