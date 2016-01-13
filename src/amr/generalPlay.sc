@@ -19,8 +19,9 @@ object generalPlay {
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
-                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
+                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
+                                                  //| , 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -89,44 +90,44 @@ object generalPlay {
   val a2 = realNumbers findAllIn t2               //> a2  : scala.util.matching.Regex.MatchIterator = non-empty iterator
   val reformatted = realNumbers replaceAllIn (t2, _ match {
     case realNumbers(number, multiple) =>
-      val replacement = number.toDouble *  (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
+      val replacement = number.toDouble * (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
       f"$replacement%.0f "
     case other => ""
   })                                              //> reformatted  : String = "one billion 2000000  once, one, 6020000000 s onet 
                                                   //| One "
 
-val dollar = """\$""".r                           //> dollar  : scala.util.matching.Regex = \$
-dollar.replaceAllIn("$56", "dollars ")            //> res23: String = dollars 56
+  val dollar = """\$""".r                         //> dollar  : scala.util.matching.Regex = \$
+  dollar.replaceAllIn("$56", "dollars ")          //> res23: String = dollars 56
   // DependencyTree.extractNumbers(t2)
   val t3 = List(2.34, 6, -56, 9.0073, 0, 1, -1)   //> t3  : List[Double] = List(2.34, 6.0, -56.0, 9.0073, 0.0, 1.0, -1.0)
   val (highScore, index) = (t3 zipWithIndex).max  //> highScore  : Double = 9.0073
                                                   //| index  : Int = 3
-val costs = List(0.686, 0.749, 0.744, 0.639, 0.386, 0.619, 0.674, 0.574, 0.785, 0.513, 0.412, 0.513, 0.321, 0.417)
+  val costs = List(0.686, 0.749, 0.744, 0.639, 0.386, 0.619, 0.674, 0.574, 0.785, 0.513, 0.412, 0.513, 0.321, 0.417)
                                                   //> costs  : List[Double] = List(0.686, 0.749, 0.744, 0.639, 0.386, 0.619, 0.67
                                                   //| 4, 0.574, 0.785, 0.513, 0.412, 0.513, 0.321, 0.417)
-val min = costs.minBy(_ * 1.0)                    //> min  : Double = 0.321
-val tempNormCosts = costs.map(x => (x - min))     //> tempNormCosts  : List[Double] = List(0.36500000000000005, 0.428, 0.423, 0.3
+  val min = costs.minBy(_ * 1.0)                  //> min  : Double = 0.321
+  val tempNormCosts = costs.map(x => (x - min))   //> tempNormCosts  : List[Double] = List(0.36500000000000005, 0.428, 0.423, 0.3
                                                   //| 18, 0.065, 0.298, 0.35300000000000004, 0.25299999999999995, 0.464, 0.192, 0
                                                   //| .09099999999999997, 0.192, 0.0, 0.09599999999999997)
-val normedCosts = if (tempNormCosts contains 0.0) tempNormCosts.toArray else (tempNormCosts map (x => 0.0)).toArray
+  val normedCosts = if (tempNormCosts contains 0.0) tempNormCosts.toArray else (tempNormCosts map (x => 0.0)).toArray
                                                   //> normedCosts  : Array[Double] = Array(0.36500000000000005, 0.428, 0.423, 0.3
                                                   //| 18, 0.065, 0.298, 0.35300000000000004, 0.25299999999999995, 0.464, 0.192, 0
                                                   //| .09099999999999997, 0.192, 0.0, 0.09599999999999997)
-normedCosts map (_.toFloat)                       //> res24: Array[Float] = Array(0.365, 0.428, 0.423, 0.318, 0.065, 0.298, 0.353
+  normedCosts map (_.toFloat)                     //> res24: Array[Float] = Array(0.365, 0.428, 0.423, 0.318, 0.065, 0.298, 0.353
                                                   //| , 0.253, 0.464, 0.192, 0.091, 0.192, 0.0, 0.096)
-var classifier = null.asInstanceOf[dagger.ml.MultiClassClassifier[String]]
+  var classifier = null.asInstanceOf[dagger.ml.MultiClassClassifier[String]]
                                                   //> classifier  : dagger.ml.MultiClassClassifier[String] = null
-classifier == null                                //> res25: Boolean = true
- val clean2 = """[.#'-]""".r                      //> clean2  : scala.util.matching.Regex = [.#'-]
- clean2.replaceAllIn("ba.se-01", "")              //> res26: String = base01
-   val numbers = "([0-9*][.,][0-9])".r            //> numbers  : scala.util.matching.Regex = ([0-9*][.,][0-9])
-   numbers.replaceAllIn("100", "")                //> res27: String = 100
-   numbers.replaceAllIn(".", "")                  //> res28: String = .
-   numbers.replaceAllIn("100.00", "")             //> res29: String = 100
-   
- val arrayTest = Array(0, 1, 2, 3, -7,89)         //> arrayTest  : Array[Int] = Array(0, 1, 2, 3, -7, 89)
- arrayTest.toList                                 //> res30: List[Int] = List(0, 1, 2, 3, -7, 89)
-"ARG0-of".substring(0, 4)                         //> res31: String = ARG0
+  classifier == null                              //> res25: Boolean = true
+  val clean2 = """[.#'-]""".r                     //> clean2  : scala.util.matching.Regex = [.#'-]
+  clean2.replaceAllIn("ba.se-01", "")             //> res26: String = base01
+  val numbers = "([0-9*][.,][0-9])".r             //> numbers  : scala.util.matching.Regex = ([0-9*][.,][0-9])
+  numbers.replaceAllIn("100", "")                 //> res27: String = 100
+  numbers.replaceAllIn(".", "")                   //> res28: String = .
+  numbers.replaceAllIn("100.00", "")              //> res29: String = 100
+
+  val arrayTest = Array(0, 1, 2, 3, -7, 89)       //> arrayTest  : Array[Int] = Array(0, 1, 2, 3, -7, 89)
+  arrayTest.toList                                //> res30: List[Int] = List(0, 1, 2, 3, -7, 89)
+  "ARG0-of".substring(0, 4)                       //> res31: String = ARG0
 
   val hyphen = "-".r                              //> hyphen  : scala.util.matching.Regex = -
   hyphen.split("anti-terrorism")                  //> res32: Array[String] = Array(anti, terrorism)
@@ -140,30 +141,22 @@ classifier == null                                //> res25: Boolean = true
   comparator.findFirstIn("best")                  //> res38: Option[String] = Some(est)
   comparator.findFirstIn("nester")                //> res39: Option[String] = Some(er)
   comparator.findFirstIn("estevan")               //> res40: Option[String] = None
-            val idFinder = """(# ::id [^:]*) ::.*""".r
-                                                  //> idFinder  : scala.util.matching.Regex = (# ::id [^:]*) ::.*
-            idFinder.findFirstIn("# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:07 ::annotator SDL-AMR-09 ::preferred")
+  val idFinder = """(# ::id [^:]*) ::.*""".r      //> idFinder  : scala.util.matching.Regex = (# ::id [^:]*) ::.*
+  idFinder.findFirstIn("# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:07 ::annotator SDL-AMR-09 ::preferred")
                                                   //> res41: Option[String] = Some(# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:0
                                                   //| 7 ::annotator SDL-AMR-09 ::preferred)
-"# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:07 ::annotator SDL-AMR-09 ::preferred" match {
-case idFinder(id) => id
-}                                                 //> res42: String = # ::id wb.c2e_0008.1
- DependencyTree.preProcess("two")                 //> Adding annotator tokenize
-                                                  //| Adding annotator ssplit
-                                                  //| Adding annotator parse
-                                                  //| Loading parser from serialized file edu/stanford/nlp/models/lexparser/engli
-                                                  //| shPCFG.ser.gz ... done [1.7 sec].
-                                                  //| Adding annotator lemma
-                                                  //| Adding annotator ner
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.all.3class.dist
-                                                  //| sim.crf.ser.gz ... done [4.3 sec].
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.muc.7class.dist
-                                                  //| sim.crf.ser.gz ... done [2.9 sec].
-                                                  //| Loading classifier from edu/stanford/nlp/models/ner/english.conll.4class.di
-                                                  //| stsim.crf.ser.gz ... done [7.5 sec].
-                                                  //| res43: List[String] = List(2)
-   DependencyTree.preProcess("One")               //> res44: List[String] = List(1)
-   
-   val mutaSeq = new Array[Int](5)                //> mutaSeq  : Array[Int] = Array(0, 0, 0, 0, 0)
-   mutaSeq(2) = 6
+  "# ::id wb.c2e_0008.1 ::date 2012-11-15T12:53:07 ::annotator SDL-AMR-09 ::preferred" match {
+    case idFinder(id) => id
+  }                                               //> res42: String = # ::id wb.c2e_0008.1
+
+  val mutaSeq = new Array[Int](5)                 //> mutaSeq  : Array[Int] = Array(0, 0, 0, 0, 0)
+  mutaSeq(2) = 6
+
+  val numericBoundary = """\b([0-9]+)([a-zA-Z]+)\b""".r
+                                                  //> numericBoundary  : scala.util.matching.Regex = \b([0-9]+)([a-zA-Z]+)\b
+  numericBoundary.replaceAllIn("23 rd", "$1 $2")  //> res43: String = 23 rd
+  numericBoundary.replaceAllIn("23rd", "$1 $2")   //> res44: String = 23 rd
+  numericBoundary.replaceAllIn("d20", "$1 $2")    //> res45: String = d20
+  numericBoundary.replaceAllIn("During the 1990s Sweden was hot.", "$1 $2")
+                                                  //> res46: String = During the 1990 s Sweden was hot.
 }

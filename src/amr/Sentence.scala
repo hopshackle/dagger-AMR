@@ -112,6 +112,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
   insertedNodes: Map[Int, (Int, String)], mergedNodes: Map[Int, List[(Int, String)]], swappedArcs: Set[(Int, Int)],
   deletedNodes: Map[Int, List[(Int, String)]]) extends Graph[Int] {
   val numbers = "[0-9.,]".r
+  val numbersAndColon = "[0-9.,:]".r
 
   def labelArc(parent: Int, child: Int, label: String): DependencyTree = {
     this.copy(arcs = arcs + ((parent, child) -> label))
@@ -246,7 +247,8 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       val quote = """""""
       val oldValue = nodes(node)
       val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
-      if (parentNodeIsName) quote + oldValue + quote else oldValue
+      val nodeRepresentsTime = oldValue.contains(":") && numbersAndColon.replaceAllIn(oldValue, "") == "" && numbers.replaceAllIn(oldValue, "") != ""
+      if (parentNodeIsName || nodeRepresentsTime) quote + oldValue + quote else oldValue
     }
 
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
@@ -399,6 +401,7 @@ object DependencyTree {
   var excludePunctuation = true
   val processor = new StanfordProcessor
   val numbers = "[0-9.,]".r
+  val numericBoundary = """\b([0-9]+)([a-zA-Z]+)\b""".r
 
   def preProcess(sentence: String): List[String] = {
     val parsedForDates = extractNumbers(extractDates(rehyphenate(sentence)))
@@ -420,7 +423,7 @@ object DependencyTree {
     val parseTree = monthFiddledTree zipWithIndex
 
     val nodes = (for {
-      (ConllToken(Some(index), Some(form), _, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
+      (ConllToken(Some(index), Some(form), _, pos, cpos, Some(lemma), Some(parentIndex), Some(deprel), phead, ner), wordCount) <- parseTree
     } yield (index -> form)).toMap
 
     val arcs = (for {
@@ -501,10 +504,10 @@ object DependencyTree {
         number + " "
       case other => ""
     })
-    val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (thousand|million|billion)[ -]""".r
+    val realNumbers = """((?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+)) (hundred|thousand|million|billion)[ -]""".r
     output = realNumbers replaceAllIn (output, _ match {
       case realNumbers(number, multiple) =>
-        val replacement = number.toDouble * (multiple match { case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
+        val replacement = number.toDouble * (multiple match { case "hundred" => 100; case "thousand" => 1000; case "million" => 1000000; case "billion" => 1000000000 });
         f"$replacement%.0f "
       case other => ""
     })
@@ -513,7 +516,10 @@ object DependencyTree {
     dollars.replaceAllIn(output, "dollars ")
   }
 
-  def rehyphenate(text: String): String = text.replaceAll(" - ", "-").replaceAll(" @-@ ", "-")
+  def rehyphenate(text: String): String = {
+    var output = text.replaceAll(" - ", "-").replaceAll(" @-@ ", "-")
+    numericBoundary.replaceAllIn(output, "$1 $2") 
+  }
 }
 
 object AMRGraph {

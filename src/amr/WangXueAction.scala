@@ -436,7 +436,7 @@ case object ReversePolarity extends WangXueAction {
 }
 
 object InsertBelow {
-    def all(): Array[WangXueAction] = {
+  def all(): Array[WangXueAction] = {
     (subInsertableConcepts.values.flatten.toList.distinct.map(i => Insert(conceptIndex(i)))).toArray
   }
 }
@@ -559,7 +559,7 @@ object Wikify {
     (if (reverse) sortedNodes.reverse else sortedNodes) map conf.currentGraph.nodes mkString ("_")
   }
   def isConcatenationOfNameArgs(amr: AMRGraph, node: String, wikification: String): Boolean = {
-    (wikification.replaceAll(quoteString, "") == forwardConcatenationOfNameArgs(amr, node)) 
+    (wikification.replaceAll(quoteString, "") == forwardConcatenationOfNameArgs(amr, node))
   }
   def forwardConcatenationOfNameArgs[K](amr: Graph[K], node: K): String = {
     sortedNameNodes(amr, node) map amr.nodes mkString ("_") replaceAll (quoteString, "")

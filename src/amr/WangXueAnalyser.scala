@@ -31,10 +31,10 @@ object WangXueAnalyser {
         outputFile2.write(s"$k\t${v._1}\t${v._2.mkString("\t")}\n")
     }
     outputFile2.close
-    
+
     val featureIndex = new MapIndex
     featureIndex.initialiseFromFile(options.getString("--featureIndex"))
-    
-    InstanceAnalyser.featureDescription(instances.iterator, 10, (i => featureIndex.elem(i)), options.DAGGER_OUTPUT_PATH + "ErrorFeatureDetail.txt")
+
+    InstanceAnalyser.featureDescription(instances.iterator, options.getInt("--errorAnalysisThreshold", 10), (i => featureIndex.elem(i)), options.DAGGER_OUTPUT_PATH + "ErrorFeatureDetail.txt")
   }
 }
