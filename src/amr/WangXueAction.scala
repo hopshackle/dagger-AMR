@@ -521,7 +521,7 @@ case class Wikify(wikiString: String) extends WangXueAction {
     val graph = conf.currentGraph
     val stringToUse = wikiString match {
       case "FORWARD" => forwardWikiString(conf)
-      case "DEFAULT" => wikifications.getOrElse(graph.nodes(sigma) + ":" + forwardConcatenationOfNameArgs(graph, sigma), "-")
+      case "DEFAULT" => wikifications.getOrElse(graph.nodes(sigma) + "|" + forwardConcatenationOfNameArgs(graph, sigma), "-")
       case _ => wikiString.replaceAll(quoteString, "")
     }
     val (newNode, tree) = conf.currentGraph.insertNodeBelow(conf.nodesToProcess.head, quoteString + stringToUse + quoteString, "", "wiki")
@@ -544,7 +544,7 @@ object Wikify {
   def hasExactMatch(state: WangXueTransitionState): Boolean = {
     val sigma = state.nodesToProcess.head
     val graph = state.currentGraph
-    wikifications contains (graph.nodes(sigma) + ":" + forwardConcatenationOfNameArgs(graph, sigma))
+    wikifications contains (graph.nodes(sigma) + "|" + forwardConcatenationOfNameArgs(graph, sigma))
   }
   def isWikified(state: WangXueTransitionState): Boolean = {
     state.nodesToProcess.headOption match {

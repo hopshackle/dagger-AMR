@@ -214,7 +214,7 @@ class WangXueExpert extends WangXueExpertBasic {
       case "" => ""
       case `forward` => "FORWARD"
       //    case `backward` => "BACKWARD"
-      case _ => fullWikiString
+      case _ => "DEFAULT"
     }
   }
 

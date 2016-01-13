@@ -34,7 +34,11 @@ object WangXueAnalyser {
 
     val featureIndex = new MapIndex
     featureIndex.initialiseFromFile(options.getString("--featureIndex"))
+    val classifierFile = options.getString("--classifier", "")
+    val classifier = if (classifierFile == "") null.asInstanceOf[AROWClassifier[WangXueAction]] else
+      AROWClassifier.fromFile(classifierFile, y => WangXueAction.construct(y))
 
-    InstanceAnalyser.featureDescription(instances.iterator, options.getInt("--errorAnalysisThreshold", 10), (i => featureIndex.elem(i)), options.DAGGER_OUTPUT_PATH + "ErrorFeatureDetail.txt")
+    InstanceAnalyser.featureDescription[WangXueTransitionState, WangXueAction](instances.iterator, options.getInt("--errorAnalysisThreshold", 10), (i => featureIndex.elem(i)),
+      options.DAGGER_OUTPUT_PATH + "ErrorFeatureDetail.txt", classifier)
   }
 }
