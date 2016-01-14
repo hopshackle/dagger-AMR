@@ -76,15 +76,16 @@ object FeatureAnalyser {
 
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     ImportConcepts.loadFromFile = true
-//    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
+    //    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
 
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
     WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
-    WangXueFeatures.includeShenanigans = (options.getString("--WXfeatures", "") contains "S")
+    WangXueFeatures.includeSiblings = (options.getString("--WXfeatures", "") contains "S")
     WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
     WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
     WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
+    WangXueFeatures.includeKappaChildren = (options.getString("--WXfeatures", "") contains "K")
     WangXueFeatures.includeWordNet = (options.getString("--WXfeatures", "") contains "H")
     if (WangXueFeatures.includeWordNet) {
       val fString = options.getString("--WXfeatures", "")

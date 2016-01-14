@@ -247,8 +247,9 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       val quote = """""""
       val oldValue = nodes(node)
       val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
+      val parentNodeIsEra = (parentsOf(node) map nodes contains "era") && !(oldValue contains quote)
       val nodeRepresentsTime = oldValue.contains(":") && numbersAndColon.replaceAllIn(oldValue, "") == "" && numbers.replaceAllIn(oldValue, "") != ""
-      if (parentNodeIsName || nodeRepresentsTime) quote + oldValue + quote else oldValue
+      if (parentNodeIsName || parentNodeIsEra || nodeRepresentsTime) quote + oldValue + quote else oldValue
     }
 
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
@@ -518,7 +519,7 @@ object DependencyTree {
 
   def rehyphenate(text: String): String = {
     var output = text.replaceAll(" - ", "-").replaceAll(" @-@ ", "-")
-    numericBoundary.replaceAllIn(output, "$1 $2") 
+    numericBoundary.replaceAllIn(output, "$1 $2")
   }
 }
 

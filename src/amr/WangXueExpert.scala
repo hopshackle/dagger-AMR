@@ -76,7 +76,7 @@ class WangXueExpert extends WangXueExpertBasic {
 
     val needsToBeWikified = SIGMAAMR match {
       case None => false
-      case Some(sigma) => WangXueTransitionSystem.wikification && !Wikify.isWikified(state) && getWikiString(data.amr.get, sigma) != ""
+      case Some(sigma) => (WangXueTransitionSystem.wikification && !Wikify.isWikified(state) && !(getWikiString(data.amr.get, sigma) == ""))
     }
 
     val kappa = unlinkedAMRChildren.toList map fullMapAMRtoDT filter state.currentGraph.nodes.contains filter (Reentrance(_).isPermissible(state))
@@ -211,10 +211,10 @@ class WangXueExpert extends WangXueExpertBasic {
     //   val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
     val quoteString = """""""
     fullWikiString.replaceAll(quoteString, "") match {
-      case "" => ""
+      case "" => ""  // i.e. there is no need to wikify at all
       case `forward` => "FORWARD"
       //    case `backward` => "BACKWARD"
-      case _ => "DEFAULT"
+      case _ => "-"  // we have made an earlier mistake...so we maximise our score by not adding a wikification at all
     }
   }
 
