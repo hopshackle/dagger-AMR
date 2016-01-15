@@ -529,7 +529,7 @@ case class Wikify(wikiString: String) extends WangXueAction {
       processedNodes = conf.processedNodes + newNode).fastForward
   }
   override def toString: String = "Wikify: " + wikiString
-  override def name: String = "Wikify:" + wikiString
+  override def name: String = "Wikify" + wikiString
   override def isPermissible(state: WangXueTransitionState): Boolean = WangXueTransitionSystem.wikification &&
     state.phase == 2 && state.childrenToProcess.isEmpty && state.nodesToProcess.nonEmpty && !isWikified(state) && {
       state.currentGraph.arcs exists { case ((from, to), edgeName) => from == state.nodesToProcess.head && edgeName == "name" }
