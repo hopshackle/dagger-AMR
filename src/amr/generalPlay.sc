@@ -19,9 +19,8 @@ object generalPlay {
   val testMap: Map[Int, Double] = Map((2 -> 1.0), (3 -> 67.0), (56 -> 4.56), (1 -> 99.0), (40 -> 0.013))
                                                   //> testMap  : Map[Int,Double] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0,
                                                   //|  40 -> 0.013)
-  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal{def getClass(): Class[_ >: D
-                                                  //| ouble with Int <: AnyVal]}] = Map(56 -> 4.56, 1 -> 99.0, 2 -> 1.0, 3 -> 67.0
-                                                  //| , 40 -> 0.013, 4 -> 9)
+  testMap + (4 -> 9)                              //> res8: scala.collection.immutable.Map[Int,AnyVal] = Map(56 -> 4.56, 1 -> 99.0
+                                                  //| , 2 -> 1.0, 3 -> 67.0, 40 -> 0.013, 4 -> 9)
   val keys = testMap.keys.toList.sorted           //> keys  : List[Int] = List(1, 2, 3, 40, 56)
   val combo = for {
     f1 <- keys
@@ -159,4 +158,13 @@ object generalPlay {
   numericBoundary.replaceAllIn("d20", "$1 $2")    //> res45: String = d20
   numericBoundary.replaceAllIn("During the 1990s Sweden was hot.", "$1 $2")
                                                   //> res46: String = During the 1990 s Sweden was hot.
+                                                  
+  val tupleToSort: List[(String, Double)] = List(("a", 0.3), ("b", 67), ("c", -0.5), ("d", 0.0), ("e", 20))
+                                                  //> tupleToSort  : List[(String, Double)] = List((a,0.3), (b,67.0), (c,-0.5), (
+                                                  //| d,0.0), (e,20.0))
+  tupleToSort.sortBy(-_._2)                       //> res47: List[(String, Double)] = List((b,67.0), (e,20.0), (a,0.3), (d,0.0), 
+                                                  //| (c,-0.5))
+   tupleToSort.sortBy(_._2)                       //> res48: List[(String, Double)] = List((c,-0.5), (d,0.0), (a,0.3), (e,20.0), 
+                                                  //| (b,67.0))
+      tupleToSort.sortBy(-_._2).take(2)           //> res49: List[(String, Double)] = List((b,67.0), (e,20.0))
 }

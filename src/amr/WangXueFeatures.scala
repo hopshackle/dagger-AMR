@@ -256,7 +256,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     if (includeSiblings) {
       val sigmaParents = state.currentGraph.parentsOf(sigma)
-      val siblings = sigmaParents map state.currentGraph.childrenOf(sigma) diff List(sigma) distinct
+      val siblings = sigmaParents flatMap state.currentGraph.childrenOf diff List(sigma) distinct
 
       if (siblings.nonEmpty) {
         add(hmap, "S-SIB-NO=" + siblings.size)

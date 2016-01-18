@@ -80,7 +80,12 @@ object RunDagger {
     val filteredTrainingData = trainData filter { s => s.amr.get.nodes.size <= maxNodesForTraining }
 
     val devFile = options.getString("--validation.data", "")
-    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr, id) => Sentence(english, amr, id) }
+    val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map {
+      case (english, amr, id) => {
+        val mappedAMR = AMRGraph(amr, english, id)
+        Sentence(english, Some(mappedAMR), id)
+      }
+    }
 
     val lemmaReplacement = options.getString("--lemmaReplace", "None")
     val correctedDevData = lemmaReplacement match {
