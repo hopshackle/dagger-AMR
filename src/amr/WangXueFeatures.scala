@@ -137,12 +137,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
       hyper foreach { h => add(hmap, "S-HYP=" + h) }
     }
 
+    /*
     val mergedNodes = state.currentGraph.mergedNodes.get(sigma) match {
       case None => Nil
       case Some(mergedNodes) => mergedNodes
     }
     mergedNodes foreach { case (n, label) => add(hmap, "S-REPH=" + label) }
-
+*/
     if (includeDeletions) {
       val deletedNodes = state.currentGraph.deletedNodes.get(sigma) match {
         case None => Nil
@@ -236,7 +237,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             if (childNER != "") add(hmap, "C-NER=" + childNER)
             if (childLemma != "") {
               add(hmap, "C-LEM-LAB=" + childLemma + "-" + label)
-              add(hmap, "C-LEM=" + childLemma)
+    //          add(hmap, "C-LEM=" + childLemma)
               if (includeWordNet) {
                 val childHypernyms = getHypernyms(childLemma, childPOS)
                 childHypernyms foreach { h => add(hmap, "C-HYP=" + h) }
@@ -338,7 +339,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     // WangXue features
     if (sigmaLemma != "" && betaPOS != "") add(hmap, "S-LEM-B-POS=" + sigmaLemma + "-" + betaPOS)
-    if (sigmaLemma != "" && sigmaDL != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + sigmaDL)
+ //   if (sigmaLemma != "" && sigmaDL != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + sigmaDL)
     if (sigmaPOS != "" && betaLemma != "") add(hmap, "S-POS-B-LEM=" + sigmaPOS + "-" + betaLemma)
     if (sigmaDL != "" && betaLemma != "") add(hmap, "S-DL-B-LEM=" + sigmaDL + "-" + betaLemma)
     if (sigmaLemma != "" && betaDL != "") add(hmap, "B-DL-S-LEM=" + betaDL + "-" + betaLemma)
@@ -349,7 +350,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     // end WangXue binaries
 
     if (distance > 0) add(hmap, "SIGMA-BETA-DISTANCE", distance)
-    add(hmap, "S-B-DISTANCE=" + distance) // distance indicator feature
+ //   add(hmap, "S-B-DISTANCE=" + distance) // distance indicator feature
     if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     if (betaPOS != "") add(hmap, "B-POS=" + betaPOS)
     if (betaLemma != "") add(hmap, "B-LEM=" + betaLemma)
@@ -498,7 +499,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           }
           if (sigmaDTNode != kappaDTNode) {
             val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
-            add(hmap, "K-S-PATH=" + path)
+     //       add(hmap, "K-S-PATH=" + path)
             add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
             //        add(hmap, "K-S-PATH-DIST=" + distance + "-" + path)
             val NERPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, true, false)

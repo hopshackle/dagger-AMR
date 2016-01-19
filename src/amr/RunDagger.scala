@@ -76,8 +76,6 @@ object RunDagger {
   def testDAGGERrun[S <: TransitionState, A <: TransitionAction[S]](options: DAGGEROptions): Unit = {
 
     val trainData = initialiseAndGetTrainingData(options)
-    val maxNodesForTraining = options.getInt("--maxTrainingSize", 100)
-    val filteredTrainingData = trainData filter { s => s.amr.get.nodes.size <= maxNodesForTraining }
 
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map {
@@ -111,7 +109,7 @@ object RunDagger {
     ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
 
     val startingClassifier = if (options.contains("--prelimOracleRun")) {
-      val sc = oracleRun[A](options, featureIndex, filteredTrainingData, correctedDevData)
+      val sc = oracleRun[A](options, featureIndex, trainData, correctedDevData)
       sc.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingClassifier.txt", x => x.name)
       featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingFeatureIndex.txt")
       sc
@@ -131,7 +129,7 @@ object RunDagger {
       val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
       val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
       val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
-      val classifier = dagger.train(filteredTrainingData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
+      val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
         actionToString = if (fileCache) (x => x.name) else null,
         stringToAction = if (fileCache) (y => WangXueAction.construct(y)) else null,
         AMROutput.AMROutputFunction,
@@ -142,7 +140,7 @@ object RunDagger {
       val dagger = new DAGGER[Sentence, ClassicAction, ClassicTransitionState](options)
       val classicFeatures = new ClassicFeatureFactory(options, featureIndex)
       val lossFunctionFactory = new ClassicLossFunctionFactory(lossToUse)
-      val classifier = dagger.train(filteredTrainingData, new ClassicExpert, classicFeatures, ClassicTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
+      val classifier = dagger.train(trainData, new ClassicExpert, classicFeatures, ClassicTransitionSystem, lossFunctionFactory, correctedDevData, corpusSmatchScore(options),
         actionToString = if (fileCache) (x => x.name) else null,
         stringToAction = if (fileCache) (y => ClassicAction.construct(y)) else null,
         AMROutput.AMROutputFunction,
@@ -258,6 +256,7 @@ object RunDagger {
     newOptions.addOption("--fileCache", "false")
     newOptions.addOption("--dagger.iterations", "1")
     newOptions.addOption("--algorithm", "Dagger")
+    newOptions.addOption("--minTrainingSize", options.getInt("--maxTrainingSize").toString)
     val lossToUse = options.getString("--lossFunction", "")
 
     val (sc, aa) = if (options.getBoolean("--WangXue", true)) {
