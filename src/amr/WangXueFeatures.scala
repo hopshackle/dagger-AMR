@@ -12,8 +12,14 @@ import dagger.core._
 import Wordnet._
 
 class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
+
+  val brownCluster = options.getString("--brownCluster", "") match {
+    case "" => null.asInstanceOf[BrownCluster]
+    case fileName => new BrownCluster(fileName)
+  }
+
   override def newFeatureFunction: FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] = {
-    new WangXueFeatures(options, dict)
+    new WangXueFeatures(options, dict, brownCluster)
   }
 }
 
@@ -31,18 +37,32 @@ object WangXueFeatures {
   val idFountain = new AtomicLong(1)
 }
 
-class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
+class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCluster) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
   import scala.collection.JavaConversions.mapAsScalaMap
   import WangXueFeatures._
 
   val random = new Random()
+  val useBrown = brownCluster != null
   var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
   var cachedState: WangXueTransitionState = null
   var hypernymMap = new ConcurrentHashMap[String, Seq[String]]();
 
   def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
+  }
+
+  def addBrownClusters(map: gnu.trove.map.hash.THashMap[Int, Float], wordForms: List[String], feature: String, featureName: String) {
+    val clusterNames = brownCluster.getBrownClusters(wordForms)
+    clusterNames foreach { c => add(map, featureName + "-BRN=" + feature + "-" + c) }
+  }
+  def addBrownClusters(map: gnu.trove.map.hash.THashMap[Int, Float], wordForms1: List[String], wordForms2: List[String],
+    feature: String, featureName: String) {
+    val clusterNames1 = brownCluster.getBrownClusters(wordForms1)
+    val clusterNames2 = brownCluster.getBrownClusters(wordForms2)
+    clusterNames1 foreach {
+      c1 => clusterNames2 foreach { c2 => add(map, featureName + "-BRN=" + feature + "-" + c1 + "-" + c2) }
+    }
   }
 
   override def featureName(key: Int): String = dict.elem(key)
@@ -125,7 +145,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
     val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
     if (sigmaPOS != "") add(hmap, "S-POS=" + sigmaPOS)
-    if (sigmaLemma != "") add(hmap, "S-LEM=" + sigmaLemma)
+    if (sigmaLemma != "") {
+      add(hmap, "S-LEM=" + sigmaLemma)
+      if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), "", "S")
+    }
     if (sigmaWord != sigmaLemma && includeWords) add(hmap, "S-WRD=" + sigmaWord)
     if (sigmaNER != "") add(hmap, "S-NER=" + sigmaNER)
     if (sigmaInserted) add(hmap, "S-INSERTED")
@@ -201,6 +224,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
             if (includeWords) add(hmap, "P-S-WRD=" + parentWord + "-" + sigmaWord)
             add(hmap, "P-S-LEM=" + parentLemma + "-" + sigmaLemma)
+            if (useBrown) addBrownClusters(hmap, List(parentWord, parentLemma), sigmaLemma, "S-LEM-P")
             //         if (parentLemma != "" && sigmaPOS != "") add(hmap, "P-LEM-S-POS=" + parentLemma + "-" + sigmaPOS)
             if (parentPOS != "" && sigmaLemma != "") add(hmap, "P-POS-S-LEM=" + parentPOS + "-" + sigmaLemma)
             if (parentDL != "" && sigmaLemma != "") add(hmap, "P-DL-S-LEM=" + parentDL + "-" + sigmaLemma)
@@ -237,7 +261,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             if (childNER != "") add(hmap, "C-NER=" + childNER)
             if (childLemma != "") {
               add(hmap, "C-LEM-LAB=" + childLemma + "-" + label)
-    //          add(hmap, "C-LEM=" + childLemma)
+              if (useBrown) addBrownClusters(hmap, List(childWord, childLemma), label, "C-LAB")
+              //          add(hmap, "C-LEM=" + childLemma)
               if (includeWordNet) {
                 val childHypernyms = getHypernyms(childLemma, childPOS)
                 childHypernyms foreach { h => add(hmap, "C-HYP=" + h) }
@@ -339,10 +364,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
 
     // WangXue features
     if (sigmaLemma != "" && betaPOS != "") add(hmap, "S-LEM-B-POS=" + sigmaLemma + "-" + betaPOS)
- //   if (sigmaLemma != "" && sigmaDL != "") add(hmap, "S-LEM-B-DL=" + sigmaLemma + "-" + sigmaDL)
+    if (sigmaLemma != "" && sigmaDL != "") add(hmap, "S-LEM-DL=" + sigmaLemma + "-" + sigmaDL)
     if (sigmaPOS != "" && betaLemma != "") add(hmap, "S-POS-B-LEM=" + sigmaPOS + "-" + betaLemma)
     if (sigmaDL != "" && betaLemma != "") add(hmap, "S-DL-B-LEM=" + sigmaDL + "-" + betaLemma)
-    if (sigmaLemma != "" && betaDL != "") add(hmap, "B-DL-S-LEM=" + betaDL + "-" + betaLemma)
+    if (sigmaLemma != "" && betaDL != "") add(hmap, "B-DL-S-LEM=" + betaDL + "-" + sigmaLemma)
     if (sigmaLemma != "" && label != "" && label != sigmaDL) add(hmap, "S-LEM-LAB=" + sigmaLemma + "-" + label)
     if (betaLemma != "" && label != "") add(hmap, "LAB-B-LEM=" + label + "-" + betaLemma)
     if (sigmaNER != "" && betaNER != "") add(hmap, "S-B-NER=" + sigmaNER + "-" + betaNER)
@@ -350,10 +375,13 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     // end WangXue binaries
 
     if (distance > 0) add(hmap, "SIGMA-BETA-DISTANCE", distance)
- //   add(hmap, "S-B-DISTANCE=" + distance) // distance indicator feature
+    //   add(hmap, "S-B-DISTANCE=" + distance) // distance indicator feature
     if (sigmaPosition == 0 || betaPosition == 0) add(hmap, "SIGMA-BETA-DISTANCE-UNKNOWN")
     if (betaPOS != "") add(hmap, "B-POS=" + betaPOS)
-    if (betaLemma != "") add(hmap, "B-LEM=" + betaLemma)
+    if (betaLemma != "") {
+      add(hmap, "B-LEM=" + betaLemma)
+      if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), "", "B")
+    }
     if (betaLemma != betaWord && includeWords) add(hmap, "B-WRD=" + betaWord)
     if (betaNER != "") add(hmap, "B-NER=" + betaNER)
     if (betaDL != "") add(hmap, "B-DL=" + betaDL)
@@ -399,7 +427,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     if (kappaInserted) add(hmap, "KAPPA-INSERTED")
     if (kappaNER != "") add(hmap, "K-NER=" + kappaNER)
     if (kappaPOS != "") add(hmap, "K-POS=" + kappaPOS)
-    if (kappaLemma != "") add(hmap, "K-LEM=" + kappaLemma)
+    if (kappaLemma != "") {
+      add(hmap, "K-LEM=" + kappaLemma)
+      if (useBrown) addBrownClusters(hmap, List(kappaWord, kappaLemma), "", "K")
+
+    }
     if (includeWords && kappaWord != kappaLemma) add(hmap, "K-WRD=" + kappaWord)
     //    if (kappaInserted && betaInserted) add(hmap, "KAPPA-BETA-INSERTED")
     //    add(hmap, "KAPPA-BETA-WORDS=" + kappaWord + "-" + betaWord)
@@ -409,7 +441,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
     val kappaDL = state.currentGraph.depLabels.getOrElse(parameterNode, "") // state.startingDT.edgesToParents(parameterNode) map state.startingDT.arcs
     val kappaParents = state.currentGraph.parentsOf(parameterNode)
     val kappaLabels = kappaParents map (state.currentGraph.arcs(_, parameterNode))
-    for (kl <- kappaLabels) if (kl != kappaDL) add(hmap, "K-LAB=" + kl)
+    for (kl <- kappaLabels) if (kl != kappaDL) {
+      add(hmap, "K-LAB=" + kl)
+      if (useBrown) addBrownClusters(hmap, List(kappaWord, kappaLemma), kl, "K-LAB")
+    }
     //    if (kappaDL != "") add(hmap, "K-DL=" + kappaDL)
     if (includeWordNet) {
       val kappaHypernyms = getHypernyms(kappaLemma, kappaPOS)
@@ -436,6 +471,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             val path = state.startingDT.getPathBetween(betaDTNode, kappaDTNode)
             add(hmap, "K-B-PATH=" + path)
             add(hmap, "K-B-PATH-LEM=" + kappaLemma + "-" + path + "-" + betaLemma)
+            if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), path, "K-B-PATH")
             //        add(hmap, "K-B-PATH-DIST=" + distance + "-" + path)
             val NERPath = state.startingDT.getPathBetween(betaDTNode, kappaDTNode, true, false)
             add(hmap, "K-B-NER-PATH=" + NERPath)
@@ -443,6 +479,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
             add(hmap, "K-B-POS-PATH=" + POSPath)
           } else {
             add(hmap, "K-B-PATH-LEM=" + kappaLemma + "-" + betaLemma)
+            if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), "", "K-B-PATH")
           }
         }
         add(hmap, "K-B-DIST=" + distance) // distance indicator feature
@@ -488,6 +525,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
         val distance = if (kappaPosition > 0 && sigmaPosition > 0) Math.abs(kappaPosition - sigmaPosition) else 0
         val sigmaPOS = state.currentGraph.nodePOS.getOrElse(sigma, "")
         val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
+        val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "")
         val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
         if (distance > 0) add(hmap, "K-S-DIST", distance)
         if (sigmaPosition > 0 && kappaPosition > 0) {
@@ -499,15 +537,17 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index) extends FeatureFuncti
           }
           if (sigmaDTNode != kappaDTNode) {
             val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
-     //       add(hmap, "K-S-PATH=" + path)
+            //       add(hmap, "K-S-PATH=" + path)
             add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
             //        add(hmap, "K-S-PATH-DIST=" + distance + "-" + path)
+            if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), path, "K-S-PATH")
             val NERPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, true, false)
             add(hmap, "K-S-NER-PATH=" + NERPath)
             val POSPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, false, false)
             add(hmap, "K-S-POS-PATH=" + POSPath)
           } else {
             add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + sigmaLemma)
+            if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-PATH")
           }
         }
         add(hmap, "K-S-DIST=" + distance) // distance indicator feature
