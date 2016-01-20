@@ -471,7 +471,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             val path = state.startingDT.getPathBetween(betaDTNode, kappaDTNode)
             add(hmap, "K-B-PATH=" + path)
             add(hmap, "K-B-PATH-LEM=" + kappaLemma + "-" + path + "-" + betaLemma)
-            if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), path, "K-B-PATH")
+   //         if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), path, "K-B-PATH")
             //        add(hmap, "K-B-PATH-DIST=" + distance + "-" + path)
             val NERPath = state.startingDT.getPathBetween(betaDTNode, kappaDTNode, true, false)
             add(hmap, "K-B-NER-PATH=" + NERPath)
@@ -479,7 +479,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             add(hmap, "K-B-POS-PATH=" + POSPath)
           } else {
             add(hmap, "K-B-PATH-LEM=" + kappaLemma + "-" + betaLemma)
-            if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), "", "K-B-PATH")
+       //     if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), "", "K-B-PATH")
           }
         }
         add(hmap, "K-B-DIST=" + distance) // distance indicator feature
@@ -540,14 +540,14 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             //       add(hmap, "K-S-PATH=" + path)
             add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
             //        add(hmap, "K-S-PATH-DIST=" + distance + "-" + path)
-            if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), path, "K-S-PATH")
+  //          if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), path, "K-S-PATH")
             val NERPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, true, false)
             add(hmap, "K-S-NER-PATH=" + NERPath)
             val POSPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, false, false)
             add(hmap, "K-S-POS-PATH=" + POSPath)
           } else {
             add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + sigmaLemma)
-            if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-PATH")
+ //           if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-PATH")
           }
         }
         add(hmap, "K-S-DIST=" + distance) // distance indicator feature
