@@ -257,10 +257,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             //             if (state.currentGraph.insertedNodes contains sigma) add(hmap, "S-C-BOTH-INSERTED")
             //           }
             if (label != "") add(hmap, "C-S-LAB=" + label)
-            if (childPOS != "") add(hmap, "C-POS=" + childPOS)
+            //           if (childPOS != "") add(hmap, "C-POS=" + childPOS)
             if (childNER != "") add(hmap, "C-NER=" + childNER)
             if (childLemma != "") {
-              add(hmap, "C-LEM-LAB=" + childLemma + "-" + label)
+              //        add(hmap, "C-LEM-LAB=" + childLemma + "-" + label)
               if (useBrown) addBrownClusters(hmap, List(childWord, childLemma), label, "C-LAB")
               //          add(hmap, "C-LEM=" + childLemma)
               if (includeWordNet) {
@@ -270,7 +270,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
               //          add(hmap, "S-C-LEM=" + sigmaLemma + "-" + childLemma)
               if (childLemma != "" && sigmaPOS != "") add(hmap, "C-LEM-S-POS=" + childLemma + "-" + sigmaPOS)
               if (childPOS != "" && sigmaLemma != "") add(hmap, "C-POS-S-LEM=" + childPOS + "-" + sigmaLemma)
-              if (label != "" && sigmaLemma != "") add(hmap, "C-DL-S-LEM=" + label + "-" + sigmaLemma)
+              //         if (label != "" && sigmaLemma != "") add(hmap, "C-DL-S-LEM=" + label + "-" + sigmaLemma)
               if (childLemma != "" && sigmaDL != "") add(hmap, "C-LEM-S-DL=" + childLemma + "-" + sigmaDL)
               if (childNER != "" && sigmaNER != "") add(hmap, "C-S-NER=" + childNER + "-" + sigmaNER)
 
@@ -284,25 +284,21 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
       val sigmaParents = state.currentGraph.parentsOf(sigma)
       val siblings = sigmaParents flatMap state.currentGraph.childrenOf diff List(sigma) distinct
 
-      if (siblings.nonEmpty) {
-        add(hmap, "S-SIB-NO=" + siblings.size)
-        val siblingLabels = for {
+      def siblingDetails: Seq[(Int, String)] = {
+        for {
           sibling <- siblings
           parent <- sigmaParents
           label <- state.currentGraph.labelsBetween(parent, sibling)
         } yield (sibling, label)
+      }
 
-        siblingLabels foreach {
-          case (sibling, label) =>
-            val siblingLemma = state.currentGraph.nodeLemmas.getOrElse(sibling, "")
-            val siblingPOS = state.currentGraph.nodePOS.getOrElse(sibling, "")
-            if (label != "") add(hmap, "SIB-LAB=" + label)
-            if (siblingPOS != "") add(hmap, "SIB-POS=" + siblingPOS)
-            if (siblingLemma != "") {
-              add(hmap, "SIB-LEM-LAB=" + siblingLemma + "-" + label)
-              add(hmap, "SIB-LEM=" + siblingLemma)
-              if (siblingLemma != "" && siblingPOS != "") add(hmap, "SIB-LEM-POS=" + siblingLemma + "-" + siblingPOS)
-            }
+      if (siblings.nonEmpty) {
+        (state.childrenToProcess, action.isInstanceOf[hasNodeAsParameter]) match {
+          case (Nil, false) => // include sibling nodes
+            siblingDetails foreach { x => add(hmap, "SIB-LAB=" + x._1) }
+          case (head :: tail, false) => // include sibling labels
+            siblingDetails foreach { x => add(hmap, "SIB-LAB=" + x._2) }
+          case _ => // do nothing
         }
       }
     }
@@ -351,8 +347,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
         add(hmap, "S-B-PATH=" + path)
         add(hmap, "S-B-PATH-LEM=" + sigmaLemma + "-" + path + "-" + betaLemma)
         //     add(hmap, "S-B-PATH-DIST=" + distance + "-" + path)
-        val NERPath = state.startingDT.getPathBetween(sigmaDTNode, betaDTNode, true, false)
-        add(hmap, "S-B-NER-PATH=" + NERPath)
+        //      val NERPath = state.startingDT.getPathBetween(sigmaDTNode, betaDTNode, true, false)
+        //      add(hmap, "S-B-NER-PATH=" + NERPath)
         val POSPath = state.startingDT.getPathBetween(sigmaDTNode, betaDTNode, false, false)
         add(hmap, "S-B-POS-PATH=" + POSPath)
       }
@@ -424,7 +420,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
     val kappaNER = state.currentGraph.nodeNER.getOrElse(parameterNode, "")
     val kappaInserted = state.currentGraph.insertedNodes contains parameterNode
 
-    if (kappaInserted) add(hmap, "KAPPA-INSERTED")
+    //  if (kappaInserted) add(hmap, "KAPPA-INSERTED")
     if (kappaNER != "") add(hmap, "K-NER=" + kappaNER)
     if (kappaPOS != "") add(hmap, "K-POS=" + kappaPOS)
     if (kappaLemma != "") {
@@ -471,7 +467,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             val path = state.startingDT.getPathBetween(betaDTNode, kappaDTNode)
             add(hmap, "K-B-PATH=" + path)
             add(hmap, "K-B-PATH-LEM=" + kappaLemma + "-" + path + "-" + betaLemma)
-   //         if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), path, "K-B-PATH")
+            //         if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), path, "K-B-PATH")
             //        add(hmap, "K-B-PATH-DIST=" + distance + "-" + path)
             val NERPath = state.startingDT.getPathBetween(betaDTNode, kappaDTNode, true, false)
             add(hmap, "K-B-NER-PATH=" + NERPath)
@@ -479,7 +475,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             add(hmap, "K-B-POS-PATH=" + POSPath)
           } else {
             add(hmap, "K-B-PATH-LEM=" + kappaLemma + "-" + betaLemma)
-       //     if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), "", "K-B-PATH")
+            //     if (useBrown) addBrownClusters(hmap, List(betaWord, betaLemma), List(kappaWord, kappaLemma), "", "K-B-PATH")
           }
         }
         add(hmap, "K-B-DIST=" + distance) // distance indicator feature
@@ -496,7 +492,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
         if (includeKappaChildren) {
           val kappaChildren = state.currentGraph.childrenOf(parameterNode)
           if (kappaChildren.nonEmpty) {
-            add(hmap, "C-K-NO=" + kappaChildren.size)
+            //            add(hmap, "C-K-NO=" + kappaChildren.size)
             val childrenLabelCombos = for {
               child <- kappaChildren
               label <- state.currentGraph.labelsBetween(parameterNode, child)
@@ -527,7 +523,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
         val sigmaLemma = state.currentGraph.nodeLemmas.getOrElse(sigma, "")
         val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "")
         val sigmaNER = state.currentGraph.nodeNER.getOrElse(sigma, "")
-        if (distance > 0) add(hmap, "K-S-DIST", distance)
+        if (distance > 0) {
+          add(hmap, "K-S-DIST", distance)
+          //        if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), distance.toString, "K-S-BRN-DIST")
+        }
         if (sigmaPosition > 0 && kappaPosition > 0) {
           val sigmaDTNode = if (!sigmaInserted) sigma else {
             (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == sigmaPosition } map { case (node, (_, _)) => node }).toSeq(0)
@@ -536,18 +535,18 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == kappaPosition } map { case (node, (_, _)) => node }).toSeq(0)
           }
           if (sigmaDTNode != kappaDTNode) {
-            val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
+    //        val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
             //       add(hmap, "K-S-PATH=" + path)
-            add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
+    //        add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
             //        add(hmap, "K-S-PATH-DIST=" + distance + "-" + path)
-  //          if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), path, "K-S-PATH")
+            if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-BRN")
             val NERPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, true, false)
             add(hmap, "K-S-NER-PATH=" + NERPath)
             val POSPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, false, false)
             add(hmap, "K-S-POS-PATH=" + POSPath)
           } else {
             add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + sigmaLemma)
- //           if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-PATH")
+            if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-BRN")
           }
         }
         add(hmap, "K-S-DIST=" + distance) // distance indicator feature
@@ -555,6 +554,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
         val sigmaDL = state.currentGraph.depLabels.getOrElse(sigma, "") // state.startingDT.edgesToParents(sigma) map state.startingDT.arcs
         // WangXue features
         if (sigmaLemma != "" && kappaDL != "") add(hmap, "S-LEM-K-DL=" + sigmaLemma + "-" + kappaDL)
+        if (sigmaLemma != "") {
+          for (kl <- kappaLabels) {
+            if (kl != kappaDL) add(hmap, "S-LEM-K-LAB=" + sigmaLemma + "-" + kl)
+          }
+        }
         //      if (kappaPOS != "" && sigmaLemma != "") add(hmap, "K-POS-S-LEM=" + kappaPOS + "-" + sigmaLemma)
         //      if (kappaLemma != "" && sigmaDL != "") add(hmap, "K-LEM-S-DL=" + kappaLemma + "-" + sigmaDL)
         if (kappaNER != "" && sigmaNER != "") add(hmap, "K-S-NER=" + kappaNER + "-" + sigmaNER)

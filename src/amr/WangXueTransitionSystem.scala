@@ -18,7 +18,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   val alwaysEdgePossibilities = Set("opN", "sntN")
 
   // We currently just use the whole flipping dictionary to define the full set of actions
-  lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(ReversePolarity) ++ Array(DoNothing) ++
+  lazy override val actions: Array[WangXueAction] = Array(DeleteNode) ++ Array(ReplaceHead) ++ Array(Swap) ++ Array(DoNothing) ++
     Insert.all ++ InsertBelow.all ++ NextNode.all ++ NextEdge.all ++ (if (useCompositeNodes) AddParent.all else Nil)
 
   // and then add on the actions specific to the nodes of the DependencyTree 
@@ -31,7 +31,10 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     val edgeKeys = (beta match { case Some(index) => state.currentGraph.nodeLemmas.getOrElse(index, "") + "-IN" :: List(state.currentGraph.nodeLemmas.getOrElse(sigma, "") + "-OUT"); case None => List() })
     val permissibleEdges = beta match {
       case None => Set.empty[Int]
-      case Some(_) => (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ (alwaysEdgePossibilities map relationIndex toSet)
+      case Some(b) => {
+        val polarity = if (state.currentGraph.nodes(b) == "-") Set("polarity") else Set[String]()
+        (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ ((alwaysEdgePossibilities ++ polarity) map relationIndex toSet)
+      }
     }
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
 
@@ -98,7 +101,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 
     reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ wikifyActions ++ subInsertActions ++
-      (Array(DeleteNode, ReplaceHead, Swap, ReversePolarity, DoNothing)).filter(action => isPermissible(action, state))
+      (Array(DeleteNode, ReplaceHead, Swap, DoNothing)).filter(action => isPermissible(action, state))
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???

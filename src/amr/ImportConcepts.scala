@@ -197,7 +197,7 @@ object ImportConcepts {
       val grouped = interimConcepts.groupBy(_._1)
       val cleaned = grouped.mapValues(_.map(_._2))
       val test = cleaned map { case (key, listOfSets) => (key -> listOfSets.groupBy(identity).mapValues(_.size)) }
-      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet - "-")) }
+      val insertableConcepts = test map { case (key, m) => (key -> (m.toSeq.sortWith(_._2 > _._2).map(_._1).toSet)) }
       val ic = new FileWriter(amrFile + "_isubc")
       insertableConcepts filter (_._2.nonEmpty) foreach (x => ic.write(x._1 + "|" + (x._2).mkString("|") + "\n"))
       ic.close

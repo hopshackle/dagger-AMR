@@ -167,4 +167,5 @@ object generalPlay {
    tupleToSort.sortBy(_._2)                       //> res48: List[(String, Double)] = List((c,-0.5), (d,0.0), (a,0.3), (e,20.0), 
                                                   //| (b,67.0))
       tupleToSort.sortBy(-_._2).take(2)           //> res49: List[(String, Double)] = List((b,67.0), (e,20.0))
+  100.toString                                    //> res50: String = 100
 }

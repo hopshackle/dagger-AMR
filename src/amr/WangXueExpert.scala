@@ -71,7 +71,7 @@ class WangXueExpert extends WangXueExpertBasic {
     //    if (debug) println(unmatchedParents)
     val unmatchedParentLabels = unmatchedParents map (data.amr.get.nodes(_))
     //    if (debug) println(unmatchedParentLabels)
-    val (unmatchedPolarityChildren, unmatchedOtherChildren) = unmatchedChildren filter (c => data.amr.get.arcs((SIGMAAMR.get, c)) != "wiki") partition (c => data.amr.get.nodes(c) == "-")
+    val unmatchedOtherChildren = unmatchedChildren filter (c => data.amr.get.arcs((SIGMAAMR.get, c)) != "wiki")
     val insertableChildren = unmatchedOtherChildren filter (c => InsertBelow(conceptIndex(data.amr.get.nodes(c))).isPermissible(state))
 
     val needsToBeWikified = SIGMAAMR match {
@@ -80,7 +80,7 @@ class WangXueExpert extends WangXueExpertBasic {
     }
 
     val kappa = unlinkedAMRChildren.toList map fullMapAMRtoDT filter state.currentGraph.nodes.contains filter (Reentrance(_).isPermissible(state))
-//    println(s"Sigma: $sigma, $SIGMAAMR, Beta: $BETA, BetaParent: $betaAMRParents")
+    //    println(s"Sigma: $sigma, $SIGMAAMR, Beta: $BETA, BetaParent: $betaAMRParents")
     val chosenAction = (state.phase, SIGMAAMR, unmatchedParentLabels.isEmpty, BETA, BETAAMR) match {
       // cases to cover: no beta - Delete, Insert or NextNode
       //    If sigmaAMR and the parent AMR node is unmatched to DT, then we InsertNode
@@ -106,7 +106,6 @@ class WangXueExpert extends WangXueExpertBasic {
           AddParent(parentString)
         } else
           Insert(conceptIndex(unmatchedParentLabels.head), unmatchedParents.head)
-      case (1, Some(sigmaAMR), _, _, _) if (unmatchedPolarityChildren nonEmpty) => ReversePolarity
       case (1, Some(sigmaAMR), _, _, _) if (insertableChildren nonEmpty) =>
         val amrRef = insertableChildren.head
         val conceptToInsert = data.amr.get.nodes(amrRef)
@@ -211,10 +210,10 @@ class WangXueExpert extends WangXueExpertBasic {
     //   val backward = Wikify.backwardConcatenationOfNameArgs(amr, node)
     val quoteString = """""""
     fullWikiString.replaceAll(quoteString, "") match {
-      case "" => ""  // i.e. there is no need to wikify at all
+      case "" => "" // i.e. there is no need to wikify at all
       case `forward` => "FORWARD"
       //    case `backward` => "BACKWARD"
-      case _ => "-"  // we have made an earlier mistake...so we maximise our score by not adding a wikification at all
+      case _ => "-" // we have made an earlier mistake...so we maximise our score by not adding a wikification at all
     }
   }
 

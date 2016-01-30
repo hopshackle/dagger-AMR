@@ -106,7 +106,7 @@ case class NextNode(conceptIndex: Int) extends WangXueAction {
       case 0 => conf.currentGraph.nodes(conf.nodesToProcess.head) // WORD
       case i => concept(i)
     }
-    val tree = conf.currentGraph.labelNode(conf.nodesToProcess.head, conceptToUse)
+    val tree = conf.currentGraph.labelNode(conf.nodesToProcess.head, conceptToUse) removeSelfLoops
     val (newPhase, newNodesToProcess) = (conf.phase, conf.nodesToProcess.tail) match {
       case (1, Nil) =>
         val rootNodes = conf.currentGraph.getRoots.toList

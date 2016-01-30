@@ -32,8 +32,10 @@ object RunClassifier {
       val devData = if (devFile == "") Iterable.empty else {
         AMRGraph.importFile(devFile) map {
           case (english, amr, id) =>
-            val amrGraph = AMRGraph(amr, english, id, false)
-            Sentence(english, Some(amrGraph), id)
+            AMRGraph(amr, english, id, false) match {
+              case null => Sentence(english, None, id)
+              case amrGraph => Sentence(english, Some(amrGraph), id)
+            }
         }
       }
       val baseResult = FeatureAnalyser.runPolicy(devData, options, featureIndex, trainedPolicy, "base_" + (i + 1))

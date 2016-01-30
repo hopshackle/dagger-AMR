@@ -118,6 +118,10 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     this.copy(arcs = arcs + ((parent, child) -> label))
   }
 
+  def removeSelfLoops: DependencyTree = {
+    this.copy(arcs = this.arcs filterNot (a => a._1._1 == a._1._2))
+  }
+
   def labelNode(node: Int, label: String): DependencyTree = {
     val newNodes = nodes + (node -> label)
     this.copy(nodes = newNodes)
@@ -142,7 +146,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     // we also take the DL and POS labelling and from old parent to child to be between old parent and new node
     val newNode = getNextNodeToInsert
     val childSpan = nodeSpans.getOrElse(node, (0, 0))
-    val newEdgesFromParent = edgesToParents(node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
+    val newEdgesFromParent = edgesToParents(node) filterNot (_._1 == node) map { case (from, to) => ((from, newNode), arcs((from, to))) }
     val newInsertedNodes = this.insertedNodes + (newNode -> (node, otherRef))
     val newEdgeFromNode = ((newNode, node), "#insert#") // dependency label made up for use as feature
     val newArcs = this.arcs -- edgesToParents(node) ++ newEdgesFromParent ++ (if (addArc) Map(newEdgeFromNode) else Map())
@@ -246,10 +250,11 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
     def extractConcept(node: Int): String = {
       val quote = """""""
       val oldValue = nodes(node)
-      val parentNodeIsName = (parentsOf(node) map nodes contains "name") && !(oldValue contains quote)
-      val parentNodeIsEra = (parentsOf(node) map nodes contains "era") && !(oldValue contains quote)
+      val parentNodesThatImplyQuotes = List("name", "era", "emoticon")
+      val parentNodeRequiresQuotes = (parentsOf(node) map nodes intersect parentNodesThatImplyQuotes nonEmpty) && !(oldValue contains quote)
+      val containsForwardSlash = oldValue.contains("/")
       val nodeRepresentsTime = oldValue.contains(":") && numbersAndColon.replaceAllIn(oldValue, "") == "" && numbers.replaceAllIn(oldValue, "") != ""
-      if (parentNodeIsName || parentNodeIsEra || nodeRepresentsTime) quote + oldValue + quote else oldValue
+      if (parentNodeRequiresQuotes || nodeRepresentsTime || containsForwardSlash) quote + oldValue + quote else oldValue
     }
 
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
@@ -321,7 +326,7 @@ object Sentence {
       case Some(amrGraph) => for {
         (key, span) <- amrGraph.nodeSpans.toSeq
       } yield span
-      case None => Nil
+      case _ => Nil
     }).distinct
 
     val removeOverlaps = uniqueSpans filter { s1 =>
@@ -521,7 +526,7 @@ object DependencyTree {
   }
 
   def rehyphenate(text: String): String = {
-    var output = text.replaceAll(" - ", "-").replaceAll(" @-@ ", "-")
+    var output = text.replaceAll(" - ", "-").replaceAll(" @-@ ", "-").replaceAll("/", " / ")
     numericBoundary.replaceAllIn(output, "$1 $2")
   }
 }
@@ -530,6 +535,7 @@ object AMRGraph {
   // We then use the JAMR functionality here
   val opN = "^op[0-9]+$".r
   val sntN = "^snt[0-9]+$".r
+  var textEncoding = "ISO8859-1"
   var useImprovedAligner = false
   var usePourdamghaniAligner = false
   var useWordNet = false
@@ -604,13 +610,13 @@ object AMRGraph {
 
   def importFile(fileName: String): IndexedSeq[(String, String, String)] = {
     val idFinder = """(# ::id [^:]*) ::.*""".r
-    val source = Source.fromFile(fileName)("ISO8859-1").getLines()
+    val source = Source.fromFile(fileName)(textEncoding).getLines()
     val sentenceIndices = (for {
       (line, i) <- source.map(_.trim).zipWithIndex
       //     val p = println(line)
       if line.matches("^# ::(snt|tok) .*")
     } yield i).toList
-    val input = Source.fromFile(fileName)("ISO8859-1").getLines().toList.map(_.trim)
+    val input = Source.fromFile(fileName)(textEncoding).getLines().toList.map(_.trim)
     val startIndices = sentenceIndices.map(_ + 2)
     val endIndices = if (sentenceIndices.size > 1)
       sentenceIndices.map(_ - 2).tail :+ (input.length - 1)
