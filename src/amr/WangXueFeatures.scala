@@ -44,7 +44,8 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
 
   val random = new Random()
   val useBrown = brownCluster != null
-  var cachedFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
+  var cachedCoreFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
+  var cachedParamFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
   var cachedState: WangXueTransitionState = null
   var hypernymMap = new ConcurrentHashMap[String, Seq[String]]();
 
@@ -67,31 +68,29 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
 
   override def featureName(key: Int): String = dict.elem(key)
 
-  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): gnu.trove.map.hash.THashMap[Int, Float] = {
+  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): (gnu.trove.map.hash.THashMap[Int, Float], gnu.trove.map.hash.THashMap[Int, Float]) = {
     // if we have cached Features for this state, and the action does not have a node parameter,
     // then we can save ourselves the effort (and memory) of re-calculating everything
     val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]
     if (cachedState != null && cachedState.eq(state) && !parameterisedAction) {
-      cachedFeatures
+      (cachedCoreFeatures, new gnu.trove.map.hash.THashMap[Int, Float]())
     } else {
       // also; even if we do have a parameterNode, we can still share the core features
 
       val thisDebug = if (debug && random.nextDouble < 0.001) true else false
 
       if (cachedState != null && cachedState.eq(state)) {
-        // we can reuse the existing cache
+        // we can reuse the existing core feature cache
       } else {
         cachedState = state
-        cachedFeatures = Instance.scalaMapToTrove(sigmaFeatures(sentence, state, action) ++ {
+        cachedCoreFeatures = Instance.scalaMapToTrove(sigmaFeatures(sentence, state, action) ++
           state.childrenToProcess match {
-            case Nil => Nil
+            case Nil => Map()
             case head :: tail => betaFeatures(sentence, state, action)
-          }
-        })
-        cachedFeatures.compact
+          })
       }
 
-      val output = cachedFeatures ++ Instance.scalaMapToTrove({
+      cachedParamFeatures = Instance.scalaMapToTrove({
         parameterisedAction match {
           case false => Map()
           case true => kappaFeatures(sentence, state, action)
@@ -100,10 +99,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
       if (thisDebug) {
         val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
         featuresDebug.write(state.toString)
-        output foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
+        cachedCoreFeatures foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
+        cachedParamFeatures foreach (_ match { case (index, value) => featuresDebug.write(f"$index : ${dict.elem(index)} = $value%.2f\n") })
         featuresDebug.close
       }
-      Instance.scalaMapToTrove(output)
+      (cachedCoreFeatures, cachedParamFeatures)
     }
   }
 
@@ -535,9 +535,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == kappaPosition } map { case (node, (_, _)) => node }).toSeq(0)
           }
           if (sigmaDTNode != kappaDTNode) {
-    //        val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
+            //        val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
             //       add(hmap, "K-S-PATH=" + path)
-    //        add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
+            //        add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
             //        add(hmap, "K-S-PATH-DIST=" + distance + "-" + path)
             if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-BRN")
             val NERPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, true, false)

@@ -3,7 +3,6 @@ import java.io._
 import dagger.core._
 import dagger.ml.MultiClassClassifier
 import dagger.ml.AROWClassifier
-import amr.classic._
 
 import scala.reflect.ClassTag
 
@@ -116,26 +115,21 @@ object RunDagger {
     WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
     WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-
+    
     val startingClassifier = if (options.getBoolean("--prelimOracleRun", false)) {
       val sc = oracleRun[A](options, featureIndex, trainData, correctedDevData)
       sc.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingClassifier.txt", x => x.name)
       featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingFeatureIndex.txt")
       sc
     } else if (options.getBoolean("--startingClassifier", false)) {
-      if (options.getBoolean("--WangXue", true)) {
         AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
-      } else {
-        AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => ClassicAction.construct(y))
-      }
     } else null
 
     if (featureIndex.array.isEmpty && startingClassifier != null) {
       featureIndex.initialiseFromFile(options.DAGGER_OUTPUT_PATH + "../FeatureIndex.txt")
     }
 
-    val (fc, aa) = if (options.getBoolean("--WangXue", true)) {
+    val (fc, aa) = {
       val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
       val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
       val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
@@ -147,19 +141,7 @@ object RunDagger {
         startingClassifier.asInstanceOf[MultiClassClassifier[WangXueAction]])
       (classifier, WangXueTransitionSystem.actions ++
         Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
-    } else {
-      val dagger = new DAGGER[Sentence, ClassicAction, ClassicTransitionState](options)
-      val classicFeatures = new ClassicFeatureFactory(options, featureIndex)
-      val lossFunctionFactory = new ClassicLossFunctionFactory(lossToUse)
-      val classifier = dagger.train(trainData, new ClassicExpert, classicFeatures, ClassicTransitionSystem, lossFunctionFactory, correctedDevData, testData,
-        corpusSmatchScore(options),
-        actionToString = if (fileCache) (x => x.name) else null,
-        stringToAction = if (fileCache) (y => ClassicAction.construct(y)) else null,
-        AMROutput.AMROutputFunction,
-        startingClassifier.asInstanceOf[MultiClassClassifier[ClassicAction]])
-      (classifier, ClassicTransitionSystem.actions ++ Array(AssignToFragment(0)))
     }
-
     val finalClassifier = fc.asInstanceOf[MultiClassClassifier[A]]
     val allActions = aa.asInstanceOf[Array[A]]
     val outputFile = new FileWriter(options.DAGGER_OUTPUT_PATH + "FeatureSummaryByAction.txt")
@@ -183,7 +165,7 @@ object RunDagger {
     finalClassifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
     featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
 
-    (options.getBoolean("--featureAnalysis", false), options.getBoolean("--WangXue", true), finalClassifier) match {
+    (options.getBoolean("--featureAnalysis", false), true, finalClassifier) match {
       case (true, true, classifier: AROWClassifier[WangXueAction]) => FeatureAnalyser.analyserRun(options, devData, classifier, featureIndex)
       case _ =>
     }
@@ -204,7 +186,6 @@ object RunDagger {
     WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
     WangXueFeatures.includeSiblings = (options.getString("--WXfeatures", "") contains "S")
     WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
-    ClassicFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
     WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
     WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
     WangXueFeatures.includeKappaChildren = (options.getString("--WXfeatures", "") contains "K")
@@ -216,7 +197,6 @@ object RunDagger {
       WangXueFeatures.hypernymLimit = limit
     }
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    ClassicTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
 
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
@@ -274,7 +254,7 @@ object RunDagger {
     newOptions.addOption("--minTrainingSize", options.getInt("--maxTrainingSize", 100).toString)
     val lossToUse = options.getString("--lossFunction", "")
 
-    val (sc, aa) = if (options.getBoolean("--WangXue", true)) {
+    val (sc, aa) = {
       val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
       val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
       val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](newOptions)
@@ -286,18 +266,7 @@ object RunDagger {
         null.asInstanceOf[MultiClassClassifier[WangXueAction]])
       (classifier, WangXueTransitionSystem.actions ++
         Array(Reattach(0)) ++ (if (WangXueTransitionSystem.reentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
-    } else {
-      val dagger = new DAGGER[Sentence, ClassicAction, ClassicTransitionState](newOptions)
-      val classicFeatures = new ClassicFeatureFactory(options, featureIndex)
-      val lossFunctionFactory = new ClassicLossFunctionFactory(lossToUse)
-      val classifier = dagger.train(trainingData, new ClassicExpert, classicFeatures, ClassicTransitionSystem, lossFunctionFactory, devData, Iterable.empty,
-        corpusSmatchScore(newOptions),
-        actionToString = null,
-        stringToAction = null,
-        null,
-        null.asInstanceOf[MultiClassClassifier[ClassicAction]])
-      (classifier, ClassicTransitionSystem.actions ++ Array(AssignToFragment(0)))
-    }
+    } 
     val startingClassifier = sc.asInstanceOf[MultiClassClassifier[A]]
     startingClassifier
   }
