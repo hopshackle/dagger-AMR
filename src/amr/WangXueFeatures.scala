@@ -84,10 +84,10 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
       } else {
         cachedState = state
         cachedCoreFeatures = Instance.scalaMapToTrove(sigmaFeatures(sentence, state, action) ++
-          state.childrenToProcess match {
+          (state.childrenToProcess match {
             case Nil => Map()
             case head :: tail => betaFeatures(sentence, state, action)
-          })
+          }))
       }
 
       cachedParamFeatures = Instance.scalaMapToTrove({
