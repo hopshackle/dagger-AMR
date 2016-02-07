@@ -168,4 +168,5 @@ object generalPlay {
                                                   //| (b,67.0))
       tupleToSort.sortBy(-_._2).take(2)           //> res49: List[(String, Double)] = List((b,67.0), (e,20.0))
   100.toString                                    //> res50: String = 100
+  List(1, 2, 3).mkString("n")                     //> res51: String = 1n2n3
 }
