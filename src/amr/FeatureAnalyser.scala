@@ -93,15 +93,14 @@ object FeatureAnalyser {
       val limit = fString.charAt(fString.indexOf("H") + 1).toString.toInt
       WangXueFeatures.hypernymLimit = limit
     }
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
 
     WangXueTransitionSystem.prohibition = options.getBoolean("--insertProhibition", true)
-    WangXueTransitionSystem.reentrance = options.getBoolean("--reentrance", false)
+    WangXueTransitionSystem.reentrance = options.getBoolean("--reentrance", true)
     WangXueTransitionSystem.reentrancePhase = options.getBoolean("--reentrancePhase", true)
     WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
     WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
   }
 
