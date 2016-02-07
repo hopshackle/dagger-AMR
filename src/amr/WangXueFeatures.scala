@@ -1,11 +1,10 @@
 package amr
 import scala.collection.Map
 import java.util.concurrent.ConcurrentHashMap
-
+import scala.collection.mutable.HashMap
 import ImportConcepts.{ concept }
 import java.io._
 import scala.util.Random
-import gnu.trove.map.hash.THashMap
 import dagger.ml.Instance
 import java.util.concurrent.atomic._
 import dagger.core._
@@ -39,25 +38,24 @@ object WangXueFeatures {
 
 class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCluster) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
-  import scala.collection.JavaConversions.mapAsScalaMap
   import WangXueFeatures._
 
   val random = new Random()
   val useBrown = brownCluster != null
-  var cachedCoreFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
-  var cachedParamFeatures = new gnu.trove.map.hash.THashMap[Int, Float]()
+  var cachedCoreFeatures = Map[Int, Float]()
+  var cachedParamFeatures = Map[Int, Float]()
   var cachedState: WangXueTransitionState = null
   var hypernymMap = new ConcurrentHashMap[String, Seq[String]]();
 
-  def add(map: gnu.trove.map.hash.THashMap[Int, Float], feat: String, value: Float = 1.0f) = {
+  def add(map: HashMap[Int, Float], feat: String, value: Float = 1.0f) = {
     map.put(dict.index(feat), value)
   }
 
-  def addBrownClusters(map: gnu.trove.map.hash.THashMap[Int, Float], wordForms: List[String], feature: String, featureName: String) {
+  def addBrownClusters(map: HashMap[Int, Float], wordForms: List[String], feature: String, featureName: String) {
     val clusterNames = brownCluster.getBrownClusters(wordForms)
     clusterNames foreach { c => add(map, featureName + "-BRN=" + feature + "-" + c) }
   }
-  def addBrownClusters(map: gnu.trove.map.hash.THashMap[Int, Float], wordForms1: List[String], wordForms2: List[String],
+  def addBrownClusters(map: HashMap[Int, Float], wordForms1: List[String], wordForms2: List[String],
     feature: String, featureName: String) {
     val clusterNames1 = brownCluster.getBrownClusters(wordForms1)
     val clusterNames2 = brownCluster.getBrownClusters(wordForms2)
@@ -68,12 +66,12 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
 
   override def featureName(key: Int): String = dict.elem(key)
 
-  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): (gnu.trove.map.hash.THashMap[Int, Float], gnu.trove.map.hash.THashMap[Int, Float]) = {
+  override def features(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): (Map[Int, Float], Map[Int, Float]) = {
     // if we have cached Features for this state, and the action does not have a node parameter,
     // then we can save ourselves the effort (and memory) of re-calculating everything
     val parameterisedAction = action.isInstanceOf[hasNodeAsParameter]
     if (cachedState != null && cachedState.eq(state) && !parameterisedAction) {
-      (cachedCoreFeatures, new gnu.trove.map.hash.THashMap[Int, Float]())
+      (cachedCoreFeatures, Map[Int, Float]())
     } else {
       // also; even if we do have a parameterNode, we can still share the core features
 
@@ -83,19 +81,18 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
         // we can reuse the existing core feature cache
       } else {
         cachedState = state
-        cachedCoreFeatures = Instance.scalaMapToTrove(sigmaFeatures(sentence, state, action) ++
+        cachedCoreFeatures = sigmaFeatures(sentence, state, action) ++
           (state.childrenToProcess match {
             case Nil => Map()
             case head :: tail => betaFeatures(sentence, state, action)
-          }))
+          })
       }
 
-      cachedParamFeatures = Instance.scalaMapToTrove({
-        parameterisedAction match {
-          case false => Map()
-          case true => kappaFeatures(sentence, state, action)
-        }
-      })
+      cachedParamFeatures = parameterisedAction match {
+        case false => Map()
+        case true => kappaFeatures(sentence, state, action)
+      }
+
       if (thisDebug) {
         val featuresDebug = new FileWriter(options.DAGGER_OUTPUT_PATH + "WXfeatures_debug.txt", true)
         featuresDebug.write(state.toString)
@@ -108,7 +105,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
-    val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
+    val hmap = HashMap[Int, Float]()
     val sigma = state.nodesToProcess.head
     val sigmaWord = state.currentGraph.nodes.getOrElse(sigma, "!!??")
     assert(sigmaWord != "!!??", "Sigma not found: " + state)
@@ -307,7 +304,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
   }
 
   def betaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
-    val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
+    val hmap = HashMap[Int, Float]()
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val label = state.currentGraph.arcs.getOrElse((sigma, beta), "")
@@ -410,7 +407,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
 
   def kappaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {
     val parameterNode = action.asInstanceOf[hasNodeAsParameter].parameterNode
-    val hmap = new gnu.trove.map.hash.THashMap[Int, Float]
+    val hmap = HashMap[Int, Float]()
     val betaOption = state.childrenToProcess.headOption
     val sigma = state.nodesToProcess.head
     val kappaWord = state.currentGraph.nodes(parameterNode)
@@ -569,7 +566,7 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
   def getHypernyms(lemma: String, pos: String) = {
     val key = lemma + (if (pos == "") "" else pos.charAt(0))
     if (hypernymMap.containsKey(key)) {
-      hypernymMap(key)
+      hypernymMap.get(key)
     } else {
       val hypernyms = getAncestors(lemma, pos, if (hypernymLimit == 0) 99 else hypernymLimit)
       hypernymMap.put(key, hypernyms)
