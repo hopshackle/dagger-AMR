@@ -532,9 +532,9 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
             (state.startingDT.nodeSpans filter { case (_, (position, _)) => position == kappaPosition } map { case (node, (_, _)) => node }).toSeq(0)
           }
           if (sigmaDTNode != kappaDTNode) {
-            //        val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
+            val path = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode)
             //       add(hmap, "K-S-PATH=" + path)
-            //        add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
+            add(hmap, "K-S-PATH-LEM=" + kappaLemma + "-" + path + "-" + sigmaLemma)
             //        add(hmap, "K-S-PATH-DIST=" + distance + "-" + path)
             if (useBrown) addBrownClusters(hmap, List(sigmaWord, sigmaLemma), List(kappaWord, kappaLemma), "", "K-S-BRN")
             val NERPath = state.startingDT.getPathBetween(sigmaDTNode, kappaDTNode, true, false)
