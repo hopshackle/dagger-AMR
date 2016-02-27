@@ -12,7 +12,7 @@ object AMROutput {
     val summaryFile = options.DAGGER_OUTPUT_PATH + "SmatchScores_" + text + ".txt"
     val asStringP = prediction.amr match {
       case Some(p) if p.nodes.nonEmpty => convertToString(p)
-      case _ => """"( a / "")"""
+      case _ => """( a / "")"""
     }
     val asStringT = target.amr match {
       case Some(t) => convertToString(t)

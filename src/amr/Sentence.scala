@@ -251,10 +251,11 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
       val quote = """""""
       val oldValue = nodes(node)
       val parentNodesThatImplyQuotes = List("name", "era", "emoticon")
-      val parentNodeRequiresQuotes = (parentsOf(node) map nodes intersect parentNodesThatImplyQuotes nonEmpty) && !(oldValue contains quote)
-      val containsForwardSlash = oldValue.contains("/")
-      val nodeRepresentsTime = oldValue.contains(":") && numbersAndColon.replaceAllIn(oldValue, "") == "" && numbers.replaceAllIn(oldValue, "") != ""
-      if (parentNodeRequiresQuotes || nodeRepresentsTime || containsForwardSlash) quote + oldValue + quote else oldValue
+      def parentNodeRequiresQuotes = (parentsOf(node) map nodes intersect parentNodesThatImplyQuotes nonEmpty) && !(oldValue contains quote)
+      def containsForwardSlash = oldValue.contains("/")
+      def alreadySurroundedByQuotes = oldValue(0).toString == quote && oldValue.last.toString == quote
+      def nodeRepresentsTime = oldValue.contains(":") && numbersAndColon.replaceAllIn(oldValue, "") == "" && numbers.replaceAllIn(oldValue, "") != ""
+      if (!alreadySurroundedByQuotes && (parentNodeRequiresQuotes || nodeRepresentsTime || containsForwardSlash)) quote + oldValue + quote else oldValue
     }
 
     val amrNodes = nodes map { case (key: Int, value: Any) => (key.toString -> extractConcept(key)) }
@@ -535,7 +536,7 @@ object AMRGraph {
   // We then use the JAMR functionality here
   val opN = "^op[0-9]+$".r
   val sntN = "^snt[0-9]+$".r
-  var textEncoding = "ISO8859-1"
+  var textEncoding = "ISO-8859-1"
   var useImprovedAligner = false
   var usePourdamghaniAligner = false
   var useWordNet = false
