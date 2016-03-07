@@ -23,14 +23,14 @@ object ImportConcepts {
   lazy val expertResults = {
     val expert = new WangXueExpert
     val output = for {
-      ((sentence, _, id), amr) <- allSentencesAndAMR zip allAMR
-      val s = Sentence(sentence, Some(amr), id)
+      s <- allSentences
       val result = RunDagger.sampleTrajectory(s, "", expert, WangXueTransitionSystem)
     } yield (s, result)
     output
   }
-  lazy val allSentencesAndAMR = importFile(amrFile)
-  lazy val allAMR = allSentencesAndAMR map { case (sentence, amr, id) => AMRGraph(amr, sentence, id) }
+  lazy val rawData = importFile(amrFile)
+  lazy val allSentences = rawData map { case (amr, sentence, id) => Sentence(amr, sentence, id) }
+  lazy val allAMR = allSentences map (_.amr.get)
   lazy val conceptStrings = loadConcepts
   lazy val defaultOptions = if (WangXueTransitionSystem.preferKnown) Map(0 -> "WORD") else Map((0 -> "WORD"), (-1 -> "LEMMA"), (-2 -> "VERB-FORM"))
   lazy val conceptMaster = (for {

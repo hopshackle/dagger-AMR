@@ -8,12 +8,12 @@ object PourdamghaniAligner {
   val idFinder = """(# ::id [^:]*) ::.*""".r
 
   def importTokenization: Map[String, (String, String)] = {
-    val source = Source.fromFile(tokenizationFile)("ISO8859-1").getLines()
+    val source = Source.fromFile(tokenizationFile)("UTF-8").getLines()
     val sentenceIndices = (for {
       (line, i) <- source.map(_.trim).zipWithIndex
       if line.matches("^# ::tok .*")
     } yield i).toList
-    val input = Source.fromFile(tokenizationFile)("ISO8859-1").getLines().toList.map(_.trim)
+    val input = Source.fromFile(tokenizationFile)("UTF-8").getLines().toList.map(_.trim)
 
     (for {
       i <- sentenceIndices
@@ -56,7 +56,48 @@ case class PourdamghaniAligner(tokenisedSentence: List[String], amr: AMRGraph, i
     val tokenIndex = initialSplit(0).toInt
     val amrText = initialSplit(1)
     val amrGraphKey = amrText split ('.') map (_.toInt - 1) mkString (".")
-    (tokenIndex, amrGraphKey)
+    if (debug) println("AMR Key = " + amrGraphKey)
+    (tokenIndex, deWikify(amrGraphKey))
+  }
+  def deWikify(wikifiedAlignment: String): String = {
+    if (!WangXueTransitionSystem.wikification) {
+      applyRules(wikifiedAlignment)
+    } else {
+      wikifiedAlignment
+    }
+  }
+  def applyRules(input: String): String = {
+    def ruleHelper(input: String, remainingRules: Seq[(String => String)]): String = {
+      remainingRules match {
+        case Nil => input
+        case head :: tail => ruleHelper(head(input), tail)
+      }
+    }
+    val output = ruleHelper(input, rules)
+    if (debug && output != input) println("applyRule: " + input + " => " + output)
+    output
+  }
+  val namedNodes = (amr.arcs filter (_._2 == "name") map (_._1._1)).toSeq.sortWith(_.length < _.length)
+  // sorted in increasing length
+  val rules = namedNodes map {
+    case fullName =>
+      if (debug) println("FullName = " + fullName)
+      val splitName = fullName.split('.') map (_.toInt)
+      (input: String) => {
+        if (input.startsWith(fullName)) {
+          val inputAsInt = input.split('.') map (_.toInt)
+          val newName = (inputAsInt.length, splitName.length) match {
+            case (a, b) if a > b => {
+              val amendedAsInt = inputAsInt.take(b) ++ Array(inputAsInt(b) - 1) ++ inputAsInt.drop(b + 1)
+              amendedAsInt.mkString(".")
+            }
+            case _ => input
+          }
+          newName
+        } else {
+          input
+        }
+      }
   }
 
   /* this is where we map the tokenised data to the sentence
@@ -70,16 +111,19 @@ case class PourdamghaniAligner(tokenisedSentence: List[String], amr: AMRGraph, i
       val allTokensForHead = tokens takeWhile (_._1 == tokens.head._1)
       val tailMapping: Map[Int, String] = if (m == -1) Map() else Map((m + offset -> allTokensForHead.last._3))
       val headMapping: Map[Int, String] = if (m == -1) Map() else Map((m + offset -> tokens.head._3))
-      if (debug) println(headMapping)
-      if (debug) println(tailMapping)
+  //    if (debug) println(headMapping)
+  //    if (debug) println(tailMapping)
       val truncatedSentence = currentSentence.drop(m + 1)
       val availableTokens = tokens.tail filterNot { case (index, _, amrRef) => m != -1 && (amrRef == tokens.head._3 || index == tokens.head._1) }
       map(availableTokens, truncatedSentence, currentMap ++ (if (useHeadMapping) headMapping else tailMapping), offset + m + 1)
     }
   }
+  /*
+   * Returns the index of the token in currentSentence
+   */
   def map(token: (Int, String, String), currentSentence: Array[String]): Int = {
     val wordToFind = DependencyTree.preProcess(token._2).head
-    if (debug) println(token + " : " + currentSentence.mkString("@") + " : " + wordToFind)
+ //   if (debug) println(token + " : " + currentSentence.mkString("@") + " : " + wordToFind)
     val found = currentSentence.take(5).find { word => word.size >= wordToFind.size && wordToFind == word.substring(0, wordToFind.size) }
     found match {
       case None => -1

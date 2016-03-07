@@ -112,17 +112,14 @@ object RunDagger {
     WangXueTransitionSystem.prohibition = insertProhibition
     WangXueTransitionSystem.reentrance = useReentrance
     WangXueTransitionSystem.reentrancePhase = reentrancePhase
-    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
-    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
-    
+
     val startingClassifier = if (options.getBoolean("--prelimOracleRun", false)) {
       val sc = oracleRun[A](options, featureIndex, trainData, correctedDevData)
       sc.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingClassifier.txt", x => x.name)
       featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingFeatureIndex.txt")
       sc
     } else if (options.getBoolean("--startingClassifier", false)) {
-        AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
+      AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
     } else null
 
     if (featureIndex.array.isEmpty && startingClassifier != null) {
@@ -181,6 +178,8 @@ object RunDagger {
     Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
     DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)
     AMRGraph.setAligner(alignerToUse)
+    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
+    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
     WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
@@ -196,12 +195,12 @@ object RunDagger {
       val limit = fString.charAt(fString.indexOf("H") + 1).toString.toInt
       WangXueFeatures.hypernymLimit = limit
     }
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
 
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
+    ImportConcepts.allSentences
   }
 
   def main(args: Array[String]): Unit = {
@@ -266,7 +265,7 @@ object RunDagger {
         null.asInstanceOf[MultiClassClassifier[WangXueAction]])
       (classifier, WangXueTransitionSystem.actions ++
         Array(Reattach(0)) ++ (if (WangXueTransitionSystem.reentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
-    } 
+    }
     val startingClassifier = sc.asInstanceOf[MultiClassClassifier[A]]
     startingClassifier
   }
