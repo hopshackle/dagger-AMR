@@ -80,7 +80,7 @@ object ImportConcepts {
           stuff.tail toSet
       } flatten
 
-      (conceptsMappedToLemmas ++ insertedConcepts ++ subInsertedConcepts).toSet
+      (conceptsMappedToLemmas ++ insertedConcepts ++ subInsertedConcepts ++ Seq("name")).toSet
     } else {
       (for {
         graph <- allAMR

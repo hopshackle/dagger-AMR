@@ -32,13 +32,13 @@ object WangXueAction {
       case x if x startsWith "InsertBelow" =>
         val concept = x.replaceAll("InsertBelow", "")
         val exists = conceptStringToIndex contains concept
-        if (!exists) println("Unknown Concept " + concept)
+        if (!exists) println("Unknown Concept (IB) " + concept)
         val index = conceptIndex(concept)
         InsertBelow(index)
       case x if x startsWith "Insert" =>
         val concept = x.replaceAll("Insert", "")
         val exists = conceptStringToIndex contains concept
-        if (!exists) println("Unknown Concept " + concept)
+        if (!exists) println("Unknown Concept (I) " + concept)
         val index = conceptIndex(concept)
         Insert(index)
       case x if x startsWith "Reattach" =>

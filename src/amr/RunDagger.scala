@@ -114,7 +114,7 @@ object RunDagger {
     WangXueTransitionSystem.reentrancePhase = reentrancePhase
     WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
     WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
     
     val startingClassifier = if (options.getBoolean("--prelimOracleRun", false)) {
       val sc = oracleRun[A](options, featureIndex, trainData, correctedDevData)

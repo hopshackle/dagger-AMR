@@ -12,7 +12,7 @@ object RunClassifier {
     val init = System.currentTimeMillis()
     println("Initialising...")
     FeatureAnalyser.initialise(options)
-    val devFiles = options.getString("--validation.data", "").split(";")
+    val devFiles = options.getString("--test.data", "").split(";")
     val start = System.currentTimeMillis()
 
     println("Took " + ((start - init) / 1000) + " seconds")
