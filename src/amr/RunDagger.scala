@@ -196,7 +196,8 @@ object RunDagger {
       val limit = fString.charAt(fString.indexOf("H") + 1).toString.toInt
       WangXueFeatures.hypernymLimit = limit
     }
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", true)
+    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
+    WangXueTransitionSystem.nameConstraints = options.getBoolean("--nameConstraints", false)
 
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)

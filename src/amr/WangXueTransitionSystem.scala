@@ -11,9 +11,10 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var reentrance = false
   var reentrancePhase = true
   var useCompositeNodes = false
-  var preferKnown = true
+  var preferKnown = false
   var wikification = true
   var insertBelow = true
+  var nameConstraints = false
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN", "sntN")
 
