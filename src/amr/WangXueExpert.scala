@@ -100,7 +100,7 @@ class WangXueExpert extends WangXueExpertBasic {
         (sigmaAMRAncestors contains betaAMR) &&
         !(sigmaAMRDescendants contains betaAMR) &&
         Swap.isPermissible(state)) => Swap
-      case (1, Some(sigmaAMR), false, _, _) if (Insert.isPermissible(state)) =>
+      case (1, Some(sigmaAMR), false, _, _) if (Insert(conceptIndex(unmatchedParentLabels.head)).isPermissible(state)) =>
         if (useCompositeNodes) {
           val parentString = getParentString(data, state, fullMapAMRtoDT)
           AddParent(parentString)

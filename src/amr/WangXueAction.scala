@@ -85,7 +85,10 @@ case class NextEdge(relIndex: Int) extends WangXueAction {
   }
   override def toString: String = "NextEdge: " + relation(relIndex)
   override def name: String = "NextEdge" + relation(relIndex)
-  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
+    (if (WangXueTransitionSystem.nameConstraints) {
+      !(state.currentGraph.nodes(state.nodesToProcess.head) == "name" && relation(relIndex) == "opN")
+    } else true)
 }
 
 object NextEdge {
@@ -173,7 +176,11 @@ case class Insert(conceptIndex: Int, otherRef: String = "") extends WangXueActio
       processedNodes = state.processedNodes + newNode, previousActions = this :: state.previousActions).fastForward
   }
 
-  override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state)
+  override def isPermissible(state: WangXueTransitionState): Boolean = Insert.isPermissible(state) && {
+    if (WangXueTransitionSystem.nameConstraints) {
+      !(conceptMaster(conceptIndex) == "name" && !state.currentGraph.isLeafNode(state.nodesToProcess.head))
+    } else true
+  }
   override def name: String = "Insert" + concept(conceptIndex)
   override def toString: String = "InsertNode: " + concept(conceptIndex) + " (Ref: " + otherRef + ")"
   override def equals(other: Any): Boolean = {
@@ -352,7 +359,13 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       !(state.currentGraph.subGraph(state.childrenToProcess.head) contains newNode) &&
       (state.currentGraph.getDistanceBetween(state.childrenToProcess.head, newNode) <= Reattach.REATTACH_RANGE ||
         math.abs(state.currentGraph.nodeSpans.getOrElse(newNode, (-100, -100))._1 -
-          state.currentGraph.nodeSpans.getOrElse(state.childrenToProcess.head, (100, 100))._1) <= 2)
+          state.currentGraph.nodeSpans.getOrElse(state.childrenToProcess.head, (100, 100))._1) <= 2) &&
+        {
+          if (WangXueTransitionSystem.nameConstraints) {
+            !(state.currentGraph.nodes.getOrElse(newNode, "") == "name" &&
+              !state.currentGraph.isLeafNode(state.childrenToProcess.head))
+          } else true
+        }
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!
     // And also only consider attachment points range in the current graph
   }
