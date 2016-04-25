@@ -74,7 +74,8 @@ object RunDagger {
 
   def testDAGGERrun[S <: TransitionState, A <: TransitionAction[S]](options: DAGGEROptions): Unit = {
 
-    val trainData = initialiseAndGetTrainingData(options)
+    initialise(options)
+    val trainData = getTrainingData(options)
 
     def extractSentences(file: String): Iterable[Sentence] = {
       if (file == "") Iterable.empty else AMRGraph.importFile(file) map {
@@ -115,14 +116,14 @@ object RunDagger {
     WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
     WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
-    
+
     val startingClassifier = if (options.getBoolean("--prelimOracleRun", false)) {
       val sc = oracleRun[A](options, featureIndex, trainData, correctedDevData)
       sc.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingClassifier.txt", x => x.name)
       featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingFeatureIndex.txt")
       sc
     } else if (options.getBoolean("--startingClassifier", false)) {
-        AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
+      AROWClassifier.fromFile(options.DAGGER_OUTPUT_PATH + "../StartingClassifier.txt", y => WangXueAction.construct(y))
     } else null
 
     if (featureIndex.array.isEmpty && startingClassifier != null) {
@@ -172,7 +173,7 @@ object RunDagger {
 
   }
 
-  def initialiseAndGetTrainingData(options: DAGGEROptions): IndexedSeq[Sentence] = {
+  def initialise(options: DAGGEROptions): Unit = {
     AMRGraph.textEncoding = options.getString("--textEncoding", "UTF-8")
     WangXueTransitionSystem.prohibition = false // temp value for lemma / concept extraction
     WangXueTransitionSystem.reentrance = true // temp value for lemma / concept extraction
@@ -201,6 +202,9 @@ object RunDagger {
 
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
+  }
+
+  def getTrainingData(options: DAGGEROptions): IndexedSeq[Sentence] = {
     ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
     (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
   }
@@ -267,7 +271,7 @@ object RunDagger {
         null.asInstanceOf[MultiClassClassifier[WangXueAction]])
       (classifier, WangXueTransitionSystem.actions ++
         Array(Reattach(0)) ++ (if (WangXueTransitionSystem.reentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
-    } 
+    }
     val startingClassifier = sc.asInstanceOf[MultiClassClassifier[A]]
     startingClassifier
   }

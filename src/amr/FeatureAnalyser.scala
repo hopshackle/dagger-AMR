@@ -55,7 +55,7 @@ object FeatureAnalyser {
   }
 
   def analyserRun(options: DAGGEROptions): Unit = {
-    initialise(options)
+    RunDagger.initialise(options)
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr, id) => Sentence(english, amr, id) }
 
@@ -65,43 +65,6 @@ object FeatureAnalyser {
     val startingClassifier = AROWClassifier.fromFile(classifierToUse, y => WangXueAction.construct(y))
     featureIndex.initialiseFromFile(featuresToUse)
     analyserRun(options, devData, startingClassifier, featureIndex)
-  }
-
-  def initialise(options: DAGGEROptions): Unit = {
-   // AMRGraph.textEncoding = options.getString("--textEncoding", "UTF-8")
-    PourdamghaniAligner.useHeadMapping = (options.getBoolean("--forwardPDG", true))
-    val alignerToUse = options.getString("--aligner", "")
-    Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
-    DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)
-    AMRGraph.setAligner(alignerToUse)
-
-    ImportConcepts.initialise(options.getString("--train.data", "C:\\AMR\\AMR2.txt"))
-    ImportConcepts.loadFromFile = true
-    //    (ImportConcepts.allAMR zip ImportConcepts.allSentencesAndAMR) map (all => Sentence(all._2._1, Some(all._1), ""))
-
-    WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
-    WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")
-    WangXueFeatures.includeParents = (options.getString("--WXfeatures", "") contains "P")
-    WangXueFeatures.includeSiblings = (options.getString("--WXfeatures", "") contains "S")
-    WangXueFeatures.includeWords = (options.getString("--WXfeatures", "") contains "W")
-    WangXueFeatures.includeActionHistory = (options.getString("--WXfeatures", "") contains "A")
-    WangXueFeatures.includeDeletions = (options.getString("--WXfeatures", "") contains "X")
-    WangXueFeatures.includeKappaChildren = (options.getString("--WXfeatures", "") contains "K")
-    WangXueFeatures.includeWordNet = (options.getString("--WXfeatures", "") contains "H")
-    if (WangXueFeatures.includeWordNet) {
-      val fString = options.getString("--WXfeatures", "")
-      val limit = fString.charAt(fString.indexOf("H") + 1).toString.toInt
-      WangXueFeatures.hypernymLimit = limit
-    }
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
-    Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
-    Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
-
-    WangXueTransitionSystem.prohibition = options.getBoolean("--insertProhibition", true)
-    WangXueTransitionSystem.reentrance = options.getBoolean("--reentrance", true)
-    WangXueTransitionSystem.reentrancePhase = options.getBoolean("--reentrancePhase", true)
-    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
-    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
   }
 
   def runPolicy(devData: Iterable[Sentence], options: DAGGEROptions, featureIndex: MapIndex,
