@@ -87,7 +87,11 @@ case class NextEdge(relIndex: Int) extends WangXueAction {
   override def name: String = "NextEdge" + relation(relIndex)
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
     (if (WangXueTransitionSystem.nameConstraints) {
-      !(state.currentGraph.nodes(state.nodesToProcess.head) == "name" && relation(relIndex) == "opN")
+      val sigma = state.nodesToProcess.head;
+      val beta = state.childrenToProcess.head;
+      val graph = state.currentGraph;
+      !(graph.nodes(sigma) == "name" && !(relation(relIndex) == "opN")) &&  // only allow opN labels out of "name"
+        !(graph.nodes(sigma) == "name" && !(graph.isLeafNode(beta))) // and only if beta is a leaf node (else we have to move it)
     } else true)
 }
 
@@ -362,8 +366,9 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
           state.currentGraph.nodeSpans.getOrElse(state.childrenToProcess.head, (100, 100))._1) <= 2) &&
         {
           if (WangXueTransitionSystem.nameConstraints) {
-            !(state.currentGraph.nodes.getOrElse(newNode, "") == "name" &&
-              !state.currentGraph.isLeafNode(state.childrenToProcess.head))
+            !(state.currentGraph.nodes.getOrElse(newNode, "") == "name" &&  // firstly do not reattach to a name node is we are not a leaf
+              !state.currentGraph.isLeafNode(state.childrenToProcess.head)) &&
+              !(state.currentGraph.parentsOf(newNode) map state.currentGraph.nodes contains "name") // secondly don;t attach to a leaf of a name
           } else true
         }
     // Do not reattach to somewhere within subgraph of beta - or you'll create a loop!

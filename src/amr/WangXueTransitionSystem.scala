@@ -34,7 +34,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
       case None => Set.empty[Int]
       case Some(b) => {
         val polarity = if (state.currentGraph.nodes(b) == "-") Set("polarity") else Set[String]()
-        (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet + 0 ++ ((alwaysEdgePossibilities ++ polarity) map relationIndex toSet)
+        (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet ++ ((alwaysEdgePossibilities ++ polarity) map relationIndex toSet)
       }
     }
     val nextEdgeActions = permissibleEdges map (NextEdge(_))
@@ -42,7 +42,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     val reentranceActions = if (reentrance && ((reentrancePhase && state.phase == 2) || (!reentrancePhase && state.phase == 1))) {
       val tokenPos = state.currentGraph.nodeSpans.getOrElse(sigma, (100, 100))._1
       val neighbouringTokens = state.currentGraph.nodes.keySet filter { n => math.abs(state.currentGraph.nodeSpans.getOrElse(n, (-100, -100))._1 - tokenPos) <= 2 }
-      (state.currentGraph.getNeighbourhood(sigma, 4) ++ neighbouringTokens - sigma) map (Reentrance(_)) filter (_.isPermissible(state))
+      (state.currentGraph.getNeighbourhood(sigma, 4) ++ neighbouringTokens - sigma) map (Reentrance(_))
     } else Set[Reentrance]()
 
     val wikifyActions = if (Wikify("FORWARD").isPermissible(state))
@@ -52,7 +52,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
 
     val subInsertNodes = if (WangXueTransitionSystem.insertBelow && state.phase == 1) Seq(sigma) filter (state.currentGraph.nodeLemmas contains _) else Seq.empty[Int]
     val subInsertable = (subInsertNodes map state.currentGraph.nodeLemmas flatMap { lemma => subInsertableConcepts.getOrElse(lemma.toLowerCase, Set()) }).toSet map conceptIndex
-    val subInsertActions = subInsertable map { InsertBelow(_, "") } filter (_.isPermissible(state))
+    val subInsertActions = subInsertable map { InsertBelow(_, "") }
 
     val reattachActions = (if (state.phase == 2 || Reattach.disableReattach || state.childrenToProcess.isEmpty ||
       (state.currentGraph.reattachedNodes contains beta.get)) {
@@ -101,8 +101,8 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
     }
     val nextNodeActions = permissibleConcepts map (NextNode(_))
 
-    reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ wikifyActions ++ subInsertActions ++
-      (Array(DeleteNode, ReplaceHead, Swap, DoNothing)).filter(action => isPermissible(action, state))
+    (reattachActions ++ nextNodeActions ++ nextEdgeActions ++ insertActions ++ reentranceActions ++ wikifyActions ++ subInsertActions ++
+      Array(DeleteNode, ReplaceHead, Swap, DoNothing)).filter(action => isPermissible(action, state))
   }
 
   def approximateLoss(datum: Sentence, state: WangXueTransitionState, action: WangXueAction): Double = ???
