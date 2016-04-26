@@ -351,7 +351,8 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       conf.copy(nodesToProcess = Insert.insertNodesIntoProcessList(List(parameterNode), tree, conf.nodesToProcess),
         childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions).fastForward
     } else {
-      conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions).fastForward
+      conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, 
+          processedEdges = conf.processedEdges - currentEdgeKey, previousActions = this :: conf.previousActions).fastForward
     }
   }
   override def name: String = "Reattach" + attachConcept
@@ -389,6 +390,7 @@ case object Swap extends WangXueAction {
     // We also make Beta the head of the subgraph - i.e. arcs that link sigma to its parents are moved to beta, with a single arc from beta to sigma
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
+    val initialArcsToBeta = state.currentGraph.parentsOf(beta) map (p => (p -> beta))
     val tree = state.currentGraph.swapArc(sigma, beta)
     val newNodesToProcess = if (state.nodesToProcess.tail contains beta) {
       state.nodesToProcess
@@ -396,7 +398,7 @@ case object Swap extends WangXueAction {
       sigma :: beta :: state.nodesToProcess.tail
     }
     state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree,
-      previousActions = this :: state.previousActions).fastForward
+      processedEdges = state.processedEdges -- initialArcsToBeta, previousActions = this :: state.previousActions).fastForward
   }
   override def name: String = "Swap"
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
