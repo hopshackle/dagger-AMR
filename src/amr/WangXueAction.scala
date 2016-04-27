@@ -207,7 +207,11 @@ object Insert {
       {
         val sigma = state.nodesToProcess.head
         val graph = state.currentGraph
-        (graph.parentsOf(sigma) intersect graph.insertedNodes.mapValues(_._1).toSeq) isEmpty
+        val insertedNodesOnSigma = graph.insertedNodes.toSeq filter (_._2._1 == sigma)
+        if (!insertedNodesOnSigma.isEmpty) {
+           // check to see if any were injected above
+          (insertedNodesOnSigma map (_._1) intersect graph.parentsOf(sigma)) isEmpty
+        } else true
       }
   }
   def insertNodesIntoProcessList(nodes: List[Int], tree: DependencyTree, currentList: List[Int]): List[Int] = {
