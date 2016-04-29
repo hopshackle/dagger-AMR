@@ -90,7 +90,7 @@ case class NextEdge(relIndex: Int) extends WangXueAction {
       val sigma = state.nodesToProcess.head;
       val beta = state.childrenToProcess.head;
       val graph = state.currentGraph;
-      !(graph.nodes(sigma) == "name" && !(relation(relIndex) == "opN")) &&  // only allow opN labels out of "name"
+      !(graph.nodes(sigma) == "name" && !(relation(relIndex) == "opN")) && // only allow opN labels out of "name"
         !(graph.nodes(sigma) == "name" && !(graph.isLeafNode(beta))) // and only if beta is a leaf node (else we have to move it)
     } else true)
 }
@@ -209,7 +209,7 @@ object Insert {
         val graph = state.currentGraph
         val insertedNodesOnSigma = graph.insertedNodes.toSeq filter (_._2._1 == sigma)
         if (!insertedNodesOnSigma.isEmpty) {
-           // check to see if any were injected above
+          // check to see if any were injected above
           (insertedNodesOnSigma map (_._1) intersect graph.parentsOf(sigma)) isEmpty
         } else true
       }
@@ -340,7 +340,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
     // then just pop out edge, and update currentGraph
     val currentEdgeKey = (conf.nodesToProcess.head, conf.childrenToProcess.head)
     attachConcept = conf.currentGraph.nodeLemmas.getOrElse(newNode, "")
-    val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN")
+    val edgeLabel = conf.currentGraph.arcs.getOrElse(currentEdgeKey, "UNKNOWN-R")
     val newEdgeKey = (newNode, conf.childrenToProcess.head)
     val edgeAlreadyExists = conf.currentGraph.arcs.contains(newEdgeKey)
     val reattachmentNodeHasBeenProcessed = !conf.nodesToProcess.contains(parameterNode)
@@ -353,10 +353,11 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       reattachedNodes = conf.childrenToProcess.head :: conf.currentGraph.reattachedNodes)
     if (reattachmentNodeHasBeenProcessed) {
       conf.copy(nodesToProcess = Insert.insertNodesIntoProcessList(List(parameterNode), tree, conf.nodesToProcess),
-        childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, previousActions = this :: conf.previousActions).fastForward
+        processedEdges = conf.processedEdges - currentEdgeKey, childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, 
+        previousActions = this :: conf.previousActions).fastForward
     } else {
-      conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, 
-          processedEdges = conf.processedEdges - currentEdgeKey, previousActions = this :: conf.previousActions).fastForward
+      conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree,
+        processedEdges = conf.processedEdges - currentEdgeKey, previousActions = this :: conf.previousActions).fastForward
     }
   }
   override def name: String = "Reattach" + attachConcept
@@ -371,7 +372,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
           state.currentGraph.nodeSpans.getOrElse(state.childrenToProcess.head, (100, 100))._1) <= 2) &&
         {
           if (WangXueTransitionSystem.nameConstraints) {
-            !(state.currentGraph.nodes.getOrElse(newNode, "") == "name" &&  // firstly do not reattach to a name node is we are not a leaf
+            !(state.currentGraph.nodes.getOrElse(newNode, "") == "name" && // firstly do not reattach to a name node is we are not a leaf
               !state.currentGraph.isLeafNode(state.childrenToProcess.head)) &&
               !(state.currentGraph.parentsOf(newNode) map state.currentGraph.nodes contains "name") // secondly don;t attach to a leaf of a name
           } else true
