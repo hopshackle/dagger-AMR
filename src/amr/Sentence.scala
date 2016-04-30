@@ -290,10 +290,14 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
   }
 
   override val size = dependencyTree.nodes.size // i.e. initialised at start and does not then change
+  override def getEmptyExample = Sentence.getEmptyExample
 }
 
 object Sentence {
   val debug = false
+  def getEmptyExample: Sentence = {
+    Sentence ("")
+  }
   def apply(sentence: String): Sentence = {
     Sentence(sentence, DependencyTree(sentence), None, Map[Int, String](), "")
   }
