@@ -353,7 +353,7 @@ case class Reattach(newNode: Int) extends WangXueAction with hasNodeAsParameter 
       reattachedNodes = conf.childrenToProcess.head :: conf.currentGraph.reattachedNodes)
     if (reattachmentNodeHasBeenProcessed) {
       conf.copy(nodesToProcess = Insert.insertNodesIntoProcessList(List(parameterNode), tree, conf.nodesToProcess),
-        processedEdges = conf.processedEdges - currentEdgeKey, childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree, 
+        processedEdges = conf.processedEdges - currentEdgeKey, childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree,
         previousActions = this :: conf.previousActions).fastForward
     } else {
       conf.copy(childrenToProcess = conf.childrenToProcess.tail, currentGraph = tree,
@@ -595,4 +595,23 @@ object Wikify {
     val nameNodes = graph.childrenOf(node) filter (graph.nodes(_) == "name") flatMap graph.childrenOf
     nameNodes.sortBy { x => graph.nodeSpans.getOrElse(x, (0, 0))._1 }
   }
+
+}
+
+object MoveToNextNode extends WangXueAction {
+  def apply(state: WangXueTransitionState): WangXueTransitionState = {
+    val newNodesToProcess = state.nodesToProcess.tail
+    val childrenOfNewNode = (state.phase, newNodesToProcess) match {
+      case (_, Nil) => Nil
+      case (1, _) => state.currentGraph.childrenOf(newNodesToProcess.head)
+      case (_, _) => Nil
+    }
+    state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = childrenOfNewNode.toList,
+      previousActions = this :: state.previousActions).fastForward
+  }
+
+  override def isPermissible(state: WangXueTransitionState): Boolean = state.nodesToProcess.nonEmpty
+  override def name: String = "MoveToNextNode"
+  override def toString: String = "MoveToNextNode"
+  override def ignoreAction: Boolean = true
 }

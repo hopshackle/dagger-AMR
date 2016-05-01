@@ -265,7 +265,7 @@ case class DependencyTree(nodes: Map[Int, String], nodeLemmas: Map[Int, String],
 }
 
 case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option[AMRGraph], positionToAMR: Map[Int, String], id: String)
-  extends dagger.core.DaggerData {
+  extends dagger.core.DaggerData[WangXueTransitionState, WangXueAction] {
   val AMRToPosition: Map[String, Int] = positionToAMR map { case (i, s) => (s -> i) }
   def unmatchedAMRNodesByConcept: Map[String, String] = amr match {
     case None => Map()
@@ -290,7 +290,7 @@ case class Sentence(rawText: String, dependencyTree: DependencyTree, amr: Option
   }
 
   override val size = dependencyTree.nodes.size // i.e. initialised at start and does not then change
-  override def getEmptyExample = Sentence.getEmptyExample
+  override def getDefaultAction = MoveToNextNode
 }
 
 object Sentence {
