@@ -396,6 +396,7 @@ case object Swap extends WangXueAction {
     val sigma = state.nodesToProcess.head
     val beta = state.childrenToProcess.head
     val initialArcsToBeta = state.currentGraph.parentsOf(beta) map (p => (p -> beta))
+    val initialArcsToSigma = state.currentGraph.parentsOf(sigma) map (p => (p -> sigma))
     val tree = state.currentGraph.swapArc(sigma, beta)
     val newNodesToProcess = if (state.nodesToProcess.tail contains beta) {
       state.nodesToProcess
@@ -403,7 +404,7 @@ case object Swap extends WangXueAction {
       sigma :: beta :: state.nodesToProcess.tail
     }
     state.copy(nodesToProcess = newNodesToProcess, childrenToProcess = state.childrenToProcess.tail, currentGraph = tree,
-      processedEdges = state.processedEdges -- initialArcsToBeta, previousActions = this :: state.previousActions).fastForward
+      processedEdges = state.processedEdges -- initialArcsToBeta -- initialArcsToSigma, previousActions = this :: state.previousActions).fastForward
   }
   override def name: String = "Swap"
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
