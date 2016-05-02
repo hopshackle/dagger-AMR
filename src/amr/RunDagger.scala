@@ -180,7 +180,7 @@ object RunDagger {
     PourdamghaniAligner.useHeadMapping = (options.getBoolean("--forwardPDG", true))
     val alignerToUse = options.getString("--aligner", "")
     Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
-    DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", true)
+    DependencyTree.excludePunctuation = !options.getBoolean("--punctuation", false)
     AMRGraph.setAligner(alignerToUse)
     WangXueFeatures.includeChildren = (options.getString("--WXfeatures", "") contains "C")
     WangXueFeatures.debug = (options.getString("--WXfeatures", "") contains "D")

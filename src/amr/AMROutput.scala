@@ -5,6 +5,7 @@ import dagger.core._
 object AMROutput {
   val numbers = "[0-9]".r
   val quote = """""""
+  val invalidCharacters = "/"
 
   def AMROutputFunction(options: DAGGEROptions, text: String, i: Integer, prediction: Sentence, target: Sentence): Unit = {
     val outputFileP = options.DAGGER_OUTPUT_PATH + "AMR_prediction_" + text + ".txt"
@@ -12,11 +13,11 @@ object AMROutput {
     val summaryFile = options.DAGGER_OUTPUT_PATH + "SmatchScores_" + text + ".txt"
     val asStringP = prediction.amr match {
       case Some(p) => convertToString(p)
-      case None => ""
+      case None => """(a / "")"""
     }
     val asStringT = target.amr match {
       case Some(t) => convertToString(t)
-      case None => ""
+      case None => """(a / "")"""
     }
     val smatchScore = (prediction.amr, target.amr) match {
       case (Some(p), Some(t)) => Smatch.fScore(p, t, 4, 10000)
@@ -53,7 +54,7 @@ object AMROutput {
           val attributes = amr.attributes filter { case (attributeNode, label, value) => attributeNode == node && label != "ROOT" } sortBy (_._2)
           val attributeString = attributes map { a => ":" + a._2 + " " + a._3 } mkString (" ")
           val output = new StringBuffer("( " + nodeCode(node))
-          output.append(" / " + amr.nodes(node) + " " + attributeString)
+          output.append(" / " + amr.nodes(node).filterNot { invalidCharacters.contains(_) } + " " + attributeString)
           for ((_, child) <- amr.edgesToChildren(node).sortWith(sortByPositionInSentence(amr))) {
             val relation = amr.arcs((node, child))
             output.append("\n")
