@@ -1,12 +1,12 @@
 package amr
-import edu.cmu.lti.nlp.amr._
+import amr.JAMR._
 object AlignTest {
 
   val quote = """"""".r
   val frameEnding = "-0[1-9]$".r
 
   private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
-  type Graph = edu.cmu.lti.nlp.amr.Graph
+  type Graph = amr.JAMR.Graph
 
   def alignWords(rawSentence: String, amr: Graph, wordnet: Boolean = false): AMRGraph = {
     import com.rockymadden.stringmetric.similarity._

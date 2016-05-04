@@ -1,7 +1,7 @@
 
 package amr
 
-import edu.cmu.lti.nlp.amr._
+import amr.JAMR._
 import scala.collection.SortedMap
 import amr.ImportConcepts.{ concept, relation, conceptIndex }
 
@@ -548,7 +548,7 @@ object AMRGraph {
     if (code == "Pourdamghani") usePourdamghaniAligner = true
     if (code == "wordnet") { useImprovedAligner = true; useWordNet = true }
   }
-  def apply(jamrGraph: edu.cmu.lti.nlp.amr.Graph): AMRGraph = {
+  def apply(jamrGraph: amr.JAMR.Graph): AMRGraph = {
     val nodes = jamrGraph.nodes.map(node => (node.id -> node.concept)).toMap
     val nodeSpans = (for {
       span <- jamrGraph.spans
