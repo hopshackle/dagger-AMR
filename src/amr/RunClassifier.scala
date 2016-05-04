@@ -11,7 +11,10 @@ object RunClassifier {
   def analyserRun(options: DAGGEROptions): Unit = {
     val init = System.currentTimeMillis()
     println("Initialising...")
-    RunDagger.initialise(options)
+    RunDagger.preInitialise(options)
+    ImportConcepts.loadFromFile = true
+    val trainData = RunDagger.getTrainingData(options)
+    RunDagger.postInitialise(options)
     val devFiles = options.getString("--test.data", "").split(";")
     val start = System.currentTimeMillis()
 

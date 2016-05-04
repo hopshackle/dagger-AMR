@@ -58,7 +58,7 @@ object ImportConcepts {
   def relationIndex(value: String) = relationStringToIndex.getOrElse(value, 0)
 
   private def loadConcepts: Set[String] = {
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_lc")).exists()) {
       val lc = Source.fromFile(amrFile + "_lc").getLines.toSeq
       val conceptsMappedToLemmas = lc map {
         x =>
@@ -100,7 +100,7 @@ object ImportConcepts {
   }
 
   private def loadRelations: Set[String] = {
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_le")).exists()) {
       val le = Source.fromFile(amrFile + "_le").getLines.toSeq
       (le map {
         x =>
@@ -147,7 +147,7 @@ object ImportConcepts {
 
   private def loadWikifications: Map[String, String] = {
     import Wikify.{ isConcatenationOfNameArgs, forwardConcatenationOfNameArgs }
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_wiki")).exists()) {
       val lr = Source.fromFile(amrFile + "_wiki").getLines.toSeq
       lr map {
         x =>
@@ -176,7 +176,7 @@ object ImportConcepts {
   }
 
   private def loadSubInsertions: Map[String, Set[String]] = {
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_isubc")).exists()) {
       val ic = Source.fromFile(amrFile + "_isubc").getLines.toSeq
       ic map {
         x =>
@@ -224,7 +224,7 @@ object ImportConcepts {
   }
 
   private def loadInsertableConcepts: Map[String, Set[String]] = {
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_ic")).exists()) {
       val ic = Source.fromFile(amrFile + "_ic").getLines.toSeq
       ic map {
         x =>
@@ -255,7 +255,7 @@ object ImportConcepts {
 
   private def loadConceptsPerLemmaReduced: Map[String, Set[Int]] = {
 
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_lc")).exists()) {
       val lc = Source.fromFile(amrFile + "_lc").getLines.toSeq
       lc map {
         x =>
@@ -283,7 +283,7 @@ object ImportConcepts {
   }
 
   private def loadEdgesPerLemma: Map[String, Set[Int]] = {
-    if (loadFromFile) {
+    if (loadFromFile && (new File(amrFile + "_le")).exists()) {
       val le = Source.fromFile(amrFile + "_le").getLines.toSeq
       le map {
         x =>

@@ -55,7 +55,8 @@ object FeatureAnalyser {
   }
 
   def analyserRun(options: DAGGEROptions): Unit = {
-    RunDagger.initialise(options)
+    RunDagger.preInitialise(options)
+    RunDagger.postInitialise(options)
     val devFile = options.getString("--validation.data", "")
     val devData = if (devFile == "") Iterable.empty else AMRGraph.importFile(devFile) map { case (english, amr, id) => Sentence(english, amr, id) }
 

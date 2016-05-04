@@ -74,9 +74,10 @@ object RunDagger {
 
   def testDAGGERrun[S <: TransitionState, A <: TransitionAction[S]](options: DAGGEROptions): Unit = {
 
-    initialise(options)
+    preInitialise(options)
     val trainData = getTrainingData(options)
-
+    postInitialise(options)
+    
     def extractSentences(file: String): Iterable[Sentence] = {
       if (file == "") Iterable.empty else AMRGraph.importFile(file) map {
         case (english, amr, id) => {
@@ -95,30 +96,12 @@ object RunDagger {
     val testFile = options.getString("--test.data", "")
     val testData = extractSentences(testFile)
 
-    val lemmaReplacement = options.getString("--lemmaReplace", "None")
-    val correctedDevData = lemmaReplacement match {
-      case "glove" => replaceLemmasGlove(devData, options.DAGGER_OUTPUT_PATH + "../glove.6B.50d.txt")
-      case "wordnet" => replaceLemmasWordnet(devData)
-      case _ => devData
-    }
-
     val lossToUse = options.getString("--lossFunction", "")
 
     val featureIndex = new MapIndex
 
-    val insertProhibition = options.getBoolean("--insertProhibition", true)
-    val useReentrance = options.getBoolean("--reentrance", false)
-    val reentrancePhase = options.getBoolean("--reentrancePhase", true)
-    val fileCache = options.getBoolean("--fileCache", false)
-    WangXueTransitionSystem.prohibition = insertProhibition
-    WangXueTransitionSystem.reentrance = useReentrance
-    WangXueTransitionSystem.reentrancePhase = reentrancePhase
-    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
-    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
-    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
-
     val startingClassifier = if (options.getBoolean("--prelimOracleRun", false)) {
-      val sc = oracleRun[A](options, featureIndex, trainData, correctedDevData)
+      val sc = oracleRun[A](options, featureIndex, trainData, devData)
       sc.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingClassifier.txt", x => x.name)
       featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "StartingFeatureIndex.txt")
       sc
@@ -134,14 +117,14 @@ object RunDagger {
       val WXFeatures = new WangXueFeatureFactory(options, featureIndex)
       val lossFunctionFactory = new WangXueLossFunctionFactory(lossToUse)
       val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
-      val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, correctedDevData, testData,
+      val classifier = dagger.train(trainData, new WangXueExpert, WXFeatures, WangXueTransitionSystem, lossFunctionFactory, devData, testData,
         corpusSmatchScore(options),
         actionToString = (x => x.name),
         stringToAction = (y => WangXueAction.construct(y)),
         AMROutput.AMROutputFunction,
         startingClassifier.asInstanceOf[MultiClassClassifier[WangXueAction]])
       (classifier, WangXueTransitionSystem.actions ++
-        Array(Reattach(0)) ++ (if (useReentrance) Array(Reentrance(0)) else Array[WangXueAction]()))
+        Array(Reattach(0)) ++ (if (options.getBoolean("--reentrance", false)) Array(Reentrance(0)) else Array[WangXueAction]()))
     }
     val finalClassifier = fc.asInstanceOf[MultiClassClassifier[A]]
     val allActions = aa.asInstanceOf[Array[A]]
@@ -173,10 +156,11 @@ object RunDagger {
 
   }
 
-  def initialise(options: DAGGEROptions): Unit = {
+  def preInitialise(options: DAGGEROptions): Unit = {
     AMRGraph.textEncoding = options.getString("--textEncoding", "UTF-8")
     WangXueTransitionSystem.prohibition = false // temp value for lemma / concept extraction
     WangXueTransitionSystem.reentrance = true // temp value for lemma / concept extraction
+    WangXueTransitionSystem.reentrancePhase = true
     PourdamghaniAligner.useHeadMapping = (options.getBoolean("--forwardPDG", true))
     val alignerToUse = options.getString("--aligner", "")
     Reattach.REATTACH_RANGE = options.getInt("--reattachRange", 6)
@@ -199,9 +183,17 @@ object RunDagger {
     }
     WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
     WangXueTransitionSystem.nameConstraints = options.getBoolean("--nameConstraints", false)
-
+    WangXueTransitionSystem.wikification = options.getBoolean("--wikification", true)
     Reattach.assertionChecking = options.getBoolean("--assertionChecking", false)
     Reentrance.assertionChecking = options.getBoolean("--assertionChecking", false)
+  }
+  
+  def postInitialise(options: DAGGEROptions): Unit = {
+    WangXueTransitionSystem.prohibition = options.getBoolean("--insertProhibition", true)
+    WangXueTransitionSystem.reentrance = options.getBoolean("--reentrance", false)
+    WangXueTransitionSystem.reentrancePhase = options.getBoolean("--reentrancePhase", true)
+    WangXueTransitionSystem.useCompositeNodes = options.getBoolean("--composite", false)
+    WangXueTransitionSystem.preferKnown = options.getBoolean("--preferKnown", false)
   }
 
   def getTrainingData(options: DAGGEROptions): IndexedSeq[Sentence] = {
@@ -212,41 +204,6 @@ object RunDagger {
   def main(args: Array[String]): Unit = {
     val options = new DAGGEROptions(args)
     testDAGGERrun(options)
-  }
-
-  def replaceLemmasGlove(devData: Iterable[Sentence], location: String): Iterable[Sentence] = {
-    val w2vDict = Word2VecReader.load(location)
-    val lemmasInDict = ImportConcepts.conceptsPerLemma.keys filter (w2vDict.contains(_))
-    devData map (s => {
-      val dt = s.dependencyTree
-      val lemmas = dt.nodeLemmas
-      val replacedLemmas = for {
-        (node, lemma) <- lemmas
-        if !(ImportConcepts.conceptsPerLemma contains lemma) // A known lemma, so we can skip onwards
-        if (w2vDict.contains(lemma)) // and we have a W2V mapping for it
-        val (nearestLemma, distance) = lemmasInDict map (x => (x, w2vDict.euclidean(x, lemma))) minBy (_._2)
-      } yield (node, nearestLemma)
-      val newDT = dt.copy(nodeLemmas = lemmas map { case (k, v) => if (replacedLemmas contains k) (k, replacedLemmas(k)) else (k, v) })
-      replacedLemmas foreach { case (k, v) => println(s"New Lemma ${lemmas(k)} replaced with $v") }
-      s.copy(dependencyTree = newDT)
-    })
-  }
-
-  def replaceLemmasWordnet(devData: Iterable[Sentence]): Iterable[Sentence] = {
-    val workInProgress = ImportConcepts.conceptsPerLemma.keys flatMap (x => Wordnet.synonyms(x) map (_ -> x)) groupBy (_._1)
-    val lemmasBySynonym = workInProgress map { case (key, listOfTuples) => (key -> (listOfTuples map (_._2)).toList.distinct) }
-    devData map (s => {
-      val dt = s.dependencyTree
-      val lemmas = dt.nodeLemmas
-      val replacedLemmas = for {
-        (node, lemma) <- lemmas
-        if !(ImportConcepts.conceptsPerLemma contains lemma) // A known lemma, so we can skip onwards
-        if lemmasBySynonym contains lemma // but it does exist in the WordNet dictionary as a synonym of a lemma we know
-      } yield (node, lemmasBySynonym(lemma)(0))
-      val newDT = dt.copy(nodeLemmas = lemmas map { case (k, v) => if (replacedLemmas contains k) (k, replacedLemmas(k)) else (k, v) })
-      replacedLemmas foreach { case (k, v) => println(s"New Lemma ${lemmas(k)} replaced with $v") }
-      s.copy(dependencyTree = newDT)
-    })
   }
 
   def oracleRun[A](options: DAGGEROptions, featureIndex: MapIndex, trainingData: Iterable[Sentence], devData: Iterable[Sentence]): MultiClassClassifier[A] = {

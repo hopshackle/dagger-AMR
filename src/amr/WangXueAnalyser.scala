@@ -14,7 +14,8 @@ object WangXueAnalyser {
 
   def analyserRun(options: DAGGEROptions): Unit = {
 
-    RunDagger.initialise(options)
+    RunDagger.preInitialise(options)
+    RunDagger.postInitialise(options)
     val instances = new FileInstances[WangXueAction](List(options.getString("--instanceFile")),
       (y => WangXueAction.construct(y)), (x => x.name), 100, false)
 
