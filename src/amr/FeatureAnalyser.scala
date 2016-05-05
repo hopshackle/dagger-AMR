@@ -71,8 +71,6 @@ object FeatureAnalyser {
   def runPolicy(devData: Iterable[Sentence], options: DAGGEROptions, featureIndex: MapIndex,
     policy: ProbabilisticClassifierPolicy[Sentence, WangXueAction, WangXueTransitionState], text: String = ""): Double = {
     val WXFeatures = new WangXueFeatureFactory(options, featureIndex).newFeatureFunction
-    val lossToUse = options.getString("--lossFunction", "")
-    val lossFunction = new WangXueLossFunctionFactory(lossToUse).newLossFunction
     val dagger = new DAGGER[Sentence, WangXueAction, WangXueTransitionState](options)
     val debug = if (options.DEBUG && text != "") new FileWriter(options.DAGGER_OUTPUT_PATH + "FA_debug_" + text + ".txt", true) else null
 

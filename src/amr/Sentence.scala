@@ -539,7 +539,7 @@ object AMRGraph {
   // We then use the JAMR functionality here
   val opN = "^op[0-9]+$".r
   val sntN = "^snt[0-9]+$".r
-  var textEncoding = "ISO8859-1"
+  var textEncoding = "UTF-8"
   var useImprovedAligner = false
   var usePourdamghaniAligner = false
   var useWordNet = false

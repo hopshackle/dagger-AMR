@@ -39,10 +39,14 @@ object AMROutput {
   }
 
   def convertToString(inputGraph: AMRGraph): String = {
-    val sample = Smatch.reduceAMR(inputGraph)
-    val processedNodes: Set[String] = Set.empty[String]
-    val output = sample.getRoots map { c => printNode(c, sample, processedNodes, 0)._1 }
-    output.mkString("\n")
+    if (inputGraph.nodes.isEmpty) {
+      """(a / "")"""
+    } else {
+      val sample = Smatch.reduceAMR(inputGraph)
+      val processedNodes: Set[String] = Set.empty[String]
+      val output = sample.getRoots map { c => printNode(c, sample, processedNodes, 0)._1 }
+      output.mkString("\n")
+    }
   }
 
   def printNode(node: String, amr: AMRGraph, processedNodes: Set[String], tab: Integer): (StringBuffer, Set[String]) = {
