@@ -6,44 +6,12 @@ The main Scala class used for execution is RunDagger. A wrapper java class Scala
 
 A sample execution is:
 ```
-  java -Xms1g -Xmx3g -jar *insert name of executable*
-  --dagger.output.path ./ 
-  --dagger.iterations 20 
-  --dagger.print.interval 1 
-  --train.data ../amr-1.0-proxy-train-half.txt 
-  --validation.data ../amr-1.0-proxy-dev.txt 
-  --samples 1 
-  --lossFunction NaivePenaltyAbs 
-  --initialExpertProb 1.0 
-  --arow.iterations 10 
-  --policy.decay 1.0 
-  --punctuation false 
-  --reentrance false 
-  --algorithm Dagger
-  --maxActions 200 
-  --unrollExpert false 
-  --oracleLoss true 
-  --aligner JAMR 
-  --insertProhibition true 
-  --WXfeatures PACX 
-  --reducedActions true 
-  --threshold 0.40
-  --instanceThreshold 1
-  --fileCache false 
-  --startingClassifier false 
-  --expertAfter 20 
-  --expertHorizonInc 2 
-  --maxTrainingSize 300 
-  --WangXue true 
-  --assertionChecking false
-  --arow.smoothing 100 
-  --discard.old.instances false 
-  --debug false
-  --num.cores 1 
-  &> B010.txt &
+nohup java -Xms1g -Xmx48g -jar ../amr-dagger-J7-semeval.jar --dagger.output.path ./ --dagger.iterations 10 --debug false --dagger.print.interval 1 --train.data ../deft-training-dev-all.txt --validation.data ../deft-p2-amr-r1-amrs-test-all.txt --test.data ../semeval_test_final.txt --lossFunction NaivePenaltyAbs --num.cores 8 --algorithm Dagger --policy.decay 0.3 --oracleLoss true --maxActions 200 --aligner Pourdamghani --arow.smoothing 100 --WXfeatures PCKX --reentrance false --reducedActions true --punctuation false --arow.iterations 3 --preferKnown false --fileCache true --instanceThreshold 1 --threshold 0.2 --minTrainingSize 30 --maxTrainingSize 120 --startingClassifier false --wikification true --average true --previousTrainingIter 2 --rolloutLimit 10 --logTrainingStats false --brownCluster ../Brown100.txt &> C226.txt &
 ```
 
-There output in the specified output directory includes Smatch scores for each sentence at each iteration in the validation and training set, plus the AMR output for each. If debug is switched on, then the key log file is CollectInstances_debug_I.txt for iteration I. This contains information on the RollIn trajectory taken, plus the losses calculated for each RollOut action considered.
+(This example is the run used for the Semeval2016 submission for Task 8.)
+
+The output in the specified output directory includes Smatch scores for each sentence at each iteration in the validation and training set, plus the AMR output for each. If debug is switched on, then the key log file is CollectInstances_debug_I.txt for iteration I. This contains information on the RollIn trajectory taken, plus the losses calculated for each RollOut action considered.
 
 Also output are, for each iteration:
 * `SmatchScores_<type>_<n>.txt`
@@ -93,12 +61,13 @@ Key (non-obvious) parameters:
 * `preferKnown` defaults to `false`. With this setting the expert will preferentially use `VERB`, `LEMMA` and `WORD` parameters for naming nodes. This ensures there is training data that can generalise to unseen AMR concepts that happen to match english words. If set to `false`, then the expert will always use the full AMR concept name.
 * `brownCluster` specified the file that specifies brown clusters to be used in features. If this option is not provided, then brown cluster features will be switched off.
 * `aligner` defaults to `JAMR`, which uses the alignment code from the original JAMR system. Other values are `improved`, which uses another set of heuristics (which work OK on newswire data, but are dreadful on other data - see code for detail), and `Pourdamghani`, which uses the Pourdamghani alignment files included in the LDC corpus distribution. In this last case, the relevant file needs to be present as a <name>.txt_tok file, where <name> matches the name of the training file.
+* `nameConstraints` default to `false`. If set, this applies soe AMR domain knowledge that enforce the transition system (mostly) to give `name` nodes that only have `opN` as outgoing AMR relations, and that all the children of `name` nodes are leaves in the AMR graph, with string format.
 
 Output files that define the classifier are:
 * `FinalClassifier.txt`
 * `FeatureIndex.txt`
 * `Classifier_<n>.txt`, where `<n>` is the iteration number.
-* 
+
 Once saved a classifier can be run over new data using `RunClassifier.scala`, or the java wrapper `ClassifierRunner.java`. These have the same parameter settings as above, although most are not used. The key ones are:
 
 * `dagger.output.path` as above
