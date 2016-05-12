@@ -152,7 +152,7 @@ object ImportConcepts {
       lr map {
         x =>
           val stuff = x.split("[|]")
-          (stuff(0) + ":" + stuff(1) -> stuff(2))
+          (stuff(0) + "|" + stuff(1) -> stuff(2))
       } toMap
     } else {
       val output = (for {

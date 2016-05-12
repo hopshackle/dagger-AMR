@@ -25,16 +25,24 @@ object WangXueAction {
       case x if x startsWith "NextNode" =>
         val concept = x.replaceAll("NextNode", "")
         val exists = conceptStringToIndex contains concept
-        if (!exists) println("Unknown Concept " + concept)
-        val index = conceptIndex(x.replaceAll("NextNode", ""))
-        NextNode(index)
+        if (!exists) { 
+          println("Unknown Concept " + concept)
+        	MoveToNextNode
+        } else {
+        	val index = conceptIndex(x.replaceAll("NextNode", ""))
+        	NextNode(index)
+        }
       case "DeleteNode" => DeleteNode
       case x if x startsWith "InsertBelow" =>
         val concept = x.replaceAll("InsertBelow", "")
         val exists = conceptStringToIndex contains concept
-        if (!exists) println("Unknown Concept (IB) " + concept)
-        val index = conceptIndex(concept)
-        InsertBelow(index)
+        if (!exists) {
+        	println("Unknown Concept (IB) " + concept)
+        	MoveToNextNode
+        } else {
+        	val index = conceptIndex(concept)
+          InsertBelow(index)
+        }
       case x if x startsWith "Insert" =>
         val concept = x.replaceAll("Insert", "")
         val exists = conceptStringToIndex contains concept
