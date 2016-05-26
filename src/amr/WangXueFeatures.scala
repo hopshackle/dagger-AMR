@@ -10,7 +10,7 @@ import java.util.concurrent.atomic._
 import dagger.core._
 import Wordnet._
 
-class WangXueFeatureFactory(options: DAGGEROptions, dict: Index = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
+class WangXueFeatureFactory(options: DAGGEROptions, dict: MapIndex = new MapIndex) extends FeatureFunctionFactory[Sentence, WangXueTransitionState, WangXueAction] {
 
   val brownCluster = options.getString("--brownCluster", "") match {
     case "" => null.asInstanceOf[BrownCluster]
@@ -36,7 +36,7 @@ object WangXueFeatures {
   val idFountain = new AtomicLong(1)
 }
 
-class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCluster) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
+class WangXueFeatures(options: DAGGEROptions, dict: MapIndex, brownCluster: BrownCluster) extends FeatureFunction[Sentence, WangXueTransitionState, WangXueAction] {
 
   import WangXueFeatures._
 
@@ -102,6 +102,11 @@ class WangXueFeatures(options: DAGGEROptions, dict: Index, brownCluster: BrownCl
       }
       (cachedCoreFeatures, cachedParamFeatures)
     }
+    
+  }
+  
+  override def writeToFile(fileName: String): Unit = {
+      dict.writeToFile(fileName)
   }
 
   def sigmaFeatures(sentence: Sentence, state: WangXueTransitionState, action: WangXueAction): Map[Int, Float] = {

@@ -169,4 +169,7 @@ object generalPlay {
       tupleToSort.sortBy(-_._2).take(2)           //> res49: List[(String, Double)] = List((b,67.0), (e,20.0))
   100.toString                                    //> res50: String = 100
   List(1, 2, 3).mkString("n")                     //> res51: String = 1n2n3
+  (List(0.1, 0.2, 0.35, 0.05, 0.30).scanLeft(0.0)(_ + _)).tail
+                                                  //> res52: List[Double] = List(0.1, 0.30000000000000004, 0.65, 0.70000000000000
+                                                  //| 01, 1.0)
 }
