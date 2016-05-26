@@ -25,16 +25,24 @@ object WangXueAction {
       case x if x startsWith "NextNode" =>
         val concept = x.replaceAll("NextNode", "")
         val exists = conceptStringToIndex contains concept
-        if (!exists) println("Unknown Concept " + concept)
-        val index = conceptIndex(x.replaceAll("NextNode", ""))
-        NextNode(index)
+        if (!exists) { 
+          println("Unknown Concept " + concept)
+        	MoveToNextNode
+        } else {
+        	val index = conceptIndex(x.replaceAll("NextNode", ""))
+        	NextNode(index)
+        }
       case "DeleteNode" => DeleteNode
       case x if x startsWith "InsertBelow" =>
         val concept = x.replaceAll("InsertBelow", "")
         val exists = conceptStringToIndex contains concept
-        if (!exists) println("Unknown Concept (IB) " + concept)
-        val index = conceptIndex(concept)
-        InsertBelow(index)
+        if (!exists) {
+        	println("Unknown Concept (IB) " + concept)
+        	MoveToNextNode
+        } else {
+        	val index = conceptIndex(concept)
+          InsertBelow(index)
+        }
       case x if x startsWith "Insert" =>
         val concept = x.replaceAll("Insert", "")
         val exists = conceptStringToIndex contains concept
@@ -408,6 +416,7 @@ case object Swap extends WangXueAction {
   }
   override def name: String = "Swap"
   override def isPermissible(state: WangXueTransitionState): Boolean = state.childrenToProcess.nonEmpty &&
+    !(WangXueTransitionSystem.nameConstraints && state.currentGraph.nodes(state.childrenToProcess.head) == "name") && 
     !(state.currentGraph.swappedArcs contains ((state.childrenToProcess.head, state.nodesToProcess.head))) &&
     state.phase == 1 && !subgraphOfSigmaIncludesBeta(state)
 
@@ -521,6 +530,11 @@ case class Reentrance(kappa: Int) extends WangXueAction with hasNodeAsParameter 
   def isPermissible(state: WangXueTransitionState): Boolean = WangXueTransitionSystem.reentrance &&
     ((WangXueTransitionSystem.reentrancePhase && state.phase == 2) || (!WangXueTransitionSystem.reentrancePhase && state.phase == 1)) &&
     state.nodesToProcess.nonEmpty && state.childrenToProcess.isEmpty &&
+    !(WangXueTransitionSystem.nameConstraints && {
+      val kappaConcept = state.currentGraph.nodes(kappa);
+      val kappaParentConcepts = state.currentGraph.parentsOf(kappa) map state.currentGraph.nodes
+      (kappaConcept == "name" || kappaParentConcepts.contains("name"))
+    }) && 
     state.currentGraph.nodes.contains(kappa) && state.nodesToProcess.head != kappa &&
     !(state.currentGraph.subGraph(kappa) contains state.nodesToProcess.head) &&
     !state.currentGraph.arcs.contains((state.nodesToProcess.head, kappa)) &&
