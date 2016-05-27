@@ -158,18 +158,37 @@ object generalPlay {
   numericBoundary.replaceAllIn("d20", "$1 $2")    //> res45: String = d20
   numericBoundary.replaceAllIn("During the 1990s Sweden was hot.", "$1 $2")
                                                   //> res46: String = During the 1990 s Sweden was hot.
-                                                  
+
   val tupleToSort: List[(String, Double)] = List(("a", 0.3), ("b", 67), ("c", -0.5), ("d", 0.0), ("e", 20))
                                                   //> tupleToSort  : List[(String, Double)] = List((a,0.3), (b,67.0), (c,-0.5), (
                                                   //| d,0.0), (e,20.0))
   tupleToSort.sortBy(-_._2)                       //> res47: List[(String, Double)] = List((b,67.0), (e,20.0), (a,0.3), (d,0.0), 
                                                   //| (c,-0.5))
-   tupleToSort.sortBy(_._2)                       //> res48: List[(String, Double)] = List((c,-0.5), (d,0.0), (a,0.3), (e,20.0), 
+  tupleToSort.sortBy(_._2)                        //> res48: List[(String, Double)] = List((c,-0.5), (d,0.0), (a,0.3), (e,20.0), 
                                                   //| (b,67.0))
-      tupleToSort.sortBy(-_._2).take(2)           //> res49: List[(String, Double)] = List((b,67.0), (e,20.0))
+  tupleToSort.sortBy(-_._2).take(2)               //> res49: List[(String, Double)] = List((b,67.0), (e,20.0))
   100.toString                                    //> res50: String = 100
   List(1, 2, 3).mkString("n")                     //> res51: String = 1n2n3
   (List(0.1, 0.2, 0.35, 0.05, 0.30).scanLeft(0.0)(_ + _)).tail
                                                   //> res52: List[Double] = List(0.1, 0.30000000000000004, 0.65, 0.70000000000000
                                                   //| 01, 1.0)
+  val beta = 0.3                                  //> beta  : Double = 0.3
+  val n = 5                                       //> n  : Int = 5
+  val tempProb = (1 to n) map (x => beta * math.pow((1 - beta), x - 1))
+                                                  //> tempProb  : scala.collection.immutable.IndexedSeq[Double] = Vector(0.3, 0.2
+                                                  //| 1, 0.14699999999999996, 0.10289999999999998, 0.07202999999999998)
+  val probabilities = (tempProb map (_ / tempProb.sum)).scanLeft(0.0)(_ + _).tail
+                                                  //> probabilities  : scala.collection.immutable.IndexedSeq[Double] = Vector(0.3
+                                                  //| 606072626302693, 0.6130323464714579, 0.7897299051602898, 0.9134181962424722
+                                                  //| , 0.9999999999999999)
+  List(0.0, 0.4, 0.6).indexWhere(_ > 0.8)         //> res53: Int = -1
+  val random = new util.Random(1)                 //> random  : scala.util.Random = scala.util.Random@694e1548
+  val diceRoll = (1 to 10) map (_ => random.nextDouble())
+                                                  //> diceRoll  : scala.collection.immutable.IndexedSeq[Double] = Vector(0.730878
+                                                  //| 1907032909, 0.41008081149220166, 0.20771484130971707, 0.3327170559595112, 0
+                                                  //| .9677559094241207, 0.006117182265761301, 0.9637047970232077, 0.939865388781
+                                                  //| 9098, 0.9471949176631939, 0.9370821488959696)
+  val i = diceRoll map (d => probabilities.indexWhere(d <= _))
+                                                  //> i  : scala.collection.immutable.IndexedSeq[Int] = Vector(2, 1, 0, 0, 4, 0, 
+                                                  //| 4, 4, 4, 4)
 }
