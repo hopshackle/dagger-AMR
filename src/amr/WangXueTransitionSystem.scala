@@ -14,6 +14,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
   var preferKnown = false
   var wikification = true
   var insertBelow = true
+  val allowUnknownEdge = false
   var nameConstraints = false
   val alwaysInsertable = Set("name")
   val alwaysEdgePossibilities = Set("opN", "sntN")
@@ -37,7 +38,7 @@ object WangXueTransitionSystem extends TransitionSystem[Sentence, WangXueAction,
         (edgeKeys flatMap { lemma => edgesPerLemma.getOrElse(lemma, Set()) }).toSet ++ ((alwaysEdgePossibilities ++ polarity) map relationIndex toSet)
       }
     }
-    val nextEdgeActions = permissibleEdges map (NextEdge(_))
+    val nextEdgeActions = permissibleEdges ++ (if (allowUnknownEdge) Set(0) else Set()) map (NextEdge(_))
 
     val reentranceActions = if (reentrance && ((reentrancePhase && state.phase == 2) || (!reentrancePhase && state.phase == 1))) {
       val tokenPos = state.currentGraph.nodeSpans.getOrElse(sigma, (100, 100))._1
