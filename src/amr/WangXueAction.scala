@@ -559,11 +559,11 @@ case class Wikify(wikiString: String) extends WangXueAction {
   def apply(conf: WangXueTransitionState): WangXueTransitionState = {
     val sigma = conf.nodesToProcess.head
     val graph = conf.currentGraph
-    val stringToUse = wikiString match {
+    val stringToUse = (wikiString match {
       case "FORWARD" => forwardWikiString(conf)
       case "DEFAULT" => wikifications.getOrElse(graph.nodes(sigma) + "|" + forwardConcatenationOfNameArgs(graph, sigma), "-")
-      case _ => wikiString.replaceAll(quoteString, "")
-    }
+      case _ => wikiString
+    }).replaceAll(quoteString, "")
     val (newNode, tree) = conf.currentGraph.insertNodeBelow(conf.nodesToProcess.head, quoteString + stringToUse + quoteString, "", "wiki")
     conf.copy(currentGraph = tree, previousActions = this :: conf.previousActions, processedEdges = conf.processedEdges + ((conf.nodesToProcess.head, newNode)),
       processedNodes = conf.processedNodes + newNode).fastForward

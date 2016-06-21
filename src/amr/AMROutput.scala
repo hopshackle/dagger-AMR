@@ -5,7 +5,7 @@ import dagger.core._
 object AMROutput {
   val numbers = "[0-9]".r
   val quote = """""""
-  val invalidCharacters = "/"
+  val invalidCharacters = "/:"
 
   def AMROutputFunction(options: DAGGEROptions, text: String, i: Integer, prediction: Sentence, target: Sentence): Unit = {
     val outputFileP = options.DAGGER_OUTPUT_PATH + "AMR_prediction_" + text + ".txt"
@@ -49,6 +49,14 @@ object AMROutput {
     }
   }
 
+  def replaceDoubleQuotes(input: String): String = {
+		  if (input.contains(quote)) {
+			  quote + input.replaceAll(quote, "") + quote
+		  } else {
+			  input
+		  }
+  }
+
   def printNode(node: String, amr: AMRGraph, processedNodes: Set[String], tab: Integer): (StringBuffer, Set[String]) = {
     (processedNodes contains node) match {
       case true => (new StringBuffer(" " + nodeCode(node) + " "), processedNodes)
@@ -56,7 +64,7 @@ object AMROutput {
         var newlyProcessedNodes = Seq(node)
         val outString = {
           val attributes = amr.attributes filter { case (attributeNode, label, value) => attributeNode == node && label != "ROOT" } sortBy (_._2)
-          val attributeString = attributes map { a => ":" + a._2 + " " + a._3 } mkString (" ")
+          val attributeString = attributes map { a => ":" + a._2 + " " + replaceDoubleQuotes(a._3) } mkString (" ")
           val output = new StringBuffer("( " + nodeCode(node))
           output.append(" / " + amr.nodes(node).filterNot { invalidCharacters.contains(_) } + " " + attributeString)
           for ((_, child) <- amr.edgesToChildren(node).sortWith(sortByPositionInSentence(amr))) {
