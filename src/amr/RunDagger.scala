@@ -146,8 +146,8 @@ object RunDagger {
     }
     outputFile.close()
 
-    finalClassifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
-    featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
+//    finalClassifier.writeToFile(options.DAGGER_OUTPUT_PATH + "FinalClassifier.txt", x => x.name)
+//    featureIndex.writeToFile(options.DAGGER_OUTPUT_PATH + "FeatureIndex.txt")
 
     (options.getBoolean("--featureAnalysis", false), true, finalClassifier) match {
       case (true, true, classifier: AROWClassifier[WangXueAction]) => FeatureAnalyser.analyserRun(options, devData, classifier, featureIndex)
