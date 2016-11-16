@@ -1,6 +1,14 @@
 # dagger-AMR
 
-This project provides code for a transition-based parsing algorithm for English sentences to AMR. It is dependent on the imitation learning code provided in the hopshackle/mr-dagger repository. Currently all training uses AROW. Once built, the key aditional runtime dependency is the installation of WordNet, with the WNHOME environment variable pointing to this directory so that lemmas et al can be looked up.
+This project provides code for a transition-based parsing algorithm for English sentences to AMR. It is dependent on the imitation learning code provided in the hopshackle/mr-dagger repository. There are also dependencies on following libraries in the build path (precise versions not critical, but these are the ones we used):
+- stanford-corenlp-3.3.1.jar
+- stanford-corenlp-3.3.1-models.jar
+- trove4j-3.0.3.jar
+- scala-parser-combinators-2_11-1.0.3.jar
+- edu.mit.jwi_2.3.0_jdk.jar
+- stringmetric-core-0.25.3.jar
+
+Currently all training uses AROW. Once built, the key additional runtime dependency is the installation of WordNet, with the WNHOME environment variable pointing to this directory so that lemmas et al can be looked up.
 
 The main Scala class used for execution is RunDagger. A wrapper java class ScalaRunner is provided that calls this (useful for some JVMs).
 
